@@ -1,0 +1,12 @@
+{
+  "action": "completed",
+  "workflow_run": {
+    "name": "Production Build & Test",
+    "status": "completed",
+    "conclusion": "failure",
+    "html_url": "https://github.com/hacrex/OpsSentinel/actions/runs/123456789"
+  },
+  "repository": {
+    "full_name": "hacrex/OpsSentinel"
+  }
+}
