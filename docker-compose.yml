@@ -1,6 +1,17 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ops_user
+      POSTGRES_PASSWORD: ops_password
+      POSTGRES_DB: ops_sentinel
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
   backend:
     build: ./backend
     ports:
@@ -10,6 +21,9 @@ services:
       - GITHUB_WEBHOOK_SECRET=my_super_secret
       - GITHUB_CLIENT_ID=dummy_client_id
       - GITHUB_CLIENT_SECRET=dummy_client_secret
+      - DATABASE_URL=postgresql://ops_user:ops_password@postgres:5432/ops_sentinel
+    depends_on:
+      - postgres
     volumes:
       - backend-data:/app
 
@@ -22,3 +36,4 @@ services:
 
 volumes:
   backend-data:
+  postgres-data:

@@ -128,7 +128,7 @@ npm run dev
 
 ### Running with Docker
 
-Run the entire stack via Docker Compose:
+Run the entire stack via Docker Compose (this automatically provisions a PostgreSQL database for robust self-hosting):
 ```bash
 docker-compose up --build -d
 ```
