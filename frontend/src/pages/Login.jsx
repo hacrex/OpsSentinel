@@ -11,7 +11,8 @@ const Login = () => {
     const code = params.get('code');
     
     if (code) {
-      fetch('http://localhost:3001/auth/github', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      fetch(`${apiUrl}/auth/github`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

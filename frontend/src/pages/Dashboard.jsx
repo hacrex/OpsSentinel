@@ -15,7 +15,8 @@ const Dashboard = () => {
 
   const fetchEvents = async () => {
     try {
-      const res = await axios.get('http://localhost:3001/events');
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const res = await axios.get(`${apiUrl}/events`);
       setEvents(res.data);
       setLoading(false);
     } catch (err) {
@@ -35,7 +36,7 @@ const Dashboard = () => {
           <Activity size={24} />
           Ops Sentinel // CI Telemetry
         </h1>
-        <div style={{display: 'flex', alignItems: 'center', gap: '16px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px'}}>
+        <div style={{display: 'flex', alignItems: 'center', gap: '16px', color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', fontWeight: '500', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px'}}>
           <span>{loading ? 'SYNCING...' : 'LIVE'}</span>
           <span style={{width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--accent-color)', boxShadow: 'var(--accent-glow)'}}></span>
         </div>
@@ -46,7 +47,7 @@ const Dashboard = () => {
         <div className="metrics-grid">
           <div className="glass-panel metric-card">
             <div className="metric-label" style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-              <CloudRain size={16} color="var(--accent-color)"/>
+              <CloudRain size={16} color="var(--text-secondary)"/>
               Total Workflows
             </div>
             <div className="metric-value">{totalRuns}</div>
@@ -57,7 +58,7 @@ const Dashboard = () => {
               <ShieldAlert size={16} color="var(--error-color)"/>
               Detected Failures
             </div>
-            <div className="metric-value" style={{color: 'var(--error-color)', textShadow: 'var(--error-glow)'}}>
+            <div className="metric-value danger">
               {failedRuns}
             </div>
           </div>
@@ -67,15 +68,15 @@ const Dashboard = () => {
               <BarChart3 size={16} color="var(--success-color)"/>
               System Health
             </div>
-            <div className="metric-value" style={{color: 'var(--success-color)', textShadow: 'var(--success-glow)'}}>
+            <div className="metric-value success">
               {100 - failRate}%
             </div>
           </div>
         </div>
 
         <div className="glass-panel" style={{marginTop: '32px'}}>
-          <div style={{padding: '16px', borderBottom: '1px solid rgba(64,196,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(5,11,20,0.5)'}}>
-            <h2 style={{fontFamily: 'var(--font-mono)', color: 'var(--accent-color)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '4px'}}>Global Run Stream</h2>
+          <div style={{padding: '16px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(15, 23, 42, 0.4)'}}>
+            <h2 style={{fontFamily: 'var(--font-sans)', color: 'var(--text-primary)', fontSize: '15px', fontWeight: '600'}}>Global Run Stream</h2>
             <div style={{fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-secondary)'}}>LIMIT: 100 EVENTS</div>
           </div>
           <div style={{overflowX: 'auto', maxHeight: '600px', overflowY: 'auto'}}>
@@ -120,7 +121,7 @@ const Dashboard = () => {
               </tbody>
             </table>
             {events.length === 0 && !loading && (
-              <div style={{padding: '48px', textAlign: 'center', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '4px'}}>
+              <div style={{padding: '48px', textAlign: 'center', color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', fontSize: '14px'}}>
                 No telemetry data found locally.
               </div>
             )}
