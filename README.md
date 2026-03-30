@@ -1,147 +1,115 @@
-# Ops Sentinel - GitHub CI/CD Failure Notifier Dashboard
+# 🛡️ OpsSentinel
 
-“See every pipeline. Fix failures faster.”
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/hacrex/OpsSentinel/main?label=CI)](https://github.com/hacrex/OpsSentinel/actions)
+[![Docker Image](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 
-**Ops Sentinel** is a GitHub-native CI/CD observability platform that provides real-time failure insights and centralized visibility. Instead of digging through logs or scattered notifications, Ops Sentinel gives you a centralized dashboard, instant alerts, and actionable insights across all repositories.
-
-Features a Palantir-style data-dense UI with neon glowing accents.
-
-## 💡 Elevator Pitch (Startup Pitch)
-
-### 🧠 Problem 
-**Today:**
-- CI/CD failures are buried in logs
-- Alerts are noisy or inconsistent
-- Teams lack cross-repo visibility
-- Debugging takes too long → slows delivery
-
-👉 **Result:**
-🚫 Delayed deployments | 🚫 Dev frustration | 🚫 Reduced productivity
-
-### ⚡ Solution
-**Ops Sentinel:**
-- 📡 Tracks all GitHub Actions in one place
-- 🚨 Sends real-time failure alerts
-- 📊 Visualizes pipeline health
-- 🔍 Helps identify failure patterns
-
-## 🔥 Unique Selling Proposition (USP)
-**🥇 Core USP:** “The simplest GitHub-native CI/CD observability platform.”
-
-### 💎 Differentiation
-1. **GitHub-First (Not Generic)**
-   - Built specifically for GitHub workflows
-   - No heavy integrations like Datadog or Splunk
-2. **Lightweight but Powerful**
-   - No complex setup
-   - Works with just: Webhooks & OAuth
-3. **Developer-Centric UX**
-   - Focus on: Failures, Fix time, Productivity (NOT infra metrics noise)
-4. **Cross-Repo Visibility (🔥 killer feature)**
-   - One dashboard for all repos; not limited like native GitHub Actions
-5. **Future AI Layer (Vision USP)**
-   - Suggest root causes, recommend fixes, and predict failures
-
-## 🧭 Positioning Statement
-For DevOps teams and developers using GitHub, Ops Sentinel is a CI/CD observability platform that provides real-time failure insights and centralized visibility — without the complexity of traditional monitoring tools.
-
-### 🆚 Competitive Positioning
-| Tool | Weakness | Your Advantage |
-|---|---|---|
-| **GitHub Native** | Basic alerts only | Full observability |
-| **Datadog** | Complex + expensive | Simple + focused |
-| **Open Source** | Hard setup | Plug-and-play |
-| **Action Scripts**| No UI | Full product |
-
-### 🎯 Target Users
-- DevOps Engineers (🔥 you)
-- Startup engineering teams
-- Indie hackers
-- SaaS builders using GitHub
-
-### 💰 Monetization (future)
-- **Free tier** → 1–2 repos
-- **Pro** → unlimited repos + analytics
-- **Team** → collaboration + insights
-
-### 🔥 One-Liner (for LinkedIn / Bio)
-Building Ops Sentinel — a GitHub-native CI/CD observability layer to fix failures faster.
-
-### ⚡ Founder Angle (Your Advantage)
-You’re not just building a tool — you’re solving DevOps pain, CI/CD inefficiency, and the observability gap. This aligns perfectly with your Cloud + DevOps background, CI/CD + security experience, and optimization mindset (Day 0).
+**OpsSentinel** is a lightweight, GitHub-native CI/CD observability platform designed to provide real-time failure insights and centralized visibility across all your repositories. Stop digging through logs and scattered notifications—get a unified view of your pipeline health in one place.
 
 ---
 
-## Features
-- Listens to GitHub webhook `workflow_run` events
-- Verifies webhook signatures via HMAC SHA256
-- Multi-repo dashboard indicating CI failures and successes
-- Built-in failure analytics
-- Multi-channel alerting (Email, Slack, Microsoft Teams)
-- GitHub OAuth Login flow
-- Docker containerization ready
+## 🚀 Features
 
-## Setup Instructions
+- **Real-Time Pipeline Tracking**: Listens to GitHub `workflow_run` events to track pipeline states as they change.
+- **Centralized Dashboard**: A high-density, "Palantir-style" UI that indicates CI failures and successes at a glance.
+- **Multi-Channel Alerting**: Instant notifications routed to **Email**, **Slack**, and **Microsoft Teams** on failures.
+- **Secure by Design**: Built-in verification of GitHub webhook signatures via HMAC SHA256.
+- **Seamless Auth**: Integrated GitHub OAuth login flow for secure access.
+- **Flexible Storage**: Supports both **SQLite** for quick starts and **PostgreSQL** for production-grade deployments.
+- **Docker Ready**: Fully containerized stack for one-command deployment.
 
-### Prerequisites
-- Node.js v18+ OR Docker
-- A GitHub OAuth App (for Login)
-- A GitHub Repo (for Webhooks)
+---
 
-### GitHub OAuth Setup
-1. Go to your GitHub Settings -> Developer settings -> OAuth Apps -> New OAuth App.
-2. Set "Authorization callback URL" to `http://localhost:5173/login`.
-3. Generate Client ID and Client Secret.
+## 🛠️ Architecture
 
-### GitHub Webhook Setup
-1. Navigate to your repository -> Settings -> Webhooks.
-2. Click **Add webhook**.
-3. Set **Payload URL** to your backend `/webhook` endpoint (e.g., via ngrok `https://<your-ngrok>/webhook`).
-4. Set **Content type** to `application/json`.
-5. Set a **Secret** matching `GITHUB_WEBHOOK_SECRET` in your `.env`.
-6. Select **Let me select individual events** -> check **Workflow runs**.
-7. Ensure it is marked **Active** and click Add.
+OpsSentinel is built with a modern, decoupled architecture:
 
-### Environment Setup
-Copy the `.env.example` file to create your `.env` for backend and `frontend/.env` for frontend.
+- **Frontend**: React (Vite) with a data-dense, dark-themed UI.
+- **Backend**: Node.js (Express) handling webhooks, authentication, and notifications.
+- **Database**: SQLite (default) or PostgreSQL.
+- **Integrations**: GitHub Webhooks & GitHub OAuth.
 
-```bash
-cp .env.example .env
-```
-Fill in the GitHub secrets and any optional notification service Webhook URLs.
+---
 
-### Running Locally (Without Docker)
+## 🚦 Quick Start (Docker)
 
-**Start Backend**
+The fastest way to get OpsSentinel running is using Docker Compose.
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/hacrex/OpsSentinel.git
+   cd OpsSentinel
+   ```
+
+2. **Configure Environment**:
+   Copy `.env.example` to `.env` and fill in your GitHub OAuth and Webhook secrets.
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Launch the stack**:
+   ```bash
+   docker-compose up --build -d
+   ```
+
+- **Dashboard**: `http://localhost`
+- **API**: `http://localhost:3001`
+
+---
+
+## 🔧 Manual Setup
+
+### Backend
 ```bash
 cd backend
 npm install
-npm run dev # or node src/server.js
+# Ensure your .env is configured
+node src/server.js
 ```
 
-**Start Frontend**
+### Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### Running with Docker
+---
 
-Run the entire stack via Docker Compose (this automatically provisions a PostgreSQL database for robust self-hosting):
-```bash
-docker-compose up --build -d
-```
-The frontend will be exposed at `http://localhost` and backend at `http://localhost:3001`.
+## ⚙️ Configuration
 
-## Testing Webhooks Locally
-Use the provided `sample-payload.json` to simulate a GitHub run failure manually.
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `GITHUB_CLIENT_ID` | GitHub OAuth App Client ID | Yes |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth App Client Secret | Yes |
+| `GITHUB_WEBHOOK_SECRET` | Secret used to verify GitHub webhooks | Yes |
+| `DATABASE_URL` | PostgreSQL connection string (falls back to SQLite if empty) | No |
+| `SLACK_WEBHOOK_URL` | Webhook URL for Slack notifications | No |
+| `TEAMS_WEBHOOK_URL` | Webhook URL for Microsoft Teams notifications | No |
+| `SMTP_HOST` | SMTP server for email alerts | No |
 
-```bash
-curl -X POST http://localhost:3001/webhook \
-  -H "x-github-event: workflow_run" \
-  -H "Content-Type: application/json" \
-  -H "x-hub-signature-256: sha256=<compute_hmac_here>" \
-  -d @sample-payload.json
-```
-*(If signature verification is on, you will need a valid signature. Or you can remove the GITHUB_WEBHOOK_SECRET from your .env briefly to bypass verification and test insertions).*
+---
+
+## 🗺️ Roadmap
+
+- [ ] **Predictive Analytics**: Forecast workflow failure probabilities.
+- [ ] **Flaky Test Detection**: Automatically identify unreliable tests.
+- [ ] **LLM Root Cause Analysis**: Summarize failure logs using AI.
+- [ ] **WebSockets**: Real-time dashboard updates without polling.
+- [ ] **RBAC**: Role-based access control for teams.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+<p align="center">Built with ❤️ for DevOps Engineers.</p>
