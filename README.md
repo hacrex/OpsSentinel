@@ -1,7 +1,6 @@
 #  OpsSentinel
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 [![Docker Image](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 
 **OpsSentinel** is a lightweight, GitHub-native CI/CD observability platform designed to provide real-time failure insights and centralized visibility across all your repositories. Stop digging through logs and scattered notifications—get a unified view of your pipeline health in one place.
