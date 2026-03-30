@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Github, Activity, AlertTriangle } from 'lucide-react';
+import { Activity, AlertTriangle } from 'lucide-react';
+
+import api from '../api';
 
 const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,13 +14,9 @@ const Login = () => {
     const params = new URLSearchParams(location.search);
     const code = params.get('code');
     if (code) {
-      fetch(`${API}/auth/github`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
+      api.post('/auth/github', { code })
+        .then((res) => {
+          const data = res.data;
           if (data.token) {
             localStorage.setItem('github_token', data.token);
             if (data.user) localStorage.setItem('github_user', JSON.stringify(data.user));
@@ -66,7 +63,6 @@ const Login = () => {
           style={{ width: '100%', justifyContent: 'center' }}
           disabled={!clientId}
         >
-          <Github size={18} />
           Authenticate with GitHub
         </button>
       </div>

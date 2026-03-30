@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity, ShieldAlert, BarChart3, CloudRain, LogOut, RotateCcw, Settings } from 'lucide-react';
-import axios from 'axios';
+import api from '../api';
 import { format } from 'date-fns';
 import FilterBar from '../components/FilterBar';
 import Pagination from '../components/Pagination';
@@ -9,7 +9,7 @@ import SkeletonRows from '../components/SkeletonRows';
 import { Toast, useToast } from '../components/Toast';
 import { useSocket } from '../hooks/useSocket';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ const Dashboard = () => {
       const params = { page, limit: 25 };
       if (activeFilters.repo) params.repo = activeFilters.repo;
       if (activeFilters.conclusion) params.conclusion = activeFilters.conclusion;
-      const res = await axios.get(`${API}/events`, { params });
+      const res = await api.get('/events', { params });
       setEvents(res.data.data);
       setPagination(res.data.pagination);
       setLoading(false);
@@ -44,8 +44,8 @@ const Dashboard = () => {
   const fetchGlobalStats = useCallback(async () => {
     try {
       const [totalRes, failRes] = await Promise.all([
-        axios.get(`${API}/events`, { params: { page: 1, limit: 1 } }),
-        axios.get(`${API}/events`, { params: { page: 1, limit: 1, conclusion: 'failure' } }),
+        api.get('/events', { params: { page: 1, limit: 1 } }),
+        api.get('/events', { params: { page: 1, limit: 1, conclusion: 'failure' } }),
       ]);
       setGlobalStats({
         total: totalRes.data.pagination.total,
@@ -56,7 +56,7 @@ const Dashboard = () => {
 
   const fetchRepos = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/repos`);
+      const res = await api.get('/repos');
       setRepos(res.data);
     } catch { /* non-critical */ }
   }, []);
@@ -100,10 +100,9 @@ const Dashboard = () => {
   };
 
   const handleRerun = async (run_url, eventId) => {
-    const token = localStorage.getItem('github_token');
     setRerunStatus((s) => ({ ...s, [eventId]: 'loading' }));
     try {
-      await axios.post(`${API}/rerun`, { run_url, token });
+      await api.post('/rerun', { run_url });
       setRerunStatus((s) => ({ ...s, [eventId]: 'success' }));
       addToast('Re-run triggered successfully', 'success');
     } catch (err) {

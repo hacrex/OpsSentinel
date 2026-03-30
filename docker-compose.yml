@@ -4,13 +4,19 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: ops_user
-      POSTGRES_PASSWORD: ops_password
-      POSTGRES_DB: ops_sentinel
+      POSTGRES_USER: ${POSTGRES_USER:-ops_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ops_password}
+      POSTGRES_DB: ${POSTGRES_DB:-ops_sentinel}
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ops_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   backend:
     build: ./backend
@@ -18,25 +24,28 @@ services:
       - "3001:3001"
     environment:
       - PORT=3001
-      - GITHUB_WEBHOOK_SECRET=my_super_secret
-      - GITHUB_CLIENT_ID=dummy_client_id
-      - GITHUB_CLIENT_SECRET=dummy_client_secret
-      - DATABASE_URL=postgresql://ops_user:ops_password@postgres:5432/ops_sentinel
+      - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-ops_user}:${POSTGRES_PASSWORD:-ops_password}@postgres:5432/${POSTGRES_DB:-ops_sentinel}
+      - RETENTION_DAYS=${RETENTION_DAYS:-30}
     depends_on:
-      - postgres
-    volumes:
-      - backend-data:/app
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
   frontend:
-    build: 
+    build:
       context: ./frontend
       args:
-        - VITE_API_URL=http://localhost:3001
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:3001}
+        - VITE_GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
     ports:
       - "80:80"
     depends_on:
       - backend
+    restart: unless-stopped
 
 volumes:
-  backend-data:
   postgres-data:

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Activity, Send, CheckCircle, XCircle } from 'lucide-react';
-import axios from 'axios';
+import api from '../api';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 
 const inputStyle = {
   background: 'rgba(15, 23, 42, 0.8)',
@@ -48,7 +48,7 @@ export default function Settings() {
   const [testStatus, setTestStatus] = useState({});
 
   useEffect(() => {
-    axios.get(`${API}/settings`)
+    api.get('/settings')
       .then((r) => setConfig(r.data))
       .catch(() => setConfig({}));
   }, []);
@@ -56,7 +56,7 @@ export default function Settings() {
   const handleTest = async (channel) => {
     setTestStatus((s) => ({ ...s, [channel]: 'loading' }));
     try {
-      await axios.post(`${API}/settings/test`, { channel });
+      await api.post('/settings/test', { channel });
       setTestStatus((s) => ({ ...s, [channel]: 'success' }));
     } catch (err) {
       setTestStatus((s) => ({ ...s, [channel]: err.response?.data?.error || 'error' }));

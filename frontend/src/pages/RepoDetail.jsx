@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Activity, ShieldAlert, BarChart3, RotateCcw, Clock, AlertTriangle, Settings } from 'lucide-react';
-import axios from 'axios';
+import api from '../api';
 import { format } from 'date-fns';
 import TrendChart from '../components/TrendChart';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 
 const RERUNNABLE = ['failure', 'cancelled'];
 
@@ -26,8 +26,8 @@ export default function RepoDetail() {
 
   useEffect(() => {
     Promise.all([
-      axios.get(`${API}/repos/${encodeURIComponent(repo)}/stats`),
-      axios.get(`${API}/repos/${encodeURIComponent(repo)}/trend`),
+      api.get(`/repos/${encodeURIComponent(repo)}/stats`),
+      api.get(`/repos/${encodeURIComponent(repo)}/trend`),
     ])
       .then(([statsRes, trendRes]) => {
         setStats(statsRes.data);
@@ -38,10 +38,9 @@ export default function RepoDetail() {
   }, [repo]);
 
   const handleRerun = async (run_url, eventId) => {
-    const token = localStorage.getItem('github_token');
     setRerunStatus((s) => ({ ...s, [eventId]: 'loading' }));
     try {
-      await axios.post(`${API}/rerun`, { run_url, token });
+      await api.post('/rerun', { run_url });
       setRerunStatus((s) => ({ ...s, [eventId]: 'success' }));
     } catch {
       setRerunStatus((s) => ({ ...s, [eventId]: 'error' }));
