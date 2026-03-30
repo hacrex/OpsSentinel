@@ -6,23 +6,18 @@
 - [ ] Implement MTTR (Mean Time To Recovery) tracking and visualization
 - [ ] Add Pipeline Cost Analysis estimation
 
-## 2. Expanded Integrations
-- [ ] Add support for GitLab CI
-- [ ] Add support for Bitbucket Pipelines
-- [ ] Integrate with Jira/Linear for automated incident ticket creation
-- [ ] Integrate with ArgoCD/Vercel for deployment tracking
 
-## 3. Actionability & Automated Remediation
+## 2. Actionability & Automated Remediation
 - [ ] Implement 1-Click workflow re-run from Dashboard and Slack/Teams
 - [ ] Add Auto-Triage to assign failures based on `CODEOWNERS` or commits
 - [ ] Integrate LLM to parse logs and summarize root causes in notifications
 
-## 4. Reliability & Architectural Scaling
+## 3. Reliability & Architectural Scaling
 - [ ] Migrate database from SQLite to PostgreSQL
 - [ ] Implement WebSockets for real-time dashboard updates
 - [ ] Set up automated data retention/cleanup policies
 
-## 5. Security & Access Control
+## 4. Security & Access Control
 - [ ] Implement Role-Based Access Control (RBAC) (Viewer, Developer, Admin)
 - [ ] Integrate SSO/SAML Login (e.g., Okta, Google Workspace)
 - [ ] Add Audit Logging for system configurations and manual actions
