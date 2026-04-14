@@ -17,6 +17,7 @@ Welcome to the comprehensive documentation for **Ops Sentinel**, a GitHub-native
    - [Running Locally (Node.js)](#running-locally-nodejs)
 6. [Testing the Application](#testing-the-application)
 7. [Upcoming Enhancements](#upcoming-enhancements)
+8. [Contributing](#contributing)
 
 ---
 
@@ -147,3 +148,10 @@ Ops Sentinel is actively developed. The roadmap includes:
 - **Advanced Integrations:** Upcoming support for GitLab CI, Bitbucket Pipelines, and Jira.
 - **Automated Remediation:** 1-Click workflow re-runs and LLM-powered root cause summarization.
 - **Enterprise Features:** Role-Based Access Control (RBAC) and SSO/SAML integration.
+
+---
+
+## Contributing
+
+We are always looking for contributors! Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to get started.
+

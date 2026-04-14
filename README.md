@@ -1,107 +1,102 @@
-#  OpsSentinel
+<p align="center">
+  <img src="docs/images/banner.png" alt="OpsSentinel Banner" width="100%">
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Docker Image](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+<h1 align="center">OpsSentinel</h1>
 
-**OpsSentinel** is a lightweight, GitHub-native CI/CD observability platform designed to provide real-time failure insights and centralized visibility across all your repositories. Stop digging through logs and scattered notifications—get a unified view of your pipeline health in one place.
+<p align="center">
+  <strong>The open-source, GitHub-native CI/CD observability platform for real-time failure insights.</strong>
+</p>
 
----
-
-## 🚀 Features
-
-- **Real-Time Pipeline Tracking**: Listens to GitHub `workflow_run` events to track pipeline states as they change.
-- **Centralized Dashboard**: A high-density, "Palantir-style" UI that indicates CI failures and successes at a glance.
-- **Multi-Channel Alerting**: Instant notifications routed to **Email**, **Slack**, and **Microsoft Teams** on failures.
-- **Secure by Design**: Built-in verification of GitHub webhook signatures via HMAC SHA256.
-- **Seamless Auth**: Integrated GitHub OAuth login flow for secure access.
-- **Flexible Storage**: Supports both **SQLite** for quick starts and **PostgreSQL** for production-grade deployments.
-- **Docker Ready**: Fully containerized stack for one-command deployment.
+<p align="center">
+  <a href="https://github.com/hacrex/OpsSentinel/stargazers"><img src="https://img.shields.io/github/stars/hacrex/OpsSentinel?style=for-the-badge&color=yellow" alt="Stars"></a>
+  <a href="https://github.com/hacrex/OpsSentinel/network/members"><img src="https://img.shields.io/github/forks/hacrex/OpsSentinel?style=for-the-badge&color=blue" alt="Forks"></a>
+  <a href="https://github.com/hacrex/OpsSentinel/blob/main/LICENSE"><img src="https://img.shields.io/github/license/hacrex/OpsSentinel?style=for-the-badge&color=green" alt="License"></a>
+  <a href="https://hub.docker.com/"><img src="https://img.shields.io/badge/Docker-Ready-blue?style=for-the-badge&logo=docker" alt="Docker"></a>
+</p>
 
 ---
 
-## 🛠️ Architecture
+## Why OpsSentinel?
 
-OpsSentinel is built with a modern, decoupled architecture:
+In the fast-paced world of DevOps, visibility is everything. **OpsSentinel** stops the madness of digging through scattered GitHub Action logs. It provides a centralized, high-density dashboard that highlights pipeline health across all your repositories in real-time.
 
-- **Frontend**: React (Vite) with a data-dense, dark-themed UI.
-- **Backend**: Node.js (Express) handling webhooks, authentication, and notifications.
-- **Database**: SQLite (default) or PostgreSQL.
-- **Integrations**: GitHub Webhooks & GitHub OAuth.
+- **Stop Proactive Polling**: Let the dashboard tell you when something is wrong.
+- **Zero Configuration**: Connect via webhooks and you're live in minutes.
+- **Instant Alerts**: Failure notifications directly to Slack, Teams, or your Inbox.
 
 ---
 
-## 🚦 Quick Start (Docker)
+## Features
 
-The fastest way to get OpsSentinel running is using Docker Compose.
+-  **Real-Time Tracking**: Listens to GitHub `workflow_run` events to track pipeline states as they change.
+-  **Centralized Dashboard**: A high-density UI designed for DevOps "Command Centers".
+-  **Multi-Channel Alerting**: Instant notifications via **Email**, **Slack**, and **Microsoft Teams**.
+-  **Secure by Design**: Webhook verification via HMAC SHA256 and GitHub OAuth integration.
+-  **Flexible Backend**: Default SQLite for local dev, PostgreSQL for production.
+-  **Docker Native**: Deploy the entire stack with a single `docker-compose up`.
 
-1. **Clone the repository**:
+---
+
+## Tech Stack
+
+| Component | Technology |
+|---|---|
+| **Frontend** | React, Vite, Lucide, Recharts |
+| **Backend** | Node.js, Express, WebSocket |
+| **Database** | SQLite / PostgreSQL |
+| **Infrastructure** | Docker, GitHub Webhooks, GitHub OAuth |
+
+---
+
+##  Quick Start (3 Minutes)
+
+The easiest way to get started is using Docker Compose.
+
+1. **Clone the repository**
    ```bash
    git clone https://github.com/hacrex/OpsSentinel.git
    cd OpsSentinel
    ```
 
-2. **Configure Environment**:
-   Copy `.env.example` to `.env` and fill in your GitHub OAuth and Webhook secrets.
+2. **Setup Environment**
    ```bash
    cp .env.example .env
+   # Fill in GITHUB_CLIENT_ID & GITHUB_CLIENT_SECRET
    ```
 
-3. **Launch the stack**:
+3. **Ignition!**
    ```bash
-   docker-compose up --build -d
+   docker-compose up -d --build
    ```
 
-- **Dashboard**: `http://localhost`
-- **API**: `http://localhost:3001`
+Visit `http://localhost` to see your dashboard in action! 🚀
 
 ---
 
-## 🔧 Manual Setup
+##  Roadmap
 
-### Backend
-```bash
-cd backend
-npm install
-# Ensure your .env is configured
-node src/server.js
-```
-
-### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
----
-
-## ⚙️ Configuration
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `GITHUB_CLIENT_ID` | GitHub OAuth App Client ID | Yes |
-| `GITHUB_CLIENT_SECRET` | GitHub OAuth App Client Secret | Yes |
-| `GITHUB_WEBHOOK_SECRET` | Secret used to verify GitHub webhooks | Yes |
-| `DATABASE_URL` | PostgreSQL connection string (falls back to SQLite if empty) | No |
-| `SLACK_WEBHOOK_URL` | Webhook URL for Slack notifications | No |
-| `TEAMS_WEBHOOK_URL` | Webhook URL for Microsoft Teams notifications | No |
-| `SMTP_HOST` | SMTP server for email alerts | No |
-
----
-
-## 🗺️ Roadmap
-
-- [ ] **Predictive Analytics**: Forecast workflow failure probabilities.
-- [ ] **Flaky Test Detection**: Automatically identify unreliable tests.
-- [ ] **LLM Root Cause Analysis**: Summarize failure logs using AI.
-- [ ] **WebSockets**: Real-time dashboard updates without polling.
-- [ ] **RBAC**: Role-based access control for teams.
+- [ ] **AI-Powered Root Cause Analysis**: LLM integration to summarize why a build failed.
+- [ ] **Flaky Test Shield**: Identify and isolate unreliable tests automatically.
+- [ ] **Predictive Alerting**: Forecast potential failures based on historical trends.
+- [ ] **Browser Extension**: Real-time status in your browser toolbar.
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+We ❤️ open source! Whether you're fixing a bug, adding a feature, or improving documentation, your contributions are welcome.
+
+Check out our [Contributing Guide](CONTRIBUTING.md) to get started.
+
+### Good First Issues
+Look for the `good first issue` label in our [Issue Tracker](https://github.com/hacrex/OpsSentinel/issues).
+
+---
+
+## ⭐ Show Your Support
+
+If you find OpsSentinel useful, please consider giving it a ⭐ on GitHub! It helps more developers discover the tool and motivates us to keep building.
 
 ---
 
@@ -109,6 +104,6 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
-
-<p align="center">Built with ❤️ for DevOps Engineers.</p>
+<p align="center">
+  Built with ♾️ by the OpsSentinel Team.
+</p>
