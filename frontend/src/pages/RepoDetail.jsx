@@ -62,10 +62,10 @@ export default function RepoDetail() {
           Ops Sentinel // Repo Detail
         </h1>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="glowing-btn" onClick={() => navigate('/settings')} style={{ padding: '6px 12px', fontSize: '12px' }}>
+          <button className="glowing-btn" onClick={() => navigate('/dashboard/settings')} style={{ padding: '6px 12px', fontSize: '12px' }}>
             <Settings size={14} /> Settings
           </button>
-          <button className="glowing-btn" onClick={() => navigate('/')}>
+          <button className="glowing-btn" onClick={() => navigate('/dashboard')}>
             <ArrowLeft size={14} /> Back
           </button>
         </div>

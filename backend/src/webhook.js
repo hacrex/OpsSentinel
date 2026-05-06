@@ -6,12 +6,27 @@ const logger = require('./logger');
 let _broadcast = null;
 function setBroadcast(fn) { _broadcast = fn; }
 
-function verifySignature(req, res, next) {
+async function verifySignature(req, res, next) {
   const signature = req.headers['x-hub-signature-256'];
-  const secret = process.env.GITHUB_WEBHOOK_SECRET;
+  const isSaas = process.env.SAAS_MODE === 'true';
+  let secret = process.env.GITHUB_WEBHOOK_SECRET;
+  let tenant_id = req.params.tenant_id || null;
+
+  if (isSaas) {
+    if (!tenant_id) return res.status(400).send('Tenant ID required for webhook in SaaS mode');
+    try {
+      const result = await db.query('SELECT webhook_secret FROM tenants WHERE id = $1', [tenant_id]);
+      if (!result.rows || result.rows.length === 0) return res.status(404).send('Tenant not found');
+      secret = result.rows[0].webhook_secret;
+    } catch (err) {
+      return res.status(500).send('Database error');
+    }
+  }
+
+  req.tenant_id = tenant_id;
 
   if (!secret) {
-    logger.warn('GITHUB_WEBHOOK_SECRET is not set. Skipping signature verification.');
+    logger.warn('Webhook secret is not set. Skipping signature verification.');
     return next();
   }
 
@@ -34,15 +49,17 @@ function verifySignature(req, res, next) {
 }
 
 // Compute MTTR: find the last failure for this workflow and return seconds since it
-async function computeMTTR(repo_name, workflow_name) {
+async function computeMTTR(repo_name, workflow_name, tenant_id) {
   try {
+    const isSaas = process.env.SAAS_MODE === 'true';
+    const where = isSaas ? "repo_name = ? AND workflow_name = ? AND conclusion = 'failure' AND tenant_id = ?" : "repo_name = ? AND workflow_name = ? AND conclusion = 'failure'";
+    const params = isSaas ? [repo_name, workflow_name, tenant_id] : [repo_name, workflow_name];
+
     const result = await db.query(
-      `SELECT created_at FROM events
-       WHERE repo_name = ? AND workflow_name = ? AND conclusion = 'failure'
-       ORDER BY created_at DESC LIMIT 1`,
-      [repo_name, workflow_name]
+      `SELECT created_at FROM events WHERE ${where} ORDER BY created_at DESC LIMIT 1`,
+      params
     );
-    if (!result.rows.length) return null;
+    if (!result.rows || !result.rows.length) return null;
     const lastFailure = new Date(result.rows[0].created_at);
     return Math.round((Date.now() - lastFailure.getTime()) / 1000);
   } catch {
@@ -71,18 +88,18 @@ async function handleWebhook(req, res) {
       const run_url = workflow_run.html_url || '';
 
       // Compute MTTR only when a failure is recovered (conclusion = success)
-      const mttr_seconds = conclusion === 'success' ? await computeMTTR(repo_name, workflow_name) : null;
+      const mttr_seconds = conclusion === 'success' ? await computeMTTR(repo_name, workflow_name, req.tenant_id) : null;
 
       db.run(
-        `INSERT INTO events (repo_name, workflow_name, status, conclusion, run_url, mttr_seconds) VALUES (?, ?, ?, ?, ?, ?)`,
-        [repo_name, workflow_name, status, conclusion, run_url, mttr_seconds],
+        `INSERT INTO events (tenant_id, repo_name, workflow_name, status, conclusion, run_url, mttr_seconds) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [req.tenant_id, repo_name, workflow_name, status, conclusion, run_url, mttr_seconds],
         function (err) {
           if (err) {
             logger.error({ err }, 'Failed to insert event');
             return res.status(500).send('Database error');
           }
 
-          const newEvent = { repo_name, workflow_name, status, conclusion, run_url, mttr_seconds };
+          const newEvent = { tenant_id: req.tenant_id, repo_name, workflow_name, status, conclusion, run_url, mttr_seconds };
 
           if (_broadcast) _broadcast({ type: 'new_event', event: newEvent });
 

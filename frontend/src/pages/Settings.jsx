@@ -84,7 +84,7 @@ export default function Settings() {
     <div style={{ minHeight: '100vh', paddingBottom: '40px' }}>
       <header className="header">
         <h1><Activity size={24} /> Ops Sentinel // Settings</h1>
-        <button className="glowing-btn" onClick={() => navigate('/')}>
+        <button className="glowing-btn" onClick={() => navigate('/dashboard')}>
           <ArrowLeft size={14} /> Back
         </button>
       </header>

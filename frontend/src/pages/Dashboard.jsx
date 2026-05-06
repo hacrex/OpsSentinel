@@ -141,7 +141,7 @@ const Dashboard = () => {
             {loading ? 'SYNCING...' : 'LIVE'}
           </span>
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--accent-color)', boxShadow: 'var(--accent-glow)' }} />
-          <button className="glowing-btn" onClick={() => navigate('/settings')} style={{ padding: '6px 12px', fontSize: '12px' }}>
+          <button className="glowing-btn" onClick={() => navigate('/dashboard/settings')} style={{ padding: '6px 12px', fontSize: '12px' }}>
             <Settings size={14} /> Settings
           </button>
           <button className="glowing-btn" onClick={handleLogout} style={{ padding: '6px 12px', fontSize: '12px' }}>
@@ -203,14 +203,14 @@ const Dashboard = () => {
                         key={evt.id}
                         tabIndex={0}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') navigate(`/repo/${encodeURIComponent(evt.repo_name)}`);
+                          if (e.key === 'Enter') navigate(`/dashboard/repo/${encodeURIComponent(evt.repo_name)}`);
                         }}
                         style={{ outline: 'none' }}
                       >
                         <td style={{ color: 'var(--text-secondary)' }}>#{String(evt.id).padStart(4, '0')}</td>
                         <td
                           style={{ color: 'var(--accent-color)', fontWeight: '600', cursor: 'pointer' }}
-                          onClick={() => navigate(`/repo/${encodeURIComponent(evt.repo_name)}`)}
+                          onClick={() => navigate(`/dashboard/repo/${encodeURIComponent(evt.repo_name)}`)}
                           title="View repo detail"
                         >
                           {evt.repo_name}

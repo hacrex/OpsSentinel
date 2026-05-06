@@ -13,11 +13,13 @@ const { startRetentionJob } = require('./retention');
 const { notifyAll } = require('./notifier');
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
+const crypto = require('crypto');
 
 dotenv.config();
 validateEnv();
 
 const app = express();
+const isSaas = process.env.SAAS_MODE === 'true';
 app.use(helmet());
 const server = http.createServer(app);
 const port = process.env.PORT || 3001;
@@ -73,7 +75,7 @@ app.use('/webhook', webhookLimiter);
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
-app.post('/webhook', verifySignature, handleWebhook);
+app.post('/webhook/:tenant_id?', verifySignature, handleWebhook);
 
 // Paginated events with optional filters
 app.get('/events', authMiddleware, async (req, res) => {
@@ -87,6 +89,11 @@ app.get('/events', authMiddleware, async (req, res) => {
 
   if (repo) { conditions.push('repo_name = ?'); params.push(repo); }
   if (conclusion) { conditions.push('conclusion = ?'); params.push(conclusion); }
+  
+  if (isSaas) {
+    conditions.push('tenant_id = ?');
+    params.push(req.tenant_id);
+  }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -112,7 +119,9 @@ app.get('/events', authMiddleware, async (req, res) => {
 // Distinct repos for filter dropdown
 app.get('/repos', authMiddleware, async (req, res) => {
   try {
-    const result = await db.query('SELECT DISTINCT repo_name FROM events ORDER BY repo_name', []);
+    const params = isSaas ? [req.tenant_id] : [];
+    const where = isSaas ? 'WHERE tenant_id = ?' : '';
+    const result = await db.query(`SELECT DISTINCT repo_name FROM events ${where} ORDER BY repo_name`, params);
     res.json(result.rows.map((r) => r.repo_name));
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -122,15 +131,17 @@ app.get('/repos', authMiddleware, async (req, res) => {
 // Repo detail — stats + recent runs + MTTR + flaky detection
 app.get('/repos/:owner/:repo/stats', authMiddleware, async (req, res) => {
   const repo = `${req.params.owner}/${req.params.repo}`;
+  const params = isSaas ? [repo, req.tenant_id] : [repo];
+  const where = isSaas ? 'WHERE repo_name = ? AND tenant_id = ?' : 'WHERE repo_name = ?';
   try {
     const [total, failures, recent, mttrResult, flakyResult] = await Promise.all([
-      db.query('SELECT COUNT(*) as cnt FROM events WHERE repo_name = ?', [repo]),
-      db.query("SELECT COUNT(*) as cnt FROM events WHERE repo_name = ? AND conclusion = 'failure'", [repo]),
-      db.query('SELECT * FROM events WHERE repo_name = ? ORDER BY created_at DESC LIMIT 20', [repo]),
+      db.query(`SELECT COUNT(*) as cnt FROM events ${where}`, params),
+      db.query(`SELECT COUNT(*) as cnt FROM events ${where} AND conclusion = 'failure'`, params),
+      db.query(`SELECT * FROM events ${where} ORDER BY created_at DESC LIMIT 20`, params),
       // Average MTTR across all recovery events
       db.query(
-        'SELECT AVG(mttr_seconds) as avg_mttr FROM events WHERE repo_name = ? AND mttr_seconds IS NOT NULL',
-        [repo]
+        `SELECT AVG(mttr_seconds) as avg_mttr FROM events ${where} AND mttr_seconds IS NOT NULL`,
+        params
       ),
       // Flaky workflows: >30% failure rate with at least 5 runs
       // Use subquery so HAVING works on both SQLite and PostgreSQL (no alias in HAVING)
@@ -139,10 +150,10 @@ app.get('/repos/:owner/:repo/stats', authMiddleware, async (req, res) => {
            SELECT workflow_name,
              COUNT(*) as total,
              SUM(CASE WHEN conclusion = 'failure' THEN 1 ELSE 0 END) as failures
-           FROM events WHERE repo_name = ?
+           FROM events ${where}
            GROUP BY workflow_name
          ) sub WHERE total >= 5`,
-        [repo]
+        params
       ),
     ]);
 
@@ -173,18 +184,21 @@ app.get('/repos/:owner/:repo/stats', authMiddleware, async (req, res) => {
 app.get('/repos/:owner/:repo/trend', authMiddleware, async (req, res) => {
   const repo = `${req.params.owner}/${req.params.repo}`;
   const isPostgres = !!process.env.DATABASE_URL;
+  const whereSql = isSaas ? "repo_name = ? AND tenant_id = ?" : "repo_name = ?";
+  const params = isSaas ? [repo, req.tenant_id] : [repo];
+  
   const sql = isPostgres
     ? `SELECT DATE(created_at) as day,
          SUM(CASE WHEN conclusion = 'failure' THEN 1 ELSE 0 END) as failures,
          SUM(CASE WHEN conclusion = 'success' THEN 1 ELSE 0 END) as successes
        FROM events
-       WHERE repo_name = $1 AND created_at >= NOW() - INTERVAL '30 days'
+       WHERE ${whereSql} AND created_at >= NOW() - INTERVAL '30 days'
        GROUP BY DATE(created_at) ORDER BY day ASC`
     : `SELECT DATE(created_at) as day,
          SUM(CASE WHEN conclusion = 'failure' THEN 1 ELSE 0 END) as failures,
          SUM(CASE WHEN conclusion = 'success' THEN 1 ELSE 0 END) as successes
        FROM events
-       WHERE repo_name = ? AND created_at >= datetime('now', '-30 days')
+       WHERE ${whereSql} AND created_at >= datetime('now', '-30 days')
        GROUP BY DATE(created_at) ORDER BY day ASC`;
   try {
     const result = await db.query(sql, [repo]);
@@ -288,9 +302,32 @@ app.post('/auth/github', async (req, res) => {
       headers: { Authorization: `Bearer ${access_token}` },
     });
 
+    const githubUser = userRes.data;
+    const github_id = String(githubUser.id);
+    
+    // Check if user exists
+    let dbUser = await db.query('SELECT * FROM users WHERE github_id = ?', [github_id]);
+    
+    if (!dbUser.rows || dbUser.rows.length === 0) {
+      let tenant_id = null;
+      if (isSaas) {
+        // Create new tenant
+        const webhook_secret = crypto.randomBytes(32).toString('hex');
+        const tenantName = `${githubUser.login}'s Workspace`;
+        await db.query('INSERT INTO tenants (name, webhook_secret) VALUES (?, ?)', [tenantName, webhook_secret]);
+        // Get inserted tenant id (assuming last_insert_rowid or returning id)
+        const tResult = await db.query('SELECT id FROM tenants WHERE webhook_secret = ?', [webhook_secret]);
+        if (tResult.rows.length > 0) tenant_id = tResult.rows[0].id;
+      }
+      // Create user
+      await db.query('INSERT INTO users (github_id, username, avatar_url, tenant_id) VALUES (?, ?, ?, ?)', 
+        [github_id, githubUser.login, githubUser.avatar_url, tenant_id]
+      );
+    }
+
     res.json({
       token: access_token,
-      user: { login: userRes.data.login, avatar_url: userRes.data.avatar_url },
+      user: { login: githubUser.login, avatar_url: githubUser.avatar_url },
     });
   } catch (err) {
     logger.error({ err }, 'Auth failed');

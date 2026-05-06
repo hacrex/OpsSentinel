@@ -6,8 +6,25 @@ const isPostgres = !!process.env.DATABASE_URL;
 let db;
 
 const CREATE_TABLE_PG = `
+  CREATE TABLE IF NOT EXISTS tenants (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    webhook_secret VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    github_id VARCHAR(255) UNIQUE,
+    username VARCHAR(255),
+    avatar_url TEXT,
+    tenant_id INTEGER REFERENCES tenants(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS events (
     id SERIAL PRIMARY KEY,
+    tenant_id INTEGER,
     repo_name VARCHAR(255),
     workflow_name VARCHAR(255),
     status VARCHAR(255),
@@ -15,12 +32,29 @@ const CREATE_TABLE_PG = `
     run_url TEXT,
     mttr_seconds INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
+  );
 `;
 
 const CREATE_TABLE_SQLITE = `
+  CREATE TABLE IF NOT EXISTS tenants (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    webhook_secret TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    github_id TEXT UNIQUE,
+    username TEXT,
+    avatar_url TEXT,
+    tenant_id INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id INTEGER,
     repo_name TEXT,
     workflow_name TEXT,
     status TEXT,
@@ -28,7 +62,7 @@ const CREATE_TABLE_SQLITE = `
     run_url TEXT,
     mttr_seconds INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
+  );
 `;
 
 // Convert SQLite ? placeholders to PostgreSQL $1, $2, ...
@@ -42,6 +76,9 @@ async function connectWithRetry(pool, retries = 10, delay = 3000) {
     try {
       const client = await pool.connect();
       await client.query(CREATE_TABLE_PG);
+      try {
+        await client.query("ALTER TABLE events ADD COLUMN tenant_id INTEGER");
+      } catch (err) { /* ignore if column exists */ }
       client.release();
       console.log('Connected to the PostgreSQL database.');
       return;
@@ -88,7 +125,11 @@ if (isPostgres) {
       console.error('Error opening SQLite database', err.message);
     } else {
       console.log('Connected to the SQLite database.');
-      sqliteDb.run(CREATE_TABLE_SQLITE);
+      sqliteDb.exec(CREATE_TABLE_SQLITE, (err) => {
+        if (!err) {
+          sqliteDb.run("ALTER TABLE events ADD COLUMN tenant_id INTEGER", () => {});
+        }
+      });
     }
   });
 

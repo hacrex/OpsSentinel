@@ -1,8 +1,7 @@
 const axios = require('axios');
 const logger = require('./logger');
+const db = require('./db');
 
-// Simple in-memory cache to store token validity for 15 minutes
-// Map of token -> { timestamp: number, valid: boolean }
 const tokenCache = new Map();
 const CACHE_TTL_MS = 15 * 60 * 1000; 
 
@@ -11,26 +10,35 @@ async function verifyGithubToken(token) {
   const cached = tokenCache.get(token);
 
   if (cached && (now - cached.timestamp < CACHE_TTL_MS)) {
-    return cached.valid;
+    return cached.user;
   }
 
   try {
-    // Validate by fetching the user profile
-    await axios.get('https://api.github.com/user', {
+    const res = await axios.get('https://api.github.com/user', {
       headers: { Authorization: `Bearer ${token}` }
     });
     
-    tokenCache.set(token, { timestamp: now, valid: true });
-    return true;
+    const github_id = String(res.data.id);
+    
+    // Look up the user in our DB to get their tenant_id
+    const result = await db.query('SELECT * FROM users WHERE github_id = $1', [github_id]);
+    let tenant_id = null;
+    
+    if (result.rows && result.rows.length > 0) {
+      tenant_id = result.rows[0].tenant_id;
+    }
+
+    const user = { valid: true, github_id, tenant_id };
+    tokenCache.set(token, { timestamp: now, user });
+    return user;
   } catch (error) {
     logger.warn('Token validation failed against GitHub API');
-    tokenCache.set(token, { timestamp: now, valid: false });
-    return false;
+    tokenCache.set(token, { timestamp: now, user: { valid: false } });
+    return { valid: false };
   }
 }
 
 async function authMiddleware(req, res, next) {
-  // Allow bypass for local dev testing if explicitly set
   if (process.env.BYPASS_AUTH === 'true') {
     logger.warn('Auth bypassed via BYPASS_AUTH environment variable');
     return next();
@@ -43,14 +51,15 @@ async function authMiddleware(req, res, next) {
 
   const token = authHeader.split(' ')[1];
   
-  const isValid = await verifyGithubToken(token);
-  if (!isValid) {
+  const user = await verifyGithubToken(token);
+  if (!user.valid) {
     return res.status(401).json({ error: 'Invalid or expired GitHub token' });
   }
 
-  // Attach token to request for downstream usage (e.g. hitting GitHub API)
   req.token = token;
+  req.tenant_id = user.tenant_id;
   next();
 }
 
 module.exports = { authMiddleware };
+
