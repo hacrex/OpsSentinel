@@ -1,90 +1,70 @@
-# Deploying OpsSentinel to Netlify
+# OpsSentinel Deployment Guide
 
-Deploying OpsSentinel requires splitting the stack because of how the backend operates. 
-
-**Netlify is perfect for the React Frontend**, but because your backend relies on persistent WebSockets and a local SQLite file database, it cannot run on Netlify's serverless infrastructure directly. Netlify functions are ephemeral and shut down between requests.
-
-Here is the recommended architecture for deploying this app into a production environment:
+Since OpsSentinel supports both **Self-Hosted** (Single Tenant) and **SaaS** (Multi-Tenant) modes, there are several ways to host the platform depending on your needs.
 
 ---
 
-## Part 1: Deploying the Frontend to Netlify
+## 1. The "Easiest & Most Cost-Effective" (Recommended for MVP / Self-Hosted)
 
-Since this is a Vite + React Single Page Application (SPA), we need to tell Netlify to redirect all routes to `index.html`.
+**Platform:** Virtual Private Server (VPS) via DigitalOcean, Hetzner, or Linode.
 
-### 1. Create `frontend/netlify.toml`
-Create a file named `netlify.toml` inside the `frontend` folder with this content:
+Because OpsSentinel is fully containerized, you can rent a cheap Linux server (starting at $5-$10/month) and deploy your entire stack in minutes. This runs both the frontend, backend, and PostgreSQL database via Docker.
 
-```toml
-[build]
-  base = "frontend"
-  command = "npm run build"
-  publish = "dist"
+**How to deploy:**
+1. Provision an Ubuntu server and SSH into it.
+2. Install Docker and Docker Compose.
+3. Clone your repository: `git clone https://github.com/hacrex/OpsSentinel.git`
+4. Copy `.env.example` to `.env` and fill in your variables.
+   - *Note: If you want to enable multi-tenancy, set `SAAS_MODE=true`.*
+5. Run `docker-compose up -d --build`.
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-```
-
-### 2. Connect Your Repository
-1. Log in to [Netlify](https://app.netlify.com).
-2. Click **Add new site** > **Import an existing project**.
-3. Authenticate with GitHub and select your `OpsSentinel` repository.
-
-### 3. Configure Build Settings & Environment Variables
-- **Base directory**: `frontend`
-- **Build command**: `npm run build`
-- **Publish directory**: `frontend/dist`
-
-Add your Environment Variables under **Advanced configuration**:
-- `VITE_API_URL`: *The public URL of your backend (e.g., `https://ops-backend.onrender.com`)*
-- `VITE_GITHUB_CLIENT_ID`: *Your GitHub OAuth Client ID*
-
-### 4. Deploy
-Click **Deploy site**. Netlify will automatically build the site and deploy it!
+**Pros:** Extremely cheap, gives you full control, and perfectly matches the current Docker setup. Handles WebSockets effortlessly.
 
 ---
 
-## Part 2: Deploying the Backend (Render/Railway)
+## 2. The "Fully Managed SaaS" Route (Zero Server Maintenance)
 
-Because the backend heavily relies on persistent data (SQLite) and stateful connections (WebSocket for live UI notifications), you must deploy it to a platform that supports containerized Node.js servers, like **Render** or **Railway**.
+**Platform:** Render / Railway (Backend) + Vercel / Netlify (Frontend).
 
-### Option A: Railway (Highly Recommended for SQLite)
-Railway provides seamless support for Docker and persistent volumes.
+If you don't want to manage Linux servers or Docker yourself, you can deploy the frontend, backend, and database separately to managed platforms.
 
-1. Go to [Railway.app](https://railway.app/).
-2. Create a new project from your GitHub repository.
-3. Configure the **Root Directory** as `/backend`.
-4. Railway will automatically detect the Node.js server or the `Dockerfile`.
-5. Add a Persistent Volume to your service in Railway and mount it to the directory where your SQLite database lives (e.g., `/app/data`). Ensure you adjust the database path in `db.js` so it writes to the mounted volume rather than the ephemeral container disk.
-6. Under **Variables**, populate all required environment flags:
-   - `GITHUB_CLIENT_ID`
-   - `GITHUB_CLIENT_SECRET`
-   - `GITHUB_WEBHOOK_SECRET`
-   - `FRONTEND_URL` *(Your Netlify URL to handle CORS correctly)*
+### Frontend (Netlify / Vercel)
+Since the frontend is a Vite + React Single Page Application (SPA), deploy it to Vercel or Netlify.
+1. Connect your GitHub repo to Netlify/Vercel.
+2. Set the Root Directory to `frontend`.
+3. Build command: `npm run build`, Output directory: `dist`.
+4. Ensure you configure SPA routing (e.g., in Netlify, redirect `/*` to `/index.html` with status 200).
+5. Set your environment variables (`VITE_API_URL`, `VITE_GITHUB_CLIENT_ID`).
 
-> [!WARNING]
-> If you don't use a Persistent Volume for SQLite on Docker platforms, your database will be wiped completely every time you release an update.
+### Backend (Render / Railway)
+Because the backend uses persistent stateful connections (WebSockets for live UI notifications), it cannot run on serverless functions.
+1. Connect your GitHub repo to Render or Railway.
+2. Set the Root Directory to `backend`.
+3. Provision a managed PostgreSQL database through the platform and set the `DATABASE_URL` environment variable.
+4. Populate your other `.env` variables (`SAAS_MODE`, `GITHUB_CLIENT_ID`, etc.).
 
-### Option B: Transitioning to PostgreSQL
-If configuring persistent volumes is tricky, you can simply spin up a managed PostgreSQL database (offered freely by Supabase, Neon, or Render). 
-Your `db.js` file is already written to automatically detect PostgreSQL! 
-
-Just supply the `DATABASE_URL` environment variable:
-```env
-DATABASE_URL=postgresql://user:password@hostname:5432/dbname
-```
-When `DATABASE_URL` is detected, the app entirely bypasses SQLite and connects to Postgres!
+**Pros:** Automatic deployments on git push, zero server maintenance, and great built-in CDN for the frontend.
 
 ---
 
-## Part 3: Updating GitHub OAuth
+## 3. The "Enterprise Scale" Route
 
-Once both the Frontend and Backend are live, you **must update your GitHub OAuth App**:
-1. Go to GitHub -> Settings -> Developer settings -> OAuth Apps.
-2. Select your Ops Sentinel app.
-3. Update the **Homepage URL** to your Netlify URL (e.g., `https://my-ops-sentinel.netlify.app`).
-4. Update the **Authorization callback URL** to your Netlify login route (e.g., `https://my-ops-sentinel.netlify.app/login`).
+**Platform:** AWS (ECS/Fargate) or Google Cloud Run.
 
-Similarly, update your GitHub Webhooks across any monitored repositories so they point to your new persistent backend URL: `https://<YOUR-RENDER-URL>/webhook`.
+If you anticipate massive scale for your SaaS and want to stay within major cloud providers.
+
+1. **Containers:** Deploy your Dockerized backend using AWS Fargate or Google Cloud Run.
+2. **Database:** Use a managed database like AWS RDS for PostgreSQL or Google Cloud SQL.
+3. **Frontend:** Host the static frontend on AWS S3 + CloudFront or Google Cloud Storage + Cloud CDN.
+
+**Pros:** Infinite horizontal scalability and high availability.
+**Cons:** Steeper learning curve, complex networking/VPC setups, and significantly more expensive.
+
+---
+
+## Post-Deployment Checklist
+
+Once your environments are live, ensure you:
+
+1. **Update GitHub OAuth Callback URL:** In your GitHub OAuth App settings, update the Authorization callback URL to point to your new production frontend (e.g., `https://my-saas.com/login`).
+2. **Configure Webhooks:** Update the webhook payloads in your monitored GitHub repositories to point to your production backend (e.g., `https://api.my-saas.com/webhook` or `https://api.my-saas.com/webhook/<tenant_id>` in SaaS mode).
