@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Activity, ShieldAlert, BarChart3, RotateCcw, Clock, AlertTriangle, Settings } from 'lucide-react';
+import { ArrowLeft, Activity, ShieldAlert, BarChart3, RotateCcw, Clock, AlertTriangle, Settings, TrendingUp, Workflow } from 'lucide-react';
 import api from '../api';
 import { format } from 'date-fns';
 import TrendChart from '../components/TrendChart';
-
-
 
 const RERUNNABLE = ['failure', 'cancelled'];
 
@@ -59,20 +57,20 @@ export default function RepoDetail() {
       <header className="header">
         <h1>
           <Activity size={24} />
-          Ops Sentinel // Repo Detail
+          OpsSentinel
         </h1>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="glowing-btn" onClick={() => navigate('/dashboard/settings')} style={{ padding: '6px 12px', fontSize: '12px' }}>
-            <Settings size={14} /> Settings
+          <button className="glowing-btn" onClick={() => navigate('/dashboard/settings')} style={{ padding: '6px 12px', fontSize: '11px' }}>
+            <Settings size={12} /> Settings
           </button>
-          <button className="glowing-btn" onClick={() => navigate('/dashboard')}>
-            <ArrowLeft size={14} /> Back
+          <button className="glowing-btn" onClick={() => navigate('/dashboard')} style={{ padding: '6px 12px', fontSize: '11px' }}>
+            <ArrowLeft size={12} /> Back
           </button>
         </div>
       </header>
 
-      <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '40px 24px 0' }}>
-        <div style={{ marginBottom: '24px', fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--accent-color)' }}>
+      <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 24px 0' }}>
+        <div style={{ marginBottom: '20px', fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--accent-color)' }}>
           {decodeURIComponent(repo)}
         </div>
 
@@ -82,53 +80,55 @@ export default function RepoDetail() {
           <div style={{ color: 'var(--error-color)', padding: '48px', textAlign: 'center' }}>Failed to load repo stats.</div>
         ) : (
           <>
-            {/* Metric cards */}
-            <div className="metrics-grid" style={{ marginBottom: '32px' }}>
+            {/* Metrics */}
+            <div className="metrics-grid" style={{ marginBottom: '24px' }}>
               <div className="glass-panel metric-card">
-                <div className="metric-label"><Activity size={16} /> Total Runs</div>
-                <div className="metric-value">{stats.total_runs}</div>
+                <div className="metric-label"><Activity size={14} /> Total Runs</div>
+                <div className="metric-value">{stats.total_runs.toLocaleString()}</div>
               </div>
               <div className="glass-panel metric-card">
-                <div className="metric-label"><ShieldAlert size={16} color="var(--error-color)" /> Failures</div>
+                <div className="metric-label"><ShieldAlert size={14} color="var(--error-color)" /> Failures</div>
                 <div className="metric-value danger">{stats.failed_runs}</div>
               </div>
               <div className="glass-panel metric-card">
-                <div className="metric-label"><BarChart3 size={16} color="var(--success-color)" /> Success Rate</div>
+                <div className="metric-label"><BarChart3 size={14} color="var(--success-color)" /> Success Rate</div>
                 <div className="metric-value success">{stats.success_rate}%</div>
               </div>
               <div className="glass-panel metric-card">
-                <div className="metric-label"><Clock size={16} color="var(--pending-color)" /> Avg MTTR</div>
+                <div className="metric-label"><Clock size={14} color="var(--pending-color)" /> Avg MTTR</div>
                 <div className="metric-value" style={{ color: 'var(--pending-color)' }}>
                   {formatMttr(stats.avg_mttr_seconds)}
                 </div>
               </div>
             </div>
 
-            {/* Flaky workflows banner */}
+            {/* Flaky Workflows */}
             {stats.flaky_workflows?.length > 0 && (
-              <div className="glass-panel" style={{ marginBottom: '24px', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: '12px', borderColor: 'rgba(245,158,11,0.4)' }}>
-                <AlertTriangle size={16} color="var(--pending-color)" />
-                <span style={{ fontSize: '13px', color: 'var(--pending-color)', fontWeight: '600' }}>Flaky workflows detected:</span>
-                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+              <div className="glass-panel" style={{ marginBottom: '20px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderColor: 'rgba(245,158,11,0.4)' }}>
+                <AlertTriangle size={14} color="var(--pending-color)" />
+                <span style={{ fontSize: '12px', color: 'var(--pending-color)', fontWeight: '600' }}>Flaky:</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                   {stats.flaky_workflows.join(', ')}
                 </span>
               </div>
             )}
 
-            {/* Trend chart */}
-            <div className="glass-panel" style={{ marginBottom: '24px' }}>
-              <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-color)', background: 'rgba(15,23,42,0.4)' }}>
-                <h2 style={{ fontSize: '15px', fontWeight: '600' }}>30-Day Failure Trend</h2>
+            {/* Trend Chart */}
+            <div className="glass-panel" style={{ marginBottom: '20px' }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', background: 'rgba(15,23,42,0.4)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <TrendingUp size={14} />
+                <h2 style={{ fontSize: '13px', fontWeight: '600' }}>30-Day Trend</h2>
               </div>
               <div style={{ padding: '16px 8px' }}>
                 <TrendChart data={trend} />
               </div>
             </div>
 
-            {/* Recent runs table */}
+            {/* Recent Runs */}
             <div className="glass-panel">
-              <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-color)', background: 'rgba(15,23,42,0.4)' }}>
-                <h2 style={{ fontSize: '15px', fontWeight: '600' }}>Recent Runs</h2>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', background: 'rgba(15,23,42,0.4)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Workflow size={14} />
+                <h2 style={{ fontSize: '13px', fontWeight: '600' }}>Recent Runs</h2>
               </div>
               <div style={{ overflowX: 'auto' }}>
                 <table className="data-table">
@@ -139,7 +139,7 @@ export default function RepoDetail() {
                       <th>Status</th>
                       <th>Conclusion</th>
                       <th>MTTR</th>
-                      <th>Timestamp</th>
+                      <th>Time</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -149,18 +149,15 @@ export default function RepoDetail() {
                       const canRerun = RERUNNABLE.includes(evt.conclusion);
                       const isFlaky = stats.flaky_workflows?.includes(evt.workflow_name);
                       return (
-                        <tr
-                          key={evt.id}
-                          tabIndex={0}
-                          onKeyDown={(e) => { if (e.key === 'Enter') window.open(evt.run_url, '_blank'); }}
-                          style={{ outline: 'none' }}
-                        >
-                          <td style={{ color: 'var(--text-secondary)' }}>#{String(evt.id).padStart(4, '0')}</td>
+                        <tr key={evt.id}>
+                          <td style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
+                            #{String(evt.id).padStart(4, '0')}
+                          </td>
                           <td>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
                               {evt.workflow_name}
                               {isFlaky && (
-                                <span className="status-badge status-pending" style={{ fontSize: '10px', padding: '2px 7px' }}>
+                                <span className="status-badge status-pending" style={{ fontSize: '9px', padding: '2px 6px' }}>
                                   FLAKY
                                 </span>
                               )}
@@ -176,26 +173,27 @@ export default function RepoDetail() {
                               {evt.conclusion || 'PENDING'}
                             </span>
                           </td>
-                          <td style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
+                          <td style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
                             {formatMttr(evt.mttr_seconds)}
                           </td>
-                          <td style={{ color: 'var(--text-secondary)' }}>{formatTs(evt.created_at)}</td>
-                          <td style={{ display: 'flex', gap: '8px' }}>
-                            <a href={evt.run_url} target="_blank" rel="noreferrer" className="glowing-btn" style={{ padding: '5px 10px', fontSize: '11px' }}>
-                              Inspect
-                            </a>
-                            {canRerun && (
-                              <button
-                                className="glowing-btn"
-                                style={{ padding: '5px 10px', fontSize: '11px', opacity: rs === 'loading' ? 0.6 : 1 }}
-                                disabled={rs === 'loading' || rs === 'success'}
-                                onClick={() => handleRerun(evt.run_url, evt.id)}
-                                title="Re-run workflow"
-                              >
-                                <RotateCcw size={12} />
-                                {rs === 'loading' ? 'Running...' : rs === 'success' ? 'Triggered' : rs === 'error' ? 'Failed' : 'Re-run'}
-                              </button>
-                            )}
+                          <td style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>{formatTs(evt.created_at)}</td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <a href={evt.run_url} target="_blank" rel="noreferrer" className="glowing-btn" style={{ padding: '4px 8px', fontSize: '10px' }}>
+                                Inspect
+                              </a>
+                              {canRerun && (
+                                <button
+                                  className="glowing-btn"
+                                  style={{ padding: '4px 8px', fontSize: '10px', opacity: rs === 'loading' ? 0.6 : 1 }}
+                                  disabled={rs === 'loading' || rs === 'success'}
+                                  onClick={() => handleRerun(evt.run_url, evt.id)}
+                                  title="Re-run workflow"
+                                >
+                                  <RotateCcw size={10} />
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );

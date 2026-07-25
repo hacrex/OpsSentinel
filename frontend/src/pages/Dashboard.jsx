@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, ShieldAlert, BarChart3, CloudRain, LogOut, RotateCcw, Settings } from 'lucide-react';
+import { Activity, ShieldAlert, BarChart3, CloudRain, LogOut, RotateCcw, Settings, RefreshCw, Search, Clock, TrendingUp, TrendingDown } from 'lucide-react';
 import api from '../api';
 import { format } from 'date-fns';
 import FilterBar from '../components/FilterBar';
@@ -9,35 +9,37 @@ import SkeletonRows from '../components/SkeletonRows';
 import { Toast, useToast } from '../components/Toast';
 import { useSocket } from '../hooks/useSocket';
 
-
-
 const Dashboard = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [repos, setRepos] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, pages: 1 });
-  const [globalStats, setGlobalStats] = useState({ total: 0, failures: 0 });
-  const [filters, setFilters] = useState({ repo: '', conclusion: '' });
+  const [globalStats, setGlobalStats] = useState({ total: 0, failures: 0, lastUpdated: null });
+  const [filters, setFilters] = useState({ repo: '', conclusion: '', workflow: '' });
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [rerunStatus, setRerunStatus] = useState({});
   const { toasts, addToast, removeToast } = useToast();
 
-  // Ref so WebSocket callback always has fresh filters without re-subscribing
   const filtersRef = useRef(filters);
   filtersRef.current = filters;
 
-  const fetchEvents = useCallback(async (page, activeFilters) => {
+  const fetchEvents = useCallback(async (page, activeFilters, isRefresh = false) => {
     try {
+      if (isRefresh) setRefreshing(true);
       const params = { page, limit: 25 };
       if (activeFilters.repo) params.repo = activeFilters.repo;
       if (activeFilters.conclusion) params.conclusion = activeFilters.conclusion;
+      if (activeFilters.workflow) params.workflow = activeFilters.workflow;
       const res = await api.get('/events', { params });
       setEvents(res.data.data);
       setPagination(res.data.pagination);
       setLoading(false);
+      setRefreshing(false);
     } catch (err) {
       console.error('Failed to fetch events:', err);
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -50,6 +52,7 @@ const Dashboard = () => {
       setGlobalStats({
         total: totalRes.data.pagination.total,
         failures: failRes.data.pagination.total,
+        lastUpdated: new Date(),
       });
     } catch { /* non-critical */ }
   }, []);
@@ -62,7 +65,7 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchEvents(1, { repo: '', conclusion: '' });
+    fetchEvents(1, { repo: '', conclusion: '', workflow: '' });
     fetchRepos();
     fetchGlobalStats();
   }, [fetchEvents, fetchRepos, fetchGlobalStats]);
@@ -71,15 +74,21 @@ const Dashboard = () => {
     if (msg.type === 'new_event') {
       const evt = msg.event;
       if (evt.conclusion === 'failure') {
-        addToast(`❌ Failure: ${evt.repo_name} — ${evt.workflow_name}`, 'error');
+        addToast(`Failure: ${evt.repo_name} — ${evt.workflow_name}`, 'error');
       } else {
-        addToast(`✓ ${evt.repo_name} — ${evt.workflow_name} ${evt.conclusion}`, 'success');
+        addToast(`${evt.repo_name} — ${evt.workflow_name} ${evt.conclusion}`, 'success');
       }
       fetchEvents(1, filtersRef.current);
       fetchRepos();
       fetchGlobalStats();
     }
   });
+
+  const handleRefresh = () => {
+    fetchEvents(pagination.page, filtersRef.current, true);
+    fetchRepos();
+    fetchGlobalStats();
+  };
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
@@ -88,7 +97,7 @@ const Dashboard = () => {
   };
 
   const handleFilterReset = () => {
-    const reset = { repo: '', conclusion: '' };
+    const reset = { repo: '', conclusion: '', workflow: '' };
     setFilters(reset);
     setLoading(true);
     fetchEvents(1, reset);
@@ -124,7 +133,7 @@ const Dashboard = () => {
     } catch { return ts; }
   };
 
-  const { total: totalRuns, failures: totalFailures } = globalStats;
+  const { total: totalRuns, failures: totalFailures, lastUpdated } = globalStats;
   const healthPct = totalRuns > 0
     ? (((totalRuns - totalFailures) / totalRuns) * 100).toFixed(1)
     : '100.0';
@@ -134,48 +143,65 @@ const Dashboard = () => {
       <header className="header">
         <h1>
           <Activity size={24} />
-          Ops Sentinel // CI Telemetry
+          OpsSentinel
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ color: 'var(--text-secondary)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            {loading ? 'SYNCING...' : 'LIVE'}
-          </span>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--accent-color)', boxShadow: 'var(--accent-glow)' }} />
-          <button className="glowing-btn" onClick={() => navigate('/dashboard/settings')} style={{ padding: '6px 12px', fontSize: '12px' }}>
-            <Settings size={14} /> Settings
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              {loading ? 'SYNCING' : 'LIVE'}
+            </span>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: loading ? 'var(--pending-color)' : 'var(--success-color)' }} />
+          </div>
+          {lastUpdated && (
+            <span style={{ color: 'var(--text-secondary)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Clock size={12} />
+              {format(lastUpdated, 'HH:mm:ss')}
+            </span>
+          )}
+          <button className="glowing-btn" onClick={handleRefresh} disabled={refreshing} style={{ padding: '6px 10px', fontSize: '11px' }}>
+            <RefreshCw size={12} className={refreshing ? 'spinning' : ''} />
           </button>
-          <button className="glowing-btn" onClick={handleLogout} style={{ padding: '6px 12px', fontSize: '12px' }}>
-            <LogOut size={14} /> Logout
+          <button className="glowing-btn" onClick={() => navigate('/dashboard/settings')} style={{ padding: '6px 12px', fontSize: '11px' }}>
+            <Settings size={12} /> Settings
+          </button>
+          <button className="glowing-btn" onClick={handleLogout} style={{ padding: '6px 12px', fontSize: '11px' }}>
+            <LogOut size={12} /> Logout
           </button>
         </div>
       </header>
 
-      <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '40px 24px 0' }}>
-
+      <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 24px 0' }}>
+        {/* Metrics */}
         <div className="metrics-grid">
           <div className="glass-panel metric-card">
             <div className="metric-label">
-              <CloudRain size={16} color="var(--text-secondary)" /> Total Workflows
+              <CloudRain size={14} color="var(--text-secondary)" /> Total Workflows
             </div>
-            <div className="metric-value">{totalRuns}</div>
+            <div className="metric-value">{totalRuns.toLocaleString()}</div>
           </div>
           <div className="glass-panel metric-card">
             <div className="metric-label">
-              <ShieldAlert size={16} color="var(--error-color)" /> Detected Failures
+              <ShieldAlert size={14} color="var(--error-color)" /> Failures
             </div>
             <div className="metric-value danger">{totalFailures}</div>
           </div>
           <div className="glass-panel metric-card">
             <div className="metric-label">
-              <BarChart3 size={16} color="var(--success-color)" /> System Health
+              <BarChart3 size={14} color="var(--success-color)" /> Success Rate
             </div>
             <div className="metric-value success">{healthPct}%</div>
           </div>
         </div>
 
-        <div className="glass-panel" style={{ marginTop: '32px' }}>
-          <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', background: 'rgba(15, 23, 42, 0.4)' }}>
-            <h2 style={{ fontSize: '15px', fontWeight: '600' }}>Global Run Stream</h2>
+        {/* Events Table */}
+        <div className="glass-panel" style={{ marginTop: '24px' }}>
+          <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', background: 'rgba(15, 23, 42, 0.4)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <h2 style={{ fontSize: '14px', fontWeight: '600' }}>Recent Runs</h2>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                {pagination.total.toLocaleString()} total events
+              </span>
+            </div>
             <FilterBar repos={repos} filters={filters} onChange={handleFilterChange} onReset={handleFilterReset} />
           </div>
 
@@ -183,13 +209,13 @@ const Dashboard = () => {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Trace ID</th>
+                  <th style={{ width: '60px' }}>ID</th>
                   <th>Repository</th>
                   <th>Workflow</th>
                   <th>Status</th>
                   <th>Conclusion</th>
-                  <th>Timestamp</th>
-                  <th>Actions</th>
+                  <th>Time</th>
+                  <th style={{ width: '100px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -205,17 +231,16 @@ const Dashboard = () => {
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') navigate(`/dashboard/repo/${encodeURIComponent(evt.repo_name)}`);
                         }}
-                        style={{ outline: 'none' }}
+                        style={{ outline: 'none', cursor: 'pointer' }}
+                        onClick={() => navigate(`/dashboard/repo/${encodeURIComponent(evt.repo_name)}`)}
                       >
-                        <td style={{ color: 'var(--text-secondary)' }}>#{String(evt.id).padStart(4, '0')}</td>
-                        <td
-                          style={{ color: 'var(--accent-color)', fontWeight: '600', cursor: 'pointer' }}
-                          onClick={() => navigate(`/dashboard/repo/${encodeURIComponent(evt.repo_name)}`)}
-                          title="View repo detail"
-                        >
+                        <td style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
+                          #{String(evt.id).padStart(4, '0')}
+                        </td>
+                        <td style={{ color: 'var(--accent-color)', fontWeight: '500', fontSize: '13px' }}>
                           {evt.repo_name}
                         </td>
-                        <td>{evt.workflow_name}</td>
+                        <td style={{ fontSize: '13px' }}>{evt.workflow_name}</td>
                         <td>
                           <span className={`status-badge ${evt.status === 'completed' ? 'status-success' : 'status-pending'}`}>
                             {evt.status}
@@ -226,23 +251,24 @@ const Dashboard = () => {
                             {evt.conclusion || 'PENDING'}
                           </span>
                         </td>
-                        <td style={{ color: 'var(--text-secondary)' }}>{formatTs(evt.created_at)}</td>
-                        <td style={{ display: 'flex', gap: '8px' }}>
-                          <a href={evt.run_url} target="_blank" rel="noreferrer" className="glowing-btn" style={{ padding: '5px 10px', fontSize: '11px' }}>
-                            Inspect
-                          </a>
-                          {['failure', 'cancelled'].includes(evt.conclusion) && (
-                            <button
-                              className="glowing-btn"
-                              style={{ padding: '5px 10px', fontSize: '11px', opacity: rs === 'loading' ? 0.6 : 1 }}
-                              disabled={rs === 'loading' || rs === 'success'}
-                              onClick={() => handleRerun(evt.run_url, evt.id)}
-                              title="Re-run workflow"
-                            >
-                              <RotateCcw size={12} />
-                              {rs === 'loading' ? 'Running...' : rs === 'success' ? 'Triggered' : rs === 'error' ? 'Failed' : 'Re-run'}
-                            </button>
-                          )}
+                        <td style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>{formatTs(evt.created_at)}</td>
+                        <td onClick={(e) => e.stopPropagation()}>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <a href={evt.run_url} target="_blank" rel="noreferrer" className="glowing-btn" style={{ padding: '4px 8px', fontSize: '10px' }}>
+                              Inspect
+                            </a>
+                            {['failure', 'cancelled'].includes(evt.conclusion) && (
+                              <button
+                                className="glowing-btn"
+                                style={{ padding: '4px 8px', fontSize: '10px', opacity: rs === 'loading' ? 0.6 : 1 }}
+                                disabled={rs === 'loading' || rs === 'success'}
+                                onClick={() => handleRerun(evt.run_url, evt.id)}
+                                title="Re-run workflow"
+                              >
+                                <RotateCcw size={10} />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -251,8 +277,8 @@ const Dashboard = () => {
               </tbody>
             </table>
             {!loading && events.length === 0 && (
-              <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
-                No telemetry data found.
+              <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                No events found. Configure webhooks to start receiving data.
               </div>
             )}
           </div>
@@ -262,6 +288,16 @@ const Dashboard = () => {
       </main>
 
       <Toast toasts={toasts} removeToast={removeToast} />
+
+      <style>{`
+        .spinning {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

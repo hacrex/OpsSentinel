@@ -32,17 +32,27 @@
 - [ ] Tenant management dashboard
 - [ ] Billing/subscription integration
 
-## 6. Testing & Quality
+## 6. Security & Bug Fixes
+- [x] Fix SQL injection in retention.js
+- [x] Fix SQLite compatibility (use ? instead of $1)
+- [x] Fix trend query params in SaaS mode
+- [x] Fix webhook tenant lookup for SQLite
+
+## 7. Testing & Quality
 - [x] Backend unit tests (Jest)
 - [x] Frontend unit tests (Vitest)
 - [ ] Integration tests for webhook processing
 - [ ] E2E tests with Playwright
 
-## 7. Product Website
+## 8. Product Website
 - [x] Create standalone `website/` directory
 - [x] Set up Vite + React project structure
 - [x] Create page components (Home, Features, Pricing, Docs, NotFound)
 - [x] Create Layout component (nav, footer)
 - [x] Create design system (CSS)
-- [ ] Run npm install and verify build
-- [ ] Add to README.md
+- [x] Run npm install and verify build
+- [x] Deploy to Vercel
+- [x] Add light/dark mode toggle
+- [x] Add animations and improvements
+- [x] Add GitHub stars counter
+- [x] Add documentation pages fetching from GitHub
