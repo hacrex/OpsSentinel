@@ -15,7 +15,8 @@ async function verifySignature(req, res, next) {
   if (isSaas) {
     if (!tenant_id) return res.status(400).send('Tenant ID required for webhook in SaaS mode');
     try {
-      const result = await db.query('SELECT webhook_secret FROM tenants WHERE id = $1', [tenant_id]);
+      // Use ? placeholder which works with both SQLite and PostgreSQL (via toPostgresSQL)
+      const result = await db.query('SELECT webhook_secret FROM tenants WHERE id = ?', [tenant_id]);
       if (!result.rows || result.rows.length === 0) return res.status(404).send('Tenant not found');
       secret = result.rows[0].webhook_secret;
     } catch (err) {

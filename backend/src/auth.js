@@ -3,7 +3,7 @@ const logger = require('./logger');
 const db = require('./db');
 
 const tokenCache = new Map();
-const CACHE_TTL_MS = 15 * 60 * 1000; 
+const CACHE_TTL_MS = 15 * 60 * 1000;
 
 async function verifyGithubToken(token) {
   const now = Date.now();
@@ -17,13 +17,14 @@ async function verifyGithubToken(token) {
     const res = await axios.get('https://api.github.com/user', {
       headers: { Authorization: `Bearer ${token}` }
     });
-    
+
     const github_id = String(res.data.id);
-    
+
     // Look up the user in our DB to get their tenant_id
-    const result = await db.query('SELECT * FROM users WHERE github_id = $1', [github_id]);
+    // Use ? placeholder which works with both SQLite and PostgreSQL (via toPostgresSQL)
+    const result = await db.query('SELECT * FROM users WHERE github_id = ?', [github_id]);
     let tenant_id = null;
-    
+
     if (result.rows && result.rows.length > 0) {
       tenant_id = result.rows[0].tenant_id;
     }
@@ -50,7 +51,7 @@ async function authMiddleware(req, res, next) {
   }
 
   const token = authHeader.split(' ')[1];
-  
+
   const user = await verifyGithubToken(token);
   if (!user.valid) {
     return res.status(401).json({ error: 'Invalid or expired GitHub token' });

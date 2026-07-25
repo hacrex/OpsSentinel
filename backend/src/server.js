@@ -201,7 +201,7 @@ app.get('/repos/:owner/:repo/trend', authMiddleware, async (req, res) => {
        WHERE ${whereSql} AND created_at >= datetime('now', '-30 days')
        GROUP BY DATE(created_at) ORDER BY day ASC`;
   try {
-    const result = await db.query(sql, [repo]);
+    const result = await db.query(sql, params);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
