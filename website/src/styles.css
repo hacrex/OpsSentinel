@@ -283,37 +283,58 @@ code {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 24px;
-  transition: border-color 0.15s, transform 0.15s;
+  transition: all 0.2s;
 }
 
 .card:hover {
   border-color: var(--border-strong);
-  transform: translateY(2px);
+  transform: translateY(-2px);
 }
 
 .card-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   background: var(--bg);
   border: 1px solid var(--border);
-  color: var(--text-muted);
+  color: var(--text);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .card h3 {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .card p {
   color: var(--text-muted);
   line-height: 1.6;
   font-size: 13px;
+}
+
+.feature-card {
+  position: relative;
+}
+
+.feature-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--border);
+  border-radius: 8px 8px 0 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.feature-card:hover::after {
+  opacity: 1;
 }
 
 /* ── Feature Grid ───────────────────────────────────────────────────────── */
@@ -325,12 +346,14 @@ code {
 
 .feature-list {
   list-style: none;
-  margin-top: 14px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 
 .feature-list li {
-  padding: 5px 0;
-  color: var(--text-muted);
+  padding: 4px 0;
+  color: var(--text-dim);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -338,11 +361,9 @@ code {
 }
 
 .feature-list li::before {
-  content: '';
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--text-dim);
+  content: '→';
+  color: var(--text-dim);
+  font-size: 10px;
   flex-shrink: 0;
 }
 

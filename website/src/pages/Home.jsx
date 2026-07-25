@@ -195,38 +195,71 @@ export default function Home() {
       <section className="section">
         <div className="section-header">
           <div className="section-label">Features</div>
-          <h2 className="section-title">What You Get</h2>
+          <h2 className="section-title">Everything You Need</h2>
+          <p className="section-subtitle">
+            Built for DevOps teams who want visibility without the complexity.
+          </p>
         </div>
         <div className="features-grid">
-          <div className="card">
+          <div className="card feature-card">
             <div className="card-icon"><Globe size={16} /></div>
-            <h3>Real-Time Updates</h3>
-            <p>Live WebSocket updates. No polling. See failures the moment they happen.</p>
+            <h3>Real-Time Dashboard</h3>
+            <p>WebSocket-powered live updates deliver pipeline status the instant events occur. No polling, no delays.</p>
+            <ul className="feature-list">
+              <li>Instant WebSocket updates</li>
+              <li>Multi-repo overview</li>
+              <li>Filter by status</li>
+            </ul>
           </div>
-          <div className="card">
+          <div className="card feature-card">
             <div className="card-icon"><LineChart size={16} /></div>
             <h3>Repo Analytics</h3>
-            <p>Success rates, MTTR, and trend charts for every repository.</p>
+            <p>Deep visibility into each repository's health. Track success rates, MTTR, and spot trends.</p>
+            <ul className="feature-list">
+              <li>Success rate tracking</li>
+              <li>Mean Time To Recovery</li>
+              <li>30-day trend charts</li>
+            </ul>
           </div>
-          <div className="card">
+          <div className="card feature-card">
             <div className="card-icon"><AlertTriangle size={16} /></div>
             <h3>Flaky Detection</h3>
-            <p>Auto-detect workflows with high failure rates. Stop chasing ghosts.</p>
+            <p>Automatically identifies workflows with high failure rates. Stop wasting time investigating.</p>
+            <ul className="feature-list">
+              <li>{'>'}30% failure threshold</li>
+              <li>5+ runs minimum</li>
+              <li>Visual "FLAKY" badges</li>
+            </ul>
           </div>
-          <div className="card">
+          <div className="card feature-card">
             <div className="card-icon"><RefreshCw size={16} /></div>
             <h3>1-Click Re-run</h3>
-            <p>Trigger re-runs from the dashboard. No need to go to GitHub.</p>
+            <p>Trigger workflow re-runs directly from the dashboard. Fix it right where you see it.</p>
+            <ul className="feature-list">
+              <li>Failed workflows</li>
+              <li>Cancelled workflows</li>
+              <li>Status feedback</li>
+            </ul>
           </div>
-          <div className="card">
+          <div className="card feature-card">
             <div className="card-icon"><Bell size={16} /></div>
-            <h3>Alerts</h3>
-            <p>Slack, Teams, and Email notifications when builds fail.</p>
+            <h3>Multi-Channel Alerts</h3>
+            <p>Get notified instantly when builds fail. Choose the channel that works for your team.</p>
+            <ul className="feature-list">
+              <li>Slack integration</li>
+              <li>Microsoft Teams</li>
+              <li>Email (SMTP)</li>
+            </ul>
           </div>
-          <div className="card">
+          <div className="card feature-card">
             <div className="card-icon"><Shield size={16} /></div>
-            <h3>Secure</h3>
-            <p>HMAC webhook verification. GitHub OAuth. Your data stays yours.</p>
+            <h3>Secure by Design</h3>
+            <p>Your CI/CD data is sensitive. OpsSentinel is built with security-first principles.</p>
+            <ul className="feature-list">
+              <li>HMAC SHA256 verification</li>
+              <li>GitHub OAuth</li>
+              <li>Rate limiting</li>
+            </ul>
           </div>
         </div>
       </section>
