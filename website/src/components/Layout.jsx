@@ -1,16 +1,15 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Activity, Github, ExternalLink } from 'lucide-react';
+import { Activity, Github } from 'lucide-react';
 
 export default function Layout({ children }) {
   const location = useLocation();
-
   const isActive = (path) => location.pathname === path ? 'active' : '';
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <nav className="nav">
         <Link to="/" className="nav-logo">
-          <Activity size={24} />
+          <Activity size={18} />
           OpsSentinel
         </Link>
         <div className="nav-links">
@@ -23,7 +22,7 @@ export default function Layout({ children }) {
             rel="noreferrer"
             className="nav-cta"
           >
-            <Github size={16} /> Star on GitHub
+            <Github size={14} /> GitHub
           </a>
         </div>
       </nav>
@@ -34,10 +33,10 @@ export default function Layout({ children }) {
         <div className="footer-content">
           <div className="footer-brand">
             <Link to="/" className="nav-logo">
-              <Activity size={24} />
+              <Activity size={16} />
               OpsSentinel
             </Link>
-            <p>The open-source CI/CD observability platform for GitHub Actions. Monitor all your pipelines in one place.</p>
+            <p>Open source CI/CD observability for GitHub Actions.</p>
           </div>
           <div className="footer-links">
             <div className="footer-col">
@@ -50,18 +49,15 @@ export default function Layout({ children }) {
               <h4>Resources</h4>
               <Link to="/docs">Documentation</Link>
               <a href="https://github.com/hacrex/OpsSentinel/blob/main/CONTRIBUTING.md" target="_blank" rel="noreferrer">Contributing</a>
-              <Link to="/docs">Quick Start</Link>
             </div>
             <div className="footer-col">
-              <h4>Community</h4>
-              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer">Star on GitHub</a>
-              <a href="https://github.com/hacrex/OpsSentinel/issues" target="_blank" rel="noreferrer">Issue Tracker</a>
+              <h4>Legal</h4>
               <a href="https://github.com/hacrex/OpsSentinel/blob/main/LICENSE" target="_blank" rel="noreferrer">MIT License</a>
             </div>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} OpsSentinel. Open Source under MIT License.</p>
+          <p>&copy; {new Date().getFullYear()} OpsSentinel</p>
         </div>
       </footer>
     </div>

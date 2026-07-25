@@ -1,118 +1,100 @@
 import { Link } from 'react-router-dom';
-import { Check, X, Zap, Server, Shield, ArrowRight } from 'lucide-react';
+import { Check, X, ArrowRight } from 'lucide-react';
 import Layout from '../components/Layout';
 
 export default function Pricing() {
   return (
     <Layout>
-      {/* Hero */}
       <section className="hero" style={{ paddingBottom: '40px' }}>
         <div className="section-label">Pricing</div>
-        <h1 className="hero-title" style={{ fontSize: '48px' }}>
-          Free Forever.<br />
-          <span className="hero-highlight">Self-Hosted.</span>
+        <h1 className="hero-title">
+          Free to Self-Host
         </h1>
         <p className="hero-subtitle">
-          OpsSentinel is open source and free to self-host. Run it on your own infrastructure,
-          keep your data private, and get enterprise-grade CI/CD observability.
+          Open source. No hidden fees. Run it on your own infrastructure.
         </p>
       </section>
 
-      {/* Pricing Cards */}
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="pricing-grid">
-          {/* Self-Hosted - Primary */}
           <div className="pricing-card pricing-card--primary">
-            <div className="pricing-badge">Most Popular</div>
-            <h3 style={{ fontSize: '20px', color: 'var(--accent-light)', marginTop: '8px' }}>Self-Hosted</h3>
-            <p style={{ color: 'var(--text-muted)', marginTop: '8px', fontSize: '14px' }}>Full control. Your data stays yours.</p>
+            <div className="pricing-badge">Free</div>
+            <h3 style={{ fontSize: '16px', marginTop: '8px' }}>Self-Hosted</h3>
+            <p style={{ color: 'var(--text-muted)', marginTop: '6px', fontSize: '13px' }}>Your data stays yours.</p>
             <div className="pricing-price">$0<span> / forever</span></div>
             <ul className="pricing-features">
-              <li><Check size={18} /> Unlimited Repositories</li>
-              <li><Check size={18} /> Unlimited Users</li>
-              <li><Check size={18} /> Real-Time WebSocket Updates</li>
-              <li><Check size={18} /> Slack, Teams & Email Alerts</li>
-              <li><Check size={18} /> Flaky Workflow Detection</li>
-              <li><Check size={18} /> MTTR & Trend Analytics</li>
-              <li><Check size={18} /> 1-Click Workflow Re-runs</li>
-              <li><Check size={18} /> Docker Compose Deployment</li>
-              <li><Check size={18} /> SQLite or PostgreSQL</li>
-              <li><Check size={18} /> Community Support</li>
+              <li><Check size={16} /> Unlimited Repositories</li>
+              <li><Check size={16} /> Unlimited Users</li>
+              <li><Check size={16} /> Real-Time Updates</li>
+              <li><Check size={16} /> Slack, Teams, Email Alerts</li>
+              <li><Check size={16} /> Flaky Detection</li>
+              <li><Check size={16} /> MTTR Analytics</li>
+              <li><Check size={16} /> 1-Click Re-runs</li>
+              <li><Check size={16} /> Docker Compose</li>
+              <li><Check size={16} /> SQLite or PostgreSQL</li>
             </ul>
             <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn-primary" style={{ justifyContent: 'center', width: '100%' }}>
-              Get Started <ArrowRight size={16} />
+              Get Started <ArrowRight size={14} />
             </a>
             <div className="pricing-code">
-              <code>git clone https://github.com/hacrex/OpsSentinel.git</code>
-              <code>cd OpsSentinel && docker-compose up -d</code>
+              <code>git clone github.com/hacrex/OpsSentinel</code>
+              <code>docker-compose up -d</code>
             </div>
           </div>
 
-          {/* Cloud - Secondary */}
           <div className="pricing-card">
-            <div className="pricing-badge pricing-badge--muted">Coming Soon</div>
-            <h3 style={{ fontSize: '20px', color: 'var(--text)', marginTop: '8px' }}>OpsSentinel Cloud</h3>
-            <p style={{ color: 'var(--text-muted)', marginTop: '8px', fontSize: '14px' }}>We host it. You focus on shipping.</p>
+            <div className="pricing-badge pricing-badge--muted">Soon</div>
+            <h3 style={{ fontSize: '16px', marginTop: '8px' }}>Cloud</h3>
+            <p style={{ color: 'var(--text-muted)', marginTop: '6px', fontSize: '13px' }}>We host it for you.</p>
             <div className="pricing-price">$49<span> / month</span></div>
             <ul className="pricing-features">
-              <li><Check size={18} /> Everything in Self-Hosted</li>
-              <li><Check size={18} /> Managed Infrastructure</li>
-              <li><Check size={18} /> Automatic Updates</li>
-              <li><Check size={18} /> 99.9% Uptime SLA</li>
-              <li><Check size={18} /> Priority Email Support</li>
-              <li className="muted"><X size={18} /> Multi-Tenant Workspaces</li>
-              <li className="muted"><X size={18} /> Role-Based Access Control</li>
-              <li className="muted"><X size={18} /> SSO/SAML Integration</li>
+              <li><Check size={16} /> Everything in Free</li>
+              <li><Check size={16} /> Managed Infrastructure</li>
+              <li><Check size={16} /> Auto Updates</li>
+              <li><Check size={16} /> Priority Support</li>
+              <li className="muted"><X size={16} /> Multi-Tenant</li>
+              <li className="muted"><X size={16} /> RBAC</li>
+              <li className="muted"><X size={16} /> SSO/SAML</li>
             </ul>
-            <Link to="/login" className="btn-secondary" style={{ justifyContent: 'center', width: '100%', opacity: 0.6 }}>
-              Join Waitlist
-            </Link>
+            <button className="btn-secondary" style={{ justifyContent: 'center', width: '100%', opacity: 0.5, cursor: 'not-allowed' }}>
+              Coming Soon
+            </button>
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
       <section className="section">
         <div className="section-header">
           <div className="section-label">FAQ</div>
-          <h2 className="section-title">Frequently Asked Questions</h2>
+          <h2 className="section-title">Questions</h2>
         </div>
         <div className="faq-grid">
           <div className="faq-item">
-            <h4>Is OpsSentinel really free?</h4>
-            <p>Yes. OpsSentinel is MIT-licensed and free to self-host forever. No hidden fees, no usage limits, no vendor lock-in.</p>
+            <h4>Is it really free?</h4>
+            <p>Yes. MIT-licensed. Free forever.</p>
           </div>
           <div className="faq-item">
-            <h4>What do I need to run it?</h4>
-            <p>Any machine with Docker. A $5/month VPS from DigitalOcean, Hetzner, or Linode works great.</p>
+            <h4>What do I need?</h4>
+            <p>Any machine with Docker. A $5/mo VPS works fine.</p>
           </div>
           <div className="faq-item">
             <h4>Does my data leave my server?</h4>
-            <p>No. When self-hosted, all data stays on your infrastructure. We have zero access to your CI/CD data.</p>
+            <p>No. We have zero access to your data.</p>
           </div>
           <div className="faq-item">
-            <h4>Can I use it with GitHub Enterprise?</h4>
-            <p>Yes. OpsSentinel works with GitHub.com and GitHub Enterprise Server.</p>
-          </div>
-          <div className="faq-item">
-            <h4>What if I need help?</h4>
-            <p>Community support is available via GitHub Issues. For self-hosted users who need more, we're building a paid support tier.</p>
-          </div>
-          <div className="faq-item">
-            <h4>Can I contribute?</h4>
-            <p>Absolutely. OpsSentinel is open source and we welcome contributions. Check out our Contributing Guide on GitHub.</p>
+            <h4>GitHub Enterprise?</h4>
+            <p>Yes. Works with GitHub.com and Enterprise.</p>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
       <section className="cta">
         <div className="cta-content">
-          <h2>Ready to Get Started?</h2>
-          <p>Free, open source, and ready to deploy. Start monitoring your CI/CD pipelines today.</p>
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <h2>Get Started</h2>
+          <p>Free and open source.</p>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn-primary">
-              Get Started Free <ArrowRight size={16} />
+              View on GitHub <ArrowRight size={14} />
             </a>
             <Link to="/features" className="btn-secondary">
               See Features
