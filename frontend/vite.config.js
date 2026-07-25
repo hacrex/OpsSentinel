@@ -14,4 +14,10 @@ export default defineConfig({
       '/settings': 'http://localhost:3001',
     },
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.js'],
+    css: true,
+  },
 })

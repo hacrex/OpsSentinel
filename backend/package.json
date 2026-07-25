@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "node src/server.js",
     "start": "node src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --forceExit --detectOpenHandles",
+    "test:coverage": "jest --coverage --forceExit --detectOpenHandles"
   },
   "keywords": [],
   "author": "",
@@ -26,5 +27,8 @@
     "pino-pretty": "^11.2.1",
     "sqlite3": "^6.0.1",
     "ws": "^8.17.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }

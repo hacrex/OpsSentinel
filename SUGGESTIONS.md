@@ -1,53 +1,89 @@
-# 💡 Suggestions for OpsSentinel
+# Suggestions for OpsSentinel
 
 Based on a review of the current codebase and project structure, here are several suggestions to improve **OpsSentinel** as a professional open-source product.
 
 ---
 
-## 🛠️ Technical Improvements
+## Technical Improvements
 
-### 1. Fix `package.json` Scripts & Dependencies
-- **Backend**: Add `scripts` for `dev` (using `nodemon`) and `start` (using `node src/server.js`).
-- **Frontend**: Several imports (`react-router-dom`, `axios`, `lucide-react`, `date-fns`) are used in the code but not listed in `package.json`. These should be added to `dependencies`.
+### 1. Add Test Suite
+- Add unit tests for backend (Jest) and frontend (Vitest)
+- Add integration tests for webhook processing and auth flows
+- Set up CI pipeline to run tests on every PR
 
-### 2. Implement WebSockets (Socket.io)
-- **Current**: The dashboard polls the `/events` endpoint every 10 seconds.
-- **Improvement**: Use WebSockets for real-time updates. This reduces server load and provides a much smoother user experience.
+### 2. Database Migrations
+- Current: Tables are created on startup with `CREATE TABLE IF NOT EXISTS`
+- Improvement: Use a migration tool (like Knex.js or Drizzle ORM) to manage schema changes reliably as the project grows
 
-### 3. Database Migrations
-- **Current**: Tables are created on startup if they don't exist.
-- **Improvement**: Use a migration tool (like `Knex.js` or `Drizzle ORM`) to manage schema changes reliably as the project grows.
+### 3. Input Validation
+- Add schema validation for webhook payloads (e.g., using Zod or Joi)
+- Validate all user inputs on backend routes
 
-### 4. Enhanced Error Handling & Logging
-- Add a structured logging library (like `Winston` or `Pino`) to the backend.
-- Implement a global error boundary in the React frontend to prevent crashes.
+### 4. Error Handling
+- Add request ID tracking for debugging
+- Add graceful shutdown handling (SIGTERM/SIGINT)
+- Add database connection health checks
 
 ---
 
-## ✨ Feature Enhancements
+## Feature Enhancements
 
-### 1. Dashboard Filtering & Search
-- Add the ability to filter events by repository name, workflow name, or status (Success/Failure).
-- Implement a search bar for quick navigation through large event streams.
+### 1. Advanced Filtering
+- Add date range filtering to events
+- Add workflow name filtering
+- Add search bar for quick navigation through large event streams
 
 ### 2. Detailed Failure View
-- Allow users to click on a failed run to see a summary of the error logs directly in the dashboard (using the GitHub API).
+- Allow users to click on a failed run to see a summary of the error logs directly in the dashboard (using the GitHub API)
+- Add log streaming for in-progress runs
 
 ### 3. User Preferences
-- Allow users to toggle specific notification channels (Slack, Email, Teams) per repository.
+- Allow users to toggle specific notification channels (Slack, Email, Teams) per repository
+- Add webhook configuration UI (currently requires .env changes)
+
+### 4. Webhook Replay
+- Add ability to replay/retry failed webhook deliveries
+- Add webhook delivery log with status and timestamps
 
 ---
 
-## 📦 Project Health & Community
+## Project Health & Community
 
-### 1. Add `CONTRIBUTING.md`
-- Define clear guidelines for how others can contribute to the project, including code style, PR process, and local development setup.
+### 1. Documentation
+- Add API documentation (OpenAPI/Swagger)
+- Add architecture diagram
+- Consolidate documentation into a `docs/` folder structure
+- Add CHANGELOG.md
 
-### 2. Unit & Integration Tests
-- Add a testing suite (e.g., `Jest` for backend, `Vitest` for frontend) to ensure stability as new features are added.
+### 2. CI/CD
+- Set up `.github/workflows/ci.yml` to automatically run linting and tests on every Pull Request
+- Add automated dependency updates (Dependabot/Renovate)
 
-### 3. GitHub Actions for CI/CD
-- Set up a `.github/workflows/ci.yml` to automatically run linting and tests on every Pull Request.
+### 3. Code Quality
+- Extract shared utilities (formatTs, etc.) to reduce duplication
+- Move inline styles to CSS modules or styled-components
+- Add TypeScript for type safety
 
-### 4. Documentation Site
-- As the project grows, consider moving from a single `Documentation.md` to a dedicated documentation site using `Docusaurus` or `MkDocs`.
+### 4. Monitoring
+- Add Prometheus metrics endpoint
+- Add structured logging with request correlation IDs
+- Add health check endpoint with database connectivity status
+
+---
+
+## Security Hardening
+
+### 1. Auth Improvements
+- Move auth tokens from localStorage to HttpOnly cookies
+- Add token refresh mechanism
+- Add session management and logout everywhere
+
+### 2. API Security
+- Add CORS restrictions for production
+- Add Content Security Policy headers
+- Add API key authentication for webhook endpoints (alternative to signature)
+
+### 3. Data Security
+- Encrypt sensitive data at rest (SMTP credentials, etc.)
+- Add audit logging for all state-changing operations
+- Add rate limiting per tenant in SaaS mode

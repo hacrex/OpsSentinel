@@ -34,12 +34,16 @@ Welcome to the comprehensive documentation for **Ops Sentinel**, a GitHub-native
 
 ## Core Features
 
-- **Real-Time Tracking:** Listens to GitHub webhook `workflow_run` events to track pipeline states as they change.
+- **Real-Time Tracking:** Listens to GitHub webhook `workflow_run` events via WebSockets for instant dashboard updates without polling.
 - **Secure Webhooks:** Built-in verification of webhook signatures via HMAC SHA256 to ensure data authenticity.
-- **Centralized Dashboard:** A multi-repo dashboard that visually indicates CI failures and successes at a glance.
-- **Failure Analytics:** Built-in analytics to help identify failure patterns and optimize CI/CD efficiency.
+- **Centralized Dashboard:** A multi-repo dashboard with filtering by repository and conclusion status.
+- **Repo Analytics:** Per-repository stats including success rate, MTTR (Mean Time To Recovery), and 30-day failure trend charts.
+- **Flaky Workflow Detection:** Automatically identifies workflows with >30% failure rate across 5+ runs.
+- **1-Click Re-run:** Trigger workflow re-runs directly from the dashboard via GitHub API.
 - **Multi-Channel Alerting:** Instant notifications routed to Email, Slack, and Microsoft Teams.
 - **Seamless Authentication:** Integrated GitHub OAuth Login flow for secure and straightforward access.
+- **SaaS Ready:** Multi-tenant mode with per-tenant webhook secrets and data isolation.
+- **Data Retention:** Automatic cleanup of old events via configurable retention policy.
 - **Containerized Deployment:** Docker-ready out of the box for easy deployment and scaling.
 
 ---
@@ -124,6 +128,35 @@ npm run dev
 
 ## Testing the Application
 
+### Unit Tests
+
+OpsSentinel includes a comprehensive test suite for both backend and frontend.
+
+**Backend Tests (Jest):**
+```bash
+cd backend
+npm test
+```
+
+**Frontend Tests (Vitest):**
+```bash
+cd frontend
+npm test
+```
+
+**Run with Coverage:**
+```bash
+# Backend
+cd backend
+npm run test:coverage
+
+# Frontend
+cd frontend
+npm run test:coverage
+```
+
+### Integration Testing
+
 You can simulate a GitHub Actions failure locally using the provided `sample-payload.json` file. This is useful for validating alerts and dashboard integration without triggering actual GitHub workflows.
 
 Run the following cURL command from the root directory:
@@ -140,13 +173,22 @@ curl -X POST http://localhost:3001/webhook \
 
 ---
 
+## Implemented Features
+
+The following features are already available:
+- **Real-Time Updates:** WebSocket-based live dashboard updates (no polling required).
+- **Flaky Workflow Detection:** Automatically identifies workflows with >30% failure rate across 5+ runs.
+- **1-Click Re-run:** Trigger workflow re-runs directly from the dashboard via GitHub API.
+- **MTTR Tracking:** Mean Time To Recovery calculation for each workflow.
+- **Data Retention:** Automatic cleanup of events older than configured retention period.
+- **SaaS Mode:** Multi-tenant support with per-tenant webhook secrets and data isolation.
+
 ## Upcoming Enhancements
 
 Ops Sentinel is actively developed. The roadmap includes:
 - **Predictive Analytics:** Forecasting workflow failure probabilities.
-- **Flaky Test Detection:** Automatically identifying unreliable tests.
 - **Advanced Integrations:** Upcoming support for GitLab CI, Bitbucket Pipelines, and Jira.
-- **Automated Remediation:** 1-Click workflow re-runs and LLM-powered root cause summarization.
+- **Automated Remediation:** LLM-powered root cause summarization in notifications.
 - **Enterprise Features:** Role-Based Access Control (RBAC) and SSO/SAML integration.
 
 ---

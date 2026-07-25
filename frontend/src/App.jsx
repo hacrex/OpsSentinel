@@ -1,6 +1,4 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Landing from './pages/Landing';
-import Pricing from './pages/Pricing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import RepoDetail from './pages/RepoDetail';
@@ -18,12 +16,21 @@ function App() {
     <Router>
       <ErrorBoundary>
         <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/pricing" element={<Pricing />} />
+          {/* App routes (require auth) */}
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/dashboard/repo/:repo(*)" element={<PrivateRoute><RepoDetail /></PrivateRoute>} />
           <Route path="/dashboard/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+
+          {/* Redirect root to login or dashboard */}
+          <Route path="/" element={
+            localStorage.getItem('github_token')
+              ? <Navigate to="/dashboard" />
+              : <Navigate to="/login" />
+          } />
+
+          {/* Catch all - redirect to login */}
+          <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </ErrorBoundary>
     </Router>

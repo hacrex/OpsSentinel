@@ -22,7 +22,7 @@ This project and everyone participating in it is governed by our Code of Conduct
 * Fork the repo and create your branch from `main`.
 * If you've added code that should be tested, add tests.
 * If you've changed APIs, update the documentation.
-* Ensure the test suite passes.
+* Ensure the test suite passes: `npm test` in both `backend/` and `frontend/`.
 * Make sure your code lints.
 
 ## 🛠️ Local Development Setup
@@ -42,6 +42,11 @@ This project and everyone participating in it is governed by our Code of Conduct
 1. Navigate to `frontend/`
 2. Install dependencies: `npm install`
 3. Start the Vite dev server: `npm run dev`
+
+### Running Tests
+- **Backend tests:** `cd backend && npm test`
+- **Frontend tests:** `cd frontend && npm test`
+- **With coverage:** `npm run test:coverage` in either directory
 
 ## 📝 Commit Message Guidelines
 
