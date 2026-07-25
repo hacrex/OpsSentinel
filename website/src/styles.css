@@ -32,21 +32,14 @@ html {
 }
 
 body {
-  overflow-x: hidden;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
   background-color: var(--bg);
   color: var(--text);
   font-family: var(--font);
   line-height: 1.7;
   min-height: 100vh;
+  overflow-x: hidden;
   background-image:
-    radial-gradient(ellipse at top, rgba(59, 130, 246, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at top, rgba(59, 130, 246, 0.1) 0%, transparent 60%),
     linear-gradient(rgba(9, 9, 11, 0.95), rgba(9, 9, 11, 0.95)),
     linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
     linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px);
