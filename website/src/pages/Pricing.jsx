@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Check, X, Zap, Server, Shield } from 'lucide-react';
+import { Check, X, Zap, Server, Shield, ArrowRight } from 'lucide-react';
 import Layout from '../components/Layout';
 
 export default function Pricing() {
@@ -7,17 +7,14 @@ export default function Pricing() {
     <Layout>
       {/* Hero */}
       <section className="hero" style={{ paddingBottom: '40px' }}>
-        <div className="hero-badge" style={{ marginBottom: '24px' }}>
-          <Server size={14} />
-          Open Source
-        </div>
-        <h1 className="hero-title" style={{ fontSize: '56px' }}>
+        <div className="section-label">Pricing</div>
+        <h1 className="hero-title" style={{ fontSize: '48px' }}>
           Free Forever.<br />
           <span className="hero-highlight">Self-Hosted.</span>
         </h1>
         <p className="hero-subtitle">
           OpsSentinel is open source and free to self-host. Run it on your own infrastructure,
-          keep your data private, and get enterprise-grade CI/CD observability without the enterprise price tag.
+          keep your data private, and get enterprise-grade CI/CD observability.
         </p>
       </section>
 
@@ -27,8 +24,8 @@ export default function Pricing() {
           {/* Self-Hosted - Primary */}
           <div className="pricing-card pricing-card--primary">
             <div className="pricing-badge">Most Popular</div>
-            <h3 style={{ fontSize: '24px', color: 'var(--accent)', marginTop: '8px' }}>Self-Hosted</h3>
-            <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>Full control. Your data stays yours.</p>
+            <h3 style={{ fontSize: '20px', color: 'var(--accent-light)', marginTop: '8px' }}>Self-Hosted</h3>
+            <p style={{ color: 'var(--text-muted)', marginTop: '8px', fontSize: '14px' }}>Full control. Your data stays yours.</p>
             <div className="pricing-price">$0<span> / forever</span></div>
             <ul className="pricing-features">
               <li><Check size={18} /> Unlimited Repositories</li>
@@ -43,7 +40,7 @@ export default function Pricing() {
               <li><Check size={18} /> Community Support</li>
             </ul>
             <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn-primary" style={{ justifyContent: 'center', width: '100%' }}>
-              <Zap size={18} /> Get Started
+              Get Started <ArrowRight size={16} />
             </a>
             <div className="pricing-code">
               <code>git clone https://github.com/hacrex/OpsSentinel.git</code>
@@ -54,8 +51,8 @@ export default function Pricing() {
           {/* Cloud - Secondary */}
           <div className="pricing-card">
             <div className="pricing-badge pricing-badge--muted">Coming Soon</div>
-            <h3 style={{ fontSize: '24px', color: 'var(--text)', marginTop: '8px' }}>OpsSentinel Cloud</h3>
-            <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>We host it. You focus on shipping.</p>
+            <h3 style={{ fontSize: '20px', color: 'var(--text)', marginTop: '8px' }}>OpsSentinel Cloud</h3>
+            <p style={{ color: 'var(--text-muted)', marginTop: '8px', fontSize: '14px' }}>We host it. You focus on shipping.</p>
             <div className="pricing-price">$49<span> / month</span></div>
             <ul className="pricing-features">
               <li><Check size={18} /> Everything in Self-Hosted</li>
@@ -77,6 +74,7 @@ export default function Pricing() {
       {/* FAQ */}
       <section className="section">
         <div className="section-header">
+          <div className="section-label">FAQ</div>
           <h2 className="section-title">Frequently Asked Questions</h2>
         </div>
         <div className="faq-grid">
@@ -114,10 +112,10 @@ export default function Pricing() {
           <p>Free, open source, and ready to deploy. Start monitoring your CI/CD pipelines today.</p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn-primary">
-              <Zap size={18} /> Get Started Free
+              Get Started Free <ArrowRight size={16} />
             </a>
             <Link to="/features" className="btn-secondary">
-              <Shield size={18} /> See Features
+              See Features
             </Link>
           </div>
         </div>

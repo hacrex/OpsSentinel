@@ -1,21 +1,28 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Activity, Github, ExternalLink } from 'lucide-react';
 
 export default function Layout({ children }) {
+  const location = useLocation();
+
+  const isActive = (path) => location.pathname === path ? 'active' : '';
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <nav className="nav">
         <Link to="/" className="nav-logo">
-          <Activity size={28} color="var(--accent)" />
+          <Activity size={24} />
           OpsSentinel
         </Link>
         <div className="nav-links">
-          <Link to="/features">Features</Link>
-          <Link to="/pricing">Pricing</Link>
-          <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer">
-            Docs <ExternalLink size={12} />
-          </a>
-          <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="nav-cta">
+          <Link to="/features" className={isActive('/features')}>Features</Link>
+          <Link to="/pricing" className={isActive('/pricing')}>Pricing</Link>
+          <Link to="/docs" className={isActive('/docs')}>Docs</Link>
+          <a
+            href="https://github.com/hacrex/OpsSentinel"
+            target="_blank"
+            rel="noreferrer"
+            className="nav-cta"
+          >
             <Github size={16} /> Star on GitHub
           </a>
         </div>
@@ -27,10 +34,10 @@ export default function Layout({ children }) {
         <div className="footer-content">
           <div className="footer-brand">
             <Link to="/" className="nav-logo">
-              <Activity size={24} color="var(--accent)" />
+              <Activity size={24} />
               OpsSentinel
             </Link>
-            <p>The open-source CI/CD observability platform for GitHub Actions.</p>
+            <p>The open-source CI/CD observability platform for GitHub Actions. Monitor all your pipelines in one place.</p>
           </div>
           <div className="footer-links">
             <div className="footer-col">
@@ -41,7 +48,7 @@ export default function Layout({ children }) {
             </div>
             <div className="footer-col">
               <h4>Resources</h4>
-              <a href="https://github.com/hacrex/OpsSentinel/blob/main/Documentation.md" target="_blank" rel="noreferrer">Documentation</a>
+              <Link to="/docs">Documentation</Link>
               <a href="https://github.com/hacrex/OpsSentinel/blob/main/CONTRIBUTING.md" target="_blank" rel="noreferrer">Contributing</a>
               <Link to="/docs">Quick Start</Link>
             </div>

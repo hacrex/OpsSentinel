@@ -1,137 +1,111 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Book, Terminal, Settings, Shield, Bell, GitBranch, ExternalLink } from 'lucide-react';
+import { Book, Settings, Shield, Rocket, ExternalLink, Loader2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import Layout from '../components/Layout';
 
+const GITHUB_RAW = 'https://raw.githubusercontent.com/hacrex/OpsSentinel/main';
+
+const docs = [
+  { id: 'documentation', title: 'Full Documentation', icon: Book, file: 'Documentation.md' },
+  { id: 'contributing', title: 'Contributing Guide', icon: Settings, file: 'CONTRIBUTING.md' },
+  { id: 'deployment', title: 'Deployment Guide', icon: Rocket, file: 'DEPLOYMENT.md' },
+  { id: 'docker', title: 'Docker Guide', icon: Shield, file: 'DOCKER_GUIDE.md' },
+];
+
 export default function Docs() {
+  const [activeDoc, setActiveDoc] = useState('documentation');
+  const [content, setContent] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const doc = docs.find(d => d.id === activeDoc);
+    if (!doc) return;
+
+    setLoading(true);
+    setError(null);
+
+    fetch(`${GITHUB_RAW}/${doc.file}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch document');
+        return res.text();
+      })
+      .then(text => {
+        setContent(text);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [activeDoc]);
+
   return (
     <Layout>
-      {/* Hero */}
-      <section className="hero" style={{ paddingBottom: '40px' }}>
-        <h1 className="hero-title" style={{ fontSize: '48px' }}>
-          Documentation
-        </h1>
-        <p className="hero-subtitle">
-          Everything you need to set up, configure, and use OpsSentinel.
-        </p>
-      </section>
-
-      {/* Quick Start */}
-      <section className="section" style={{ paddingTop: 0 }}>
-        <div className="section-header">
-          <h2 className="section-title">Quick Start</h2>
-        </div>
-        <div className="features-grid" style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div className="card">
-            <div className="card-icon"><Terminal size={24} /></div>
-            <h3>1. Clone & Configure</h3>
-            <div className="pricing-code">
-              <code>git clone https://github.com/hacrex/OpsSentinel.git</code>
-              <code>cd OpsSentinel</code>
-              <code>cp .env.example .env</code>
-            </div>
-            <p style={{ marginTop: '16px', color: 'var(--text-muted)', fontSize: '14px' }}>
-              Edit <code>.env</code> and add your GitHub OAuth credentials.
-            </p>
-          </div>
-
-          <div className="card">
-            <div className="card-icon"><GitBranch size={24} /></div>
-            <h3>2. Start the Stack</h3>
-            <div className="pricing-code">
-              <code>docker-compose up -d --build</code>
-            </div>
-            <p style={{ marginTop: '16px', color: 'var(--text-muted)', fontSize: '14px' }}>
-              This starts the backend, database, and frontend.
-            </p>
-          </div>
-
-          <div className="card">
-            <div className="card-icon"><Settings size={24} /></div>
-            <h3>3. Add Webhooks</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-              In your GitHub repo, go to Settings {'>'} Webhooks {'>'} Add webhook.
-              Set the payload URL to your backend endpoint.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Configuration */}
-      <section className="section">
-        <div className="section-header">
-          <h2 className="section-title">Configuration</h2>
-          <p className="section-subtitle">All environment variables</p>
-        </div>
-        <div className="faq-grid" style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <div className="faq-item">
-            <h4>Required Variables</h4>
-            <div className="pricing-code">
-              <code>GITHUB_CLIENT_ID=your_client_id</code>
-              <code>GITHUB_CLIENT_SECRET=your_secret</code>
-              <code>GITHUB_WEBHOOK_SECRET=your_secret</code>
-            </div>
-          </div>
-          <div className="faq-item">
-            <h4>Optional Variables</h4>
-            <div className="pricing-code">
-              <code>PORT=3001</code>
-              <code>RETENTION_DAYS=30</code>
-              <code>SAAS_MODE=false</code>
-            </div>
-          </div>
-          <div className="faq-item">
-            <h4>Notifications</h4>
-            <div className="pricing-code">
-              <code>SLACK_WEBHOOK_URL=</code>
-              <code>TEAMS_WEBHOOK_URL=</code>
-              <code>ALERT_EMAIL_TO=</code>
-              <code>SMTP_HOST=</code>
-            </div>
-          </div>
-          <div className="faq-item">
-            <h4>Database</h4>
-            <div className="pricing-code">
-              <code># Uses SQLite by default</code>
-              <code># Set DATABASE_URL for PostgreSQL:</code>
-              <code>DATABASE_URL=postgresql://...</code>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Links */}
-      <section className="section">
-        <div className="section-header">
-          <h2 className="section-title">More Resources</h2>
-        </div>
-        <div className="tech-grid" style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <a href="https://github.com/hacrex/OpsSentinel/blob/main/Documentation.md" target="_blank" rel="noreferrer" className="tech-item" style={{ cursor: 'pointer' }}>
-            <Book size={20} /> Full Documentation <ExternalLink size={14} />
-          </a>
-          <a href="https://github.com/hacrex/OpsSentinel/blob/main/DEPLOYMENT.md" target="_blank" rel="noreferrer" className="tech-item" style={{ cursor: 'pointer' }}>
-            <Shield size={20} /> Deployment Guide <ExternalLink size={14} />
-          </a>
-          <a href="https://github.com/hacrex/OpsSentinel/blob/main/CONTRIBUTING.md" target="_blank" rel="noreferrer" className="tech-item" style={{ cursor: 'pointer' }}>
-            <Bell size={20} /> Contributing Guide <ExternalLink size={14} />
-          </a>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="cta">
-        <div className="cta-content">
-          <h2>Need Help?</h2>
-          <p>Join our community on GitHub for support and discussions.</p>
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="https://github.com/hacrex/OpsSentinel/issues" target="_blank" rel="noreferrer" className="btn-primary">
-              <GitBranch size={18} /> Open an Issue
+      <div className="doc-layout">
+        {/* Sidebar */}
+        <aside className="doc-sidebar">
+          <nav className="doc-nav">
+            <h4>Documentation</h4>
+            {docs.map(doc => (
+              <button
+                key={doc.id}
+                className={`doc-nav-item ${activeDoc === doc.id ? 'active' : ''}`}
+                onClick={() => setActiveDoc(doc.id)}
+              >
+                <doc.icon size={18} />
+                {doc.title}
+              </button>
+            ))}
+            <h4 style={{ marginTop: '24px' }}>Quick Links</h4>
+            <a
+              href="https://github.com/hacrex/OpsSentinel"
+              target="_blank"
+              rel="noreferrer"
+              className="doc-nav-item"
+            >
+              <ExternalLink size={18} />
+              GitHub Repository
             </a>
-            <Link to="/" className="btn-secondary">
-              Back to Home
-            </Link>
-          </div>
-        </div>
-      </section>
+            <a
+              href="https://github.com/hacrex/OpsSentinel/issues"
+              target="_blank"
+              rel="noreferrer"
+              className="doc-nav-item"
+            >
+              <ExternalLink size={18} />
+              Report Issue
+            </a>
+          </nav>
+        </aside>
+
+        {/* Content */}
+        <main className="doc-content">
+          {loading ? (
+            <div className="loading">
+              <div className="loading-spinner" />
+              <span style={{ marginLeft: '12px' }}>Loading documentation...</span>
+            </div>
+          ) : error ? (
+            <div className="loading" style={{ color: 'var(--error)' }}>
+              <p>Failed to load documentation. Please try again later.</p>
+              <button
+                className="btn-secondary"
+                style={{ marginTop: '16px' }}
+                onClick={() => setActiveDoc(activeDoc)}
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {content}
+            </ReactMarkdown>
+          )}
+        </main>
+      </div>
     </Layout>
   );
 }
