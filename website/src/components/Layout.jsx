@@ -1,15 +1,57 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Activity, Github, Sun, Moon } from 'lucide-react';
+import { Activity, Github, Sun, Moon, Star } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+
+function GitHubStars() {
+  const [stars, setStars] = useState(null);
+
+  useEffect(() => {
+    fetch('https://api.github.com/repos/hacrex/OpsSentinel')
+      .then(res => res.json())
+      .then(data => {
+        if (data.stargazers_count) {
+          setStars(data.stargazers_count);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  return (
+    <a
+      href="https://github.com/hacrex/OpsSentinel"
+      target="_blank"
+      rel="noreferrer"
+      className="nav-cta github-btn"
+    >
+      <Github size={14} />
+      {stars !== null && (
+        <span className="stars-count">
+          <Star size={12} />
+          {stars}
+        </span>
+      )}
+    </a>
+  );
+}
 
 export default function Layout({ children }) {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const [scrolled, setScrolled] = useState(false);
   const isActive = (path) => location.pathname === path ? 'active' : '';
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <nav className="nav">
+      <nav className={`nav ${scrolled ? 'nav-scrolled' : ''}`}>
         <Link to="/" className="nav-logo">
           <Activity size={18} />
           OpsSentinel
@@ -25,14 +67,7 @@ export default function Layout({ children }) {
           >
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
-          <a
-            href="https://github.com/hacrex/OpsSentinel"
-            target="_blank"
-            rel="noreferrer"
-            className="nav-cta"
-          >
-            <Github size={14} /> GitHub
-          </a>
+          <GitHubStars />
         </div>
       </nav>
       <main style={{ flex: 1 }}>

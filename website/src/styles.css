@@ -78,14 +78,28 @@ code {
   align-items: center;
   padding: 0 40px;
   height: 56px;
+  background: transparent;
+  backdrop-filter: blur(0px);
+  border-bottom: 1px solid transparent;
+  transition: all 0.3s;
+}
+
+.nav-scrolled {
   background: rgba(10, 10, 10, 0.95);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
-  transition: background-color 0.3s, border-color 0.3s;
 }
 
 [data-theme="light"] .nav {
+  background: transparent;
+}
+
+[data-theme="light"] .nav-scrolled {
   background: rgba(250, 250, 250, 0.95);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 .nav-logo {
@@ -144,10 +158,36 @@ code {
   padding: 7px 14px !important;
   border-radius: 6px !important;
   font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
 }
 
 .nav-cta:hover {
   opacity: 0.9;
+}
+
+.github-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stars-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 8px;
+  border-left: 1px solid var(--border);
+  font-size: 12px;
+}
+
+[data-theme="dark"] .stars-count {
+  border-left-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="light"] .stars-count {
+  border-left-color: rgba(0, 0, 0, 0.2);
 }
 
 /* ── Hero ───────────────────────────────────────────────────────────────── */
