@@ -51,19 +51,18 @@ export default function Home() {
           Open Source & Free
         </div>
         <h1 className="hero-title">
-          See Your CI/CD<br />
-          At a Glance
+          Stop Digging Through<br />GitHub Actions Logs
         </h1>
         <p className="hero-subtitle">
-          A single dashboard for all your GitHub Actions workflows.
-          Know when things break. Fix them faster.
+          One dashboard for all your CI/CD pipelines. Real-time alerts.
+          Flaky test detection. 1-click re-runs. Deploy in 3 minutes.
         </p>
         <div className="hero-actions">
           <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn-primary">
-            Get Started <ArrowRight size={14} />
+            Get Started Free <ArrowRight size={16} />
           </a>
           <Link to="/features" className="btn-secondary">
-            Learn More
+            See Features
           </Link>
         </div>
         <div className="hero-code">
