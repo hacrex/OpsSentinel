@@ -1,8 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Activity, Github, Twitter, Heart } from 'lucide-react';
+import { Activity, Github, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Layout({ children }) {
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
   const isActive = (path) => location.pathname === path ? 'active' : '';
 
   return (
@@ -16,6 +18,13 @@ export default function Layout({ children }) {
           <Link to="/features" className={isActive('/features')}>Features</Link>
           <Link to="/pricing" className={isActive('/pricing')}>Pricing</Link>
           <Link to="/docs" className={isActive('/docs')}>Docs</Link>
+          <button
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
           <a
             href="https://github.com/hacrex/OpsSentinel"
             target="_blank"
@@ -66,7 +75,7 @@ export default function Layout({ children }) {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} OpsSentinel. Built with <Heart size={12} style={{ display: 'inline', verticalAlign: '-2px' }} /> by the community.</p>
+          <p>&copy; {new Date().getFullYear()} OpsSentinel. Built with ❤️ by the community.</p>
         </div>
       </footer>
     </div>
