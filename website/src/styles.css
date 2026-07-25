@@ -60,9 +60,9 @@ code {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 48px;
-  height: 64px;
-  background: rgba(10, 10, 10, 0.9);
+  padding: 0 40px;
+  height: 56px;
+  background: rgba(10, 10, 10, 0.95);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
 }
@@ -112,9 +112,9 @@ code {
 
 /* ── Hero ───────────────────────────────────────────────────────────────── */
 .hero {
-  padding: 160px 24px 80px;
+  padding: 100px 24px 60px;
   text-align: center;
-  max-width: 800px;
+  max-width: 720px;
   margin: 0 auto;
 }
 
@@ -122,37 +122,37 @@ code {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  color: var(--text-muted);
-  margin-bottom: 24px;
+  color: var(--text-dim);
+  margin-bottom: 20px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
 }
 
 .hero-title {
-  font-size: 56px;
+  font-size: 48px;
   font-weight: 700;
   line-height: 1.1;
-  margin-bottom: 20px;
-  letter-spacing: -2px;
+  margin-bottom: 16px;
+  letter-spacing: -1.5px;
   color: var(--text);
 }
 
 .hero-subtitle {
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text-muted);
-  max-width: 480px;
-  margin: 0 auto 36px;
-  line-height: 1.7;
+  max-width: 440px;
+  margin: 0 auto 28px;
+  line-height: 1.6;
 }
 
 .hero-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-bottom: 48px;
+  margin-bottom: 32px;
 }
 
 .hero-code {
@@ -168,41 +168,47 @@ code {
   display: inline-block;
   font-size: 12px;
   color: var(--text-muted);
+  transition: border-color 0.2s;
+}
+
+.hero-code code:hover {
+  border-color: var(--border-strong);
 }
 
 /* ── Buttons ────────────────────────────────────────────────────────────── */
 .btn-primary {
   background: var(--text);
   color: var(--bg);
-  padding: 10px 20px;
+  padding: 10px 18px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: opacity 0.15s;
+  transition: all 0.15s;
   border: none;
   cursor: pointer;
 }
 
 .btn-primary:hover {
-  opacity: 0.9;
+  opacity: 0.85;
+  transform: translateY(1px);
 }
 
 .btn-secondary {
   background: transparent;
   color: var(--text-muted);
-  padding: 10px 20px;
+  padding: 10px 18px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: color 0.15s;
+  transition: all 0.15s;
   border: 1px solid var(--border);
   cursor: pointer;
 }
@@ -210,11 +216,12 @@ code {
 .btn-secondary:hover {
   color: var(--text);
   border-color: var(--border-strong);
+  background: var(--surface);
 }
 
 /* ── Sections ───────────────────────────────────────────────────────────── */
 .section {
-  padding: 80px 24px;
+  padding: 60px 24px;
   max-width: 1100px;
   margin: 0 auto;
 }
@@ -253,31 +260,32 @@ code {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 28px;
-  transition: border-color 0.15s;
+  padding: 24px;
+  transition: border-color 0.15s, transform 0.15s;
 }
 
 .card:hover {
   border-color: var(--border-strong);
+  transform: translateY(2px);
 }
 
 .card-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
   background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .card h3 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .card p {
