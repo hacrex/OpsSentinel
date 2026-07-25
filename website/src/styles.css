@@ -748,7 +748,7 @@ code {
 }
 
 .footer-brand {
-  max-width: 240px;
+  max-width: 280px;
 }
 
 .footer-brand p {
@@ -756,6 +756,31 @@ code {
   font-size: 13px;
   margin-top: 12px;
   line-height: 1.6;
+}
+
+.footer-social {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.footer-social a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+
+.footer-social a:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
 }
 
 .footer-links {
@@ -766,17 +791,17 @@ code {
 .footer-col h4 {
   font-size: 11px;
   font-weight: 600;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--text-dim);
+  color: var(--text);
 }
 
 .footer-col a {
   display: block;
   color: var(--text-muted);
   font-size: 13px;
-  padding: 3px 0;
+  padding: 4px 0;
   transition: color 0.15s;
 }
 
@@ -791,6 +816,13 @@ code {
   border-top: 1px solid var(--border);
   color: var(--text-dim);
   font-size: 12px;
+}
+
+.footer-bottom p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 /* ── Documentation ──────────────────────────────────────────────────────── */

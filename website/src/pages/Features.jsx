@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Globe, AlertTriangle, RefreshCw, Bell, Shield, LineChart, Database, Server, ArrowRight } from 'lucide-react';
+import { Globe, AlertTriangle, RefreshCw, Bell, Shield, LineChart, Database, Server, ArrowRight, Lock, Zap, GitBranch } from 'lucide-react';
 import Layout from '../components/Layout';
 
 export default function Features() {
@@ -95,17 +95,38 @@ export default function Features() {
         <div className="section-header">
           <div className="section-label">Architecture</div>
           <h2 className="section-title">Flexible Setup</h2>
+          <p className="section-subtitle">Run it your way — from local dev to production</p>
         </div>
-        <div className="features-grid" style={{ maxWidth: '700px', margin: '0 auto' }}>
+        <div className="features-grid">
           <div className="card">
             <div className="card-icon"><Database size={16} /></div>
             <h3>SQLite</h3>
-            <p>Zero-config. Just docker-compose up and go.</p>
+            <p>Zero-config database. Perfect for small teams and personal use. Just docker-compose up.</p>
           </div>
           <div className="card">
             <div className="card-icon"><Server size={16} /></div>
             <h3>PostgreSQL</h3>
-            <p>Production-ready. Handles high volume.</p>
+            <p>Production-ready database. Handles high-volume webhook traffic and large datasets.</p>
+          </div>
+          <div className="card">
+            <div className="card-icon"><Lock size={16} /></div>
+            <h3>Self-Hosted</h3>
+            <p>Your data stays on your infrastructure. Full control, full privacy.</p>
+          </div>
+          <div className="card">
+            <div className="card-icon"><Zap size={16} /></div>
+            <h3>WebSocket</h3>
+            <p>Real-time updates without polling. See failures the instant they happen.</p>
+          </div>
+          <div className="card">
+            <div className="card-icon"><Shield size={16} /></div>
+            <h3>Secure</h3>
+            <p>HMAC webhook verification, GitHub OAuth, rate limiting, security headers.</p>
+          </div>
+          <div className="card">
+            <div className="card-icon"><GitBranch size={16} /></div>
+            <h3>Open Source</h3>
+            <p>MIT licensed. Fork it, modify it, run it forever. No vendor lock-in.</p>
           </div>
         </div>
       </section>
