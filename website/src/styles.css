@@ -32,17 +32,17 @@ html {
 }
 
 body {
-  background-color: var(--bg);
+  background-color: #030712;
   color: var(--text);
   font-family: var(--font);
   line-height: 1.7;
   min-height: 100vh;
   overflow-x: hidden;
   background-image:
-    radial-gradient(ellipse at top, rgba(59, 130, 246, 0.1) 0%, transparent 60%),
-    linear-gradient(rgba(9, 9, 11, 0.95), rgba(9, 9, 11, 0.95)),
-    linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
-    linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+    radial-gradient(ellipse at top, rgba(56, 189, 248, 0.12) 0%, transparent 60%),
+    linear-gradient(rgba(3, 7, 18, 0.95), rgba(3, 7, 18, 0.95)),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+    linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
