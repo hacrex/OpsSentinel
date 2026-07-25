@@ -883,6 +883,320 @@ code {
   to { transform: rotate(360deg); }
 }
 
+/* ── Trust Badges ───────────────────────────────────────────────────────── */
+.trust-badges {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.trust-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+/* ── Dashboard Preview ──────────────────────────────────────────────────── */
+.dashboard-preview {
+  max-width: 900px;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.preview-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.preview-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+.preview-dots span:first-child { background: #ef4444; }
+.preview-dots span:nth-child(2) { background: #f59e0b; }
+.preview-dots span:last-child { background: #22c55e; }
+
+.preview-title {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.preview-content {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  min-height: 280px;
+}
+
+.preview-sidebar {
+  padding: 12px;
+  border-right: 1px solid var(--border);
+}
+
+.preview-nav-item {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.preview-nav-item.active {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.preview-main {
+  padding: 16px;
+}
+
+.preview-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.preview-stat {
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 6px;
+}
+
+.preview-stat-value {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.preview-stat-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.preview-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 60px;
+  margin-bottom: 16px;
+  padding: 8px;
+  background: var(--bg);
+  border-radius: 6px;
+}
+
+.preview-chart-bar {
+  flex: 1;
+  background: var(--border-strong);
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+.preview-chart-bar:hover {
+  background: var(--text-dim);
+}
+
+.preview-table {
+  background: var(--bg);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.preview-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  padding: 10px 12px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.preview-row:last-child {
+  border-bottom: none;
+}
+
+.preview-repo {
+  color: var(--text-muted);
+}
+
+.preview-status {
+  font-weight: 500;
+}
+
+.preview-status.success { color: var(--success); }
+.preview-status.failure { color: var(--error); }
+
+.preview-time {
+  color: var(--text-dim);
+}
+
+/* ── Comparison Table ───────────────────────────────────────────────────── */
+.comparison-table {
+  max-width: 700px;
+  margin: 0 auto;
+  overflow-x: auto;
+}
+
+.comparison-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.comparison-table th {
+  font-weight: 600;
+  color: var(--text-dim);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.comparison-table td {
+  color: var(--text-muted);
+}
+
+.comparison-table th.highlight,
+.comparison-table td.highlight {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.comparison-table tr:last-child td {
+  border-bottom: none;
+}
+
+.icon-good {
+  color: var(--success);
+  margin-right: 6px;
+}
+
+.icon-bad {
+  color: var(--text-dim);
+  margin-right: 6px;
+}
+
+/* ── Use Case Cards ─────────────────────────────────────────────────────── */
+.use-case-card {
+  text-align: center;
+}
+
+.use-case-icon {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+}
+
+/* ── Social Proof ───────────────────────────────────────────────────────── */
+.social-proof-text {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 20px;
+}
+
+.social-proof-stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+}
+
+.social-proof-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.social-proof-stat svg {
+  color: var(--text-dim);
+}
+
+/* ── Newsletter ─────────────────────────────────────────────────────────── */
+.newsletter-card {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.newsletter-card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.newsletter-card p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.newsletter-form {
+  display: flex;
+  gap: 8px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.newsletter-form input {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+}
+
+.newsletter-form input:focus {
+  border-color: var(--border-strong);
+}
+
+.newsletter-form input::placeholder {
+  color: var(--text-dim);
+}
+
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .nav {
@@ -944,5 +1258,30 @@ code {
 
   .doc-nav-item {
     white-space: nowrap;
+  }
+
+  .preview-content {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-sidebar {
+    display: none;
+  }
+
+  .preview-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .newsletter-form {
+    flex-direction: column;
+  }
+
+  .social-proof-stats {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .trust-badges {
+    gap: 16px;
   }
 }
