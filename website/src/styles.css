@@ -490,8 +490,8 @@ code {
 .pricing-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  max-width: 720px;
+  gap: 20px;
+  max-width: 760px;
   margin: 0 auto;
 }
 
@@ -501,22 +501,52 @@ code {
   border: 1px solid var(--border);
   border-radius: 12px;
   position: relative;
+  transition: all 0.2s;
+}
+
+.pricing-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
 }
 
 .pricing-card--primary {
   border-color: var(--text-dim);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
+}
+
+.pricing-card--primary:hover {
+  border-color: var(--text-muted);
+}
+
+.pricing-card--secondary {
+  opacity: 0.8;
+}
+
+.pricing-header {
+  margin-bottom: 16px;
+}
+
+.pricing-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+.pricing-header p {
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .pricing-badge {
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: var(--text);
   color: var(--bg);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 999px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -524,10 +554,11 @@ code {
 
 .pricing-badge--muted {
   background: var(--border-strong);
+  color: var(--text-muted);
 }
 
 .pricing-price {
-  font-size: 44px;
+  font-size: 48px;
   font-weight: 700;
   margin: 20px 0;
   letter-spacing: -2px;
@@ -543,6 +574,8 @@ code {
 .pricing-features {
   list-style: none;
   margin: 24px 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
 }
 
 .pricing-features li {
@@ -554,7 +587,7 @@ code {
 }
 
 .pricing-features li svg {
-  color: var(--text-muted);
+  color: var(--text);
   flex-shrink: 0;
 }
 
@@ -563,7 +596,44 @@ code {
 }
 
 .pricing-features li.muted svg {
-  opacity: 0.4;
+  opacity: 0.3;
+}
+
+/* ── Pricing Trust ──────────────────────────────────────────────────────── */
+.pricing-trust {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.pricing-trust-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.pricing-trust-item svg {
+  color: var(--text-dim);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.pricing-trust-item h4 {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.pricing-trust-item p {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 .pricing-code {
