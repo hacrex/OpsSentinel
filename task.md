@@ -34,7 +34,7 @@
 - [x] HMAC SHA256 webhook signature verification
 - [x] Rate limiting on API and webhook endpoints
 - [x] Helmet security headers
-- [ ] Implement Role-Based Access Control (RBAC) (Viewer, Developer, Admin)
+- [x] Implement Role-Based Access Control (RBAC) (Viewer, Developer, Admin)
 - [ ] Integrate SSO/SAML Login (e.g., Okta, Google Workspace)
 - [x] Add Audit Logging for system configurations and manual actions
 

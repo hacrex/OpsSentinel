@@ -19,6 +19,7 @@ const CREATE_TABLE_PG = `
     username VARCHAR(255),
     avatar_url TEXT,
     tenant_id INTEGER REFERENCES tenants(id),
+    role VARCHAR(50) DEFAULT 'viewer',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -54,6 +55,7 @@ const CREATE_TABLE_SQLITE = `
     username TEXT,
     avatar_url TEXT,
     tenant_id INTEGER,
+    role TEXT DEFAULT 'viewer',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 

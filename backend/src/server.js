@@ -14,6 +14,7 @@ const { notifyAll } = require('./notifier');
 const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
+const { requirePermission, requireAnyPermission, getRoles, isValidRole } = require('./rbac');
 const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
 
@@ -260,7 +261,7 @@ app.get('/settings', authMiddleware, (req, res) => {
 });
 
 // Settings — test a notification channel
-app.post('/settings/test', authMiddleware, async (req, res) => {
+app.post('/settings/test', authMiddleware, requirePermission('notifications:test'), async (req, res) => {
   const { channel } = req.body;
   const testEvent = {
     repo_name: 'ops-sentinel/test',
@@ -308,7 +309,7 @@ app.post('/settings/test', authMiddleware, async (req, res) => {
 });
 
 // 1-Click re-run
-app.post('/rerun', authMiddleware, async (req, res) => {
+app.post('/rerun', authMiddleware, requirePermission('workflow:rerun'), async (req, res) => {
   const { run_url } = req.body;
   const token = req.token;
   if (!run_url || !token) return res.status(400).json({ error: 'run_url and token required' });
@@ -421,7 +422,7 @@ app.get('/auth/me', authMiddleware, (req, res) => {
 });
 
 // Audit Logs — get audit trail
-app.get('/audit-logs', authMiddleware, async (req, res) => {
+app.get('/audit-logs', authMiddleware, requirePermission('audit_logs:read'), async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
   const { action, startDate, endDate } = req.query;
@@ -439,6 +440,54 @@ app.get('/audit-logs', authMiddleware, async (req, res) => {
     logger.error({ err }, 'Failed to fetch audit logs');
     res.status(500).json({ error: 'Failed to fetch audit logs' });
   }
+});
+
+// Users — list all users (admin only)
+app.get('/users', authMiddleware, requirePermission('users:read'), async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT id, github_id, username, avatar_url, role, created_at FROM users ORDER BY created_at DESC'
+    );
+    res.json(result.rows);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch users');
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Users — update user role (admin only)
+app.put('/users/:id/role', authMiddleware, requirePermission('users:write'), async (req, res) => {
+  const { id } = req.params;
+  const { role } = req.body;
+
+  if (!isValidRole(role)) {
+    return res.status(400).json({ error: 'Invalid role. Must be: viewer, developer, or admin' });
+  }
+
+  try {
+    await db.query('UPDATE users SET role = ? WHERE id = ?', [role, id]);
+    
+    // Log the audit event
+    await logAuditEvent({
+      userId: req.user?.id || null,
+      username: req.user?.login || 'unknown',
+      action: 'role_change',
+      resourceType: 'user',
+      resourceId: id,
+      details: { new_role: role },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true, message: `User role updated to ${role}` });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update user role');
+    res.status(500).json({ error: 'Failed to update user role' });
+  }
+});
+
+// Roles — get all roles with permissions
+app.get('/roles', authMiddleware, (req, res) => {
+  res.json(getRoles());
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
