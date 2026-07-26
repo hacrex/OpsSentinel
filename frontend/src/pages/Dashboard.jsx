@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, ShieldAlert, BarChart3, CloudRain, LogOut, RotateCcw, Settings, RefreshCw, Search, Clock, TrendingUp, TrendingDown, FileText, Users, GitBranch } from 'lucide-react';
+import { Activity, ShieldAlert, BarChart3, CloudRain, LogOut, RotateCcw, Settings, RefreshCw, Search, Clock, TrendingUp, TrendingDown, FileText, Users, GitBranch, Brain } from 'lucide-react';
 import api from '../api';
 import { format } from 'date-fns';
 import FilterBar from '../components/FilterBar';
@@ -20,6 +20,7 @@ const Dashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [rerunStatus, setRerunStatus] = useState({});
   const [triageStatus, setTriageStatus] = useState({});
+  const [analysisStatus, setAnalysisStatus] = useState({});
   const { toasts, addToast, removeToast } = useToast();
 
   const filtersRef = useRef(filters);
@@ -139,6 +140,27 @@ const Dashboard = () => {
     } catch (err) {
       setTriageStatus((s) => ({ ...s, [eventId]: 'error' }));
       addToast(err.response?.data?.error || 'Triage failed', 'error');
+    }
+  };
+
+  const handleAnalyze = async (run_url, eventId) => {
+    setAnalysisStatus((s) => ({ ...s, [eventId]: 'loading' }));
+    try {
+      const res = await api.post('/analyze', { run_url });
+      const { summary, success, error } = res.data;
+      
+      if (success && summary) {
+        const msg = `Root Cause: ${summary.root_cause}\nCategory: ${summary.category}\nFix: ${summary.suggested_fix}`;
+        addToast(msg, 'success');
+      } else {
+        addToast(error || 'Analysis failed', 'error');
+      }
+      
+      setAnalysisStatus((s) => ({ ...s, [eventId]: success ? 'success' : 'error' }));
+    } catch (err) {
+      setAnalysisStatus((s) => ({ ...s, [eventId]: 'error' }));
+      const errMsg = err.response?.data?.error || 'Analysis failed';
+      addToast(errMsg, 'error');
     }
   };
 
@@ -288,6 +310,15 @@ const Dashboard = () => {
                             </a>
                             {['failure', 'cancelled'].includes(evt.conclusion) && (
                               <>
+                                <button
+                                  className="glowing-btn"
+                                  style={{ padding: '4px 8px', fontSize: '10px', opacity: analysisStatus[evt.id] === 'loading' ? 0.6 : 1 }}
+                                  disabled={analysisStatus[evt.id] === 'loading'}
+                                  onClick={() => handleAnalyze(evt.run_url, evt.id)}
+                                  title="Analyze failure logs with AI"
+                                >
+                                  <Brain size={10} />
+                                </button>
                                 <button
                                   className="glowing-btn"
                                   style={{ padding: '4px 8px', fontSize: '10px', opacity: triageStatus[evt.id] === 'loading' ? 0.6 : 1 }}

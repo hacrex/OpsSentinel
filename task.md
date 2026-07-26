@@ -22,7 +22,7 @@
 ## 2. Actionability & Automated Remediation
 - [x] Implement 1-Click workflow re-run from Dashboard
 - [x] Add Auto-Triage to assign failures based on `CODEOWNERS` or commits
-- [ ] Integrate LLM to parse logs and summarize root causes in notifications
+- [x] Integrate LLM to parse logs and summarize root causes in notifications
 
 ## 3. Reliability & Architectural Scaling
 - [x] Migrate database from SQLite to PostgreSQL (dual support)

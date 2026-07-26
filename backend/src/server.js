@@ -13,6 +13,7 @@ const { startRetentionJob } = require('./retention');
 const { notifyAll } = require('./notifier');
 const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
 const { triageFailure } = require('./triage');
+const { analyzeFailure, getLLMConfig } = require('./llm');
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
 const { requirePermission, requireAnyPermission, getRoles, isValidRole } = require('./rbac');
@@ -531,6 +532,67 @@ app.post('/triage', authMiddleware, requirePermission('workflow:rerun'), async (
     logger.error({ err }, 'Triage failed');
     res.status(500).json({ error: 'Triage failed' });
   }
+});
+
+// LLM Analysis — analyze workflow failure logs
+app.post('/analyze', authMiddleware, requirePermission('workflow:rerun'), async (req, res) => {
+  const { run_url } = req.body;
+  const token = req.token;
+
+  if (!run_url) return res.status(400).json({ error: 'run_url required' });
+
+  const match = run_url.match(/github\.com\/([^/]+)\/([^/]+)\/actions\/runs\/(\d+)/);
+  if (!match) return res.status(400).json({ error: 'Invalid run_url format' });
+
+  const [, owner, repo, runId] = match;
+
+  // Check if LLM is configured
+  const llmConfig = getLLMConfig();
+  if (!llmConfig) {
+    return res.status(400).json({ 
+      error: 'LLM not configured. Set LLM_API_KEY environment variable.',
+      configured: false,
+    });
+  }
+
+  try {
+    const result = await analyzeFailure({
+      owner,
+      repo,
+      runId: parseInt(runId),
+      token,
+    });
+
+    // Log the audit event
+    await logAuditEvent({
+      userId: req.user?.id || null,
+      username: req.user?.login || 'unknown',
+      action: 'log_analysis',
+      resourceType: 'workflow_run',
+      resourceId: `${owner}/${repo}/runs/${runId}`,
+      details: { 
+        success: result.success, 
+        category: result.summary?.category,
+        root_cause: result.summary?.root_cause,
+      },
+      ipAddress: req.ip,
+    });
+
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Log analysis failed');
+    res.status(500).json({ error: 'Log analysis failed' });
+  }
+});
+
+// LLM Status — check if LLM is configured
+app.get('/llm/status', authMiddleware, (req, res) => {
+  const config = getLLMConfig();
+  res.json({
+    configured: !!config,
+    provider: config?.provider || null,
+    model: config?.model || null,
+  });
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
