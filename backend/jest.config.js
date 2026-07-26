@@ -4,6 +4,5 @@ module.exports = {
   collectCoverageFrom: ['src/**/*.js'],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],
-  setupFilesAfterSetup: [],
   verbose: true,
 };

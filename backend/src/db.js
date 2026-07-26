@@ -33,6 +33,11 @@ const CREATE_TABLE_PG = `
     mttr_seconds INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
+
+  CREATE INDEX IF NOT EXISTS idx_events_tenant_id ON events(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_events_repo_name ON events(repo_name);
+  CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at);
+  CREATE INDEX IF NOT EXISTS idx_events_conclusion ON events(conclusion);
 `;
 
 const CREATE_TABLE_SQLITE = `
@@ -63,6 +68,11 @@ const CREATE_TABLE_SQLITE = `
     mttr_seconds INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+
+  CREATE INDEX IF NOT EXISTS idx_events_tenant_id ON events(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_events_repo_name ON events(repo_name);
+  CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at);
+  CREATE INDEX IF NOT EXISTS idx_events_conclusion ON events(conclusion);
 `;
 
 // Convert SQLite ? placeholders to PostgreSQL $1, $2, ...
@@ -79,6 +89,11 @@ async function connectWithRetry(pool, retries = 10, delay = 3000) {
       try {
         await client.query("ALTER TABLE events ADD COLUMN tenant_id INTEGER");
       } catch (err) { /* ignore if column exists */ }
+      // Create indexes if they don't exist
+      await client.query("CREATE INDEX IF NOT EXISTS idx_events_tenant_id ON events(tenant_id)");
+      await client.query("CREATE INDEX IF NOT EXISTS idx_events_repo_name ON events(repo_name)");
+      await client.query("CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at)");
+      await client.query("CREATE INDEX IF NOT EXISTS idx_events_conclusion ON events(conclusion)");
       client.release();
       console.log('Connected to the PostgreSQL database.');
       return;
@@ -116,6 +131,9 @@ if (isPostgres) {
       const pgSql = toPostgresSQL(sql);
       return pool.query(pgSql, params);
     },
+    close: (callback) => {
+      pool.end().then(() => callback?.()).catch(() => callback?.());
+    },
   };
 } else {
   const sqlite3 = require('sqlite3').verbose();
@@ -128,6 +146,11 @@ if (isPostgres) {
       sqliteDb.exec(CREATE_TABLE_SQLITE, (err) => {
         if (!err) {
           sqliteDb.run("ALTER TABLE events ADD COLUMN tenant_id INTEGER", () => {});
+          // Create indexes if they don't exist
+          sqliteDb.run("CREATE INDEX IF NOT EXISTS idx_events_tenant_id ON events(tenant_id)", () => {});
+          sqliteDb.run("CREATE INDEX IF NOT EXISTS idx_events_repo_name ON events(repo_name)", () => {});
+          sqliteDb.run("CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at)", () => {});
+          sqliteDb.run("CREATE INDEX IF NOT EXISTS idx_events_conclusion ON events(conclusion)", () => {});
         }
       });
     }
@@ -140,6 +163,12 @@ if (isPostgres) {
         else resolve({ rows });
       });
     });
+
+  sqliteDb.close = (callback) => {
+    sqliteDb.close((err) => {
+      if (callback) callback(err);
+    });
+  };
 
   db = sqliteDb;
 }

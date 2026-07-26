@@ -2,16 +2,28 @@
 jest.mock('sqlite3', () => ({
   verbose: jest.fn(() => ({
     Database: jest.fn().mockImplementation((path, callback) => {
-      if (callback) callback(null);
+      // Call callback asynchronously to match real SQLite behavior
+      if (callback) setTimeout(() => callback(null), 0);
       return {
         exec: jest.fn().mockImplementation((sql, callback) => {
-          if (callback) callback(null);
+          // Call callback asynchronously
+          if (callback) setTimeout(() => callback(null), 0);
         }),
         run: jest.fn().mockImplementation((sql, params, callback) => {
-          if (callback) callback(null);
+          // Handle optional params
+          if (typeof params === 'function') {
+            setTimeout(() => params(null), 0);
+          } else if (callback) {
+            setTimeout(() => callback(null), 0);
+          }
         }),
         all: jest.fn().mockImplementation((sql, params, callback) => {
-          if (callback) callback(null, []);
+          // Handle optional params
+          if (typeof params === 'function') {
+            setTimeout(() => params(null, []), 0);
+          } else if (callback) {
+            setTimeout(() => callback(null, []), 0);
+          }
         }),
         close: jest.fn(),
       };

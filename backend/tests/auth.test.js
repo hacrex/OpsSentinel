@@ -22,10 +22,12 @@ describe('Auth Middleware', () => {
     process.env.BYPASS_AUTH = 'false';
     req = {
       headers: {},
+      cookies: {},
     };
     res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
+      clearCookie: jest.fn().mockReturnThis(),
     };
     next = jest.fn();
   });
@@ -39,13 +41,13 @@ describe('Auth Middleware', () => {
     expect(res.status).not.toHaveBeenCalled();
   });
 
-  test('should return 401 when no authorization header', async () => {
+  test('should return 401 when no token in cookie or header', async () => {
     process.env.BYPASS_AUTH = 'false';
 
     await authMiddleware(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Missing or invalid Authorization header' });
+    expect(res.json).toHaveBeenCalledWith({ error: 'Not authenticated' });
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -69,10 +71,37 @@ describe('Auth Middleware', () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({ error: 'Invalid or expired GitHub token' });
+    expect(res.clearCookie).toHaveBeenCalledWith('github_token', { path: '/' });
     expect(next).not.toHaveBeenCalled();
   });
 
-  test('should call next with valid token', async () => {
+  test('should read token from cookie preferentially', async () => {
+    process.env.BYPASS_AUTH = 'false';
+    req.cookies.github_token = 'cookie-token';
+    req.headers.authorization = 'Bearer header-token';
+
+    axios.get.mockResolvedValue({
+      data: { id: 12345, login: 'testuser' },
+    });
+
+    db.query.mockResolvedValue({
+      rows: [{ tenant_id: 1 }],
+    });
+
+    await authMiddleware(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    expect(req.token).toBe('cookie-token');
+    expect(req.tenant_id).toBe(1);
+    expect(axios.get).toHaveBeenCalledWith(
+      'https://api.github.com/user',
+      expect.objectContaining({
+        headers: { Authorization: 'Bearer cookie-token' },
+      })
+    );
+  });
+
+  test('should call next with valid token from header', async () => {
     process.env.BYPASS_AUTH = 'false';
     req.headers.authorization = 'Bearer valid-token';
 
@@ -94,10 +123,10 @@ describe('Auth Middleware', () => {
 
   test('should set tenant_id to null when user not in DB', async () => {
     process.env.BYPASS_AUTH = 'false';
-    req.headers.authorization = 'Bearer valid-token';
+    req.headers.authorization = 'Bearer another-valid-token';
 
     axios.get.mockResolvedValue({
-      data: { id: 12345, login: 'testuser' },
+      data: { id: 67890, login: 'otheruser' },
     });
 
     db.query.mockResolvedValue({ rows: [] });

@@ -1,5 +1,18 @@
 # OpsSentinel Enhancement Plan
 
+## 0. Critical Bugs & Security Fixes
+- [x] Fix retention.js callback bug (db.query returns Promise, not callback)
+- [x] Add database indexes on events table (tenant_id, repo_name, created_at)
+- [x] Fix webhook.test.js — computeMTTR not exported from webhook.js
+- [x] Fix FilterBar.test.jsx — expects "All Conclusions" but component uses "All Status"
+- [x] Fix jest.config.js — invalid setupFilesAfterSetup key
+- [x] Add WebSocket authentication (verify token on connection)
+- [x] Add root .gitignore (exclude node_modules, database.sqlite, dist/)
+- [x] Remove committed database.sqlite and frontend/dist/ from repo
+- [x] Remove dead code (App.css, react.svg, vite.svg, hero.png)
+- [x] Fix Express 5 route syntax (`:tenant_id?` → `{/:tenant_id}`)
+- [x] Fix auth.test.js token cache collision between tests
+
 ## 1. Advanced Analytics & Insights
 - [x] Implement MTTR (Mean Time To Recovery) tracking and visualization
 - [x] Add Flaky Workflow Detection system (>30% failure rate, 5+ runs)

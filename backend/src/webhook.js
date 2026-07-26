@@ -118,4 +118,4 @@ async function handleWebhook(req, res) {
   res.status(200).send('Event ignored');
 }
 
-module.exports = { verifySignature, handleWebhook, setBroadcast };
+module.exports = { verifySignature, handleWebhook, setBroadcast, computeMTTR };

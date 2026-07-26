@@ -14,7 +14,11 @@ export function useSocket(onMessage) {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
     const wsUrl = apiUrl.replace(/^http/, 'ws');
 
-    const ws = new WebSocket(wsUrl);
+    // Extract token from cookie for WebSocket authentication
+    const token = document.cookie.split('github_token=')?.[1]?.split(';')?.[0];
+    const wsUrlWithToken = token ? `${wsUrl}?token=${token}` : wsUrl;
+
+    const ws = new WebSocket(wsUrlWithToken);
     wsRef.current = ws;
 
     ws.onopen = () => {

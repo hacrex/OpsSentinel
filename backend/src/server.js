@@ -14,6 +14,7 @@ const { notifyAll } = require('./notifier');
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
 const crypto = require('crypto');
+const cookieParser = require('cookie-parser');
 
 dotenv.config();
 validateEnv();
@@ -21,13 +22,36 @@ validateEnv();
 const app = express();
 const isSaas = process.env.SAAS_MODE === 'true';
 app.use(helmet());
+app.use(cookieParser());
 const server = http.createServer(app);
 const port = process.env.PORT || 3001;
+
+function getTokenCookieOptions() {
+  const isProduction = process.env.NODE_ENV === 'production';
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'lax' : 'none',
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  };
+}
 
 // ── WebSocket Server ──────────────────────────────────────────────────────────
 const wss = new WebSocketServer({ server });
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req) => {
+  // Authenticate WebSocket connection using token from cookie or query
+  const token = req.headers.cookie?.split('github_token=')?.[1]?.split(';')?.[0]
+    || new URL(req.url, 'http://localhost').searchParams.get('token');
+
+  if (!token && process.env.GITHUB_WEBHOOK_SECRET) {
+    // If webhook secret is set, require auth
+    logger.warn('WebSocket connection rejected: no token provided');
+    ws.close(1008, 'Authentication required');
+    return;
+  }
+
   logger.info('WebSocket client connected');
   ws.on('close', () => logger.info('WebSocket client disconnected'));
 });
@@ -46,6 +70,9 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
 }));
+
+// Trust proxy for secure cookies behind reverse proxies
+app.set('trust proxy', 1);
 
 // Capture raw body for webhook signature verification
 app.use(express.json({
@@ -73,22 +100,30 @@ app.use('/auth', apiLimiter);
 app.use('/webhook', webhookLimiter);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
+app.get('/health', async (req, res) => {
+  try {
+    await db.query('SELECT 1');
+    res.status(200).json({ status: 'ok', db: 'connected' });
+  } catch {
+    res.status(503).json({ status: 'error', db: 'disconnected' });
+  }
+});
 
-app.post('/webhook/:tenant_id?', verifySignature, handleWebhook);
+app.post('/webhook{/:tenant_id}', verifySignature, handleWebhook);
 
 // Paginated events with optional filters
 app.get('/events', authMiddleware, async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
   const offset = (page - 1) * limit;
-  const { repo, conclusion } = req.query;
+  const { repo, conclusion, workflow } = req.query;
 
   const conditions = [];
   const params = [];
 
   if (repo) { conditions.push('repo_name = ?'); params.push(repo); }
   if (conclusion) { conditions.push('conclusion = ?'); params.push(conclusion); }
+  if (workflow) { conditions.push('workflow_name LIKE ?'); params.push(`%${workflow}%`); }
   
   if (isSaas) {
     conditions.push('tenant_id = ?');
@@ -112,7 +147,7 @@ app.get('/events', authMiddleware, async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, 'Failed to fetch events');
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to fetch events' });
   }
 });
 
@@ -124,7 +159,8 @@ app.get('/repos', authMiddleware, async (req, res) => {
     const result = await db.query(`SELECT DISTINCT repo_name FROM events ${where} ORDER BY repo_name`, params);
     res.json(result.rows.map((r) => r.repo_name));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logger.error({ err }, 'Failed to fetch repos');
+    res.status(500).json({ error: 'Failed to fetch repos' });
   }
 });
 
@@ -176,7 +212,7 @@ app.get('/repos/:owner/:repo/stats', authMiddleware, async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, 'Failed to fetch repo stats');
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to fetch repo stats' });
   }
 });
 
@@ -204,7 +240,7 @@ app.get('/repos/:owner/:repo/trend', authMiddleware, async (req, res) => {
     const result = await db.query(sql, params);
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to fetch trend data' });
   }
 });
 
@@ -253,7 +289,7 @@ app.post('/settings/test', authMiddleware, async (req, res) => {
     }
     res.json({ success: true, message: `Test sent to ${channel}` });
   } catch (err) {
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Failed to send test notification' });
   }
 });
 
@@ -325,8 +361,8 @@ app.post('/auth/github', async (req, res) => {
       );
     }
 
+    res.cookie('github_token', access_token, getTokenCookieOptions());
     res.json({
-      token: access_token,
       user: { login: githubUser.login, avatar_url: githubUser.avatar_url },
     });
   } catch (err) {
@@ -335,8 +371,59 @@ app.post('/auth/github', async (req, res) => {
   }
 });
 
+// Logout — clear auth cookie
+app.post('/auth/logout', (req, res) => {
+  res.clearCookie('github_token', { path: '/' });
+  res.json({ success: true });
+});
+
+// Check if user is authenticated (reads from cookie)
+app.get('/auth/me', authMiddleware, (req, res) => {
+  res.json({ authenticated: true, tenant_id: req.tenant_id || null });
+});
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 server.listen(port, () => {
   logger.info(`Backend server listening at http://localhost:${port}`);
   startRetentionJob();
 });
+
+// ── Graceful Shutdown ─────────────────────────────────────────────────────────
+let isShuttingDown = false;
+
+function gracefulShutdown(signal) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  logger.info(`${signal} received. Starting graceful shutdown...`);
+
+  // Stop accepting new connections
+  server.close(() => {
+    logger.info('HTTP server closed.');
+
+    // Close all WebSocket connections
+    wss.clients.forEach((client) => {
+      client.close(1001, 'Server shutting down');
+    });
+
+    // Close database connections
+    db.close?.(() => {
+      logger.info('Database connections closed.');
+      process.exit(0);
+    });
+
+    // If db.close doesn't exist (PostgreSQL), exit after timeout
+    setTimeout(() => {
+      logger.info('Shutdown timeout reached. Exiting.');
+      process.exit(0);
+    }, 5000);
+  });
+
+  // Force exit if shutdown takes too long
+  setTimeout(() => {
+    logger.error('Forced shutdown after timeout.');
+    process.exit(1);
+  }, 10000);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

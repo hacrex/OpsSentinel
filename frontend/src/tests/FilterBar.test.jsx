@@ -19,7 +19,7 @@ describe('FilterBar Component', () => {
 
   it('should render conclusion dropdown with options', () => {
     render(<FilterBar {...defaultProps} />);
-    expect(screen.getByText('All Conclusions')).toBeInTheDocument();
+    expect(screen.getByText('All Status')).toBeInTheDocument();
     expect(screen.getByText('Failure')).toBeInTheDocument();
     expect(screen.getByText('Success')).toBeInTheDocument();
     expect(screen.getByText('Cancelled')).toBeInTheDocument();
@@ -44,7 +44,7 @@ describe('FilterBar Component', () => {
 
   it('should call onChange when conclusion filter changes', () => {
     render(<FilterBar {...defaultProps} />);
-    const conclusionSelect = screen.getByDisplayValue('All Conclusions');
+    const conclusionSelect = screen.getByDisplayValue('All Status');
     fireEvent.change(conclusionSelect, { target: { value: 'failure' } });
     expect(defaultProps.onChange).toHaveBeenCalledWith({ repo: '', conclusion: 'failure' });
   });
