@@ -55,7 +55,7 @@
 - [x] Backend unit tests (Jest)
 - [x] Frontend unit tests (Vitest)
 - [x] Integration tests for webhook processing
-- [ ] E2E tests with Playwright
+- [x] E2E tests with Playwright
 
 ## 8. Product Website
 - [x] Create standalone `website/` directory
