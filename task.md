@@ -36,7 +36,7 @@
 - [x] Helmet security headers
 - [ ] Implement Role-Based Access Control (RBAC) (Viewer, Developer, Admin)
 - [ ] Integrate SSO/SAML Login (e.g., Okta, Google Workspace)
-- [ ] Add Audit Logging for system configurations and manual actions
+- [x] Add Audit Logging for system configurations and manual actions
 
 ## 5. Multi-Tenancy (SaaS)
 - [x] Tenant model with webhook secrets

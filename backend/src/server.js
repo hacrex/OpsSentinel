@@ -11,6 +11,7 @@ const logger = require('./logger');
 const validateEnv = require('./validateEnv');
 const { startRetentionJob } = require('./retention');
 const { notifyAll } = require('./notifier');
+const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
 const crypto = require('crypto');
@@ -97,6 +98,7 @@ const webhookLimiter = rateLimit({
 
 app.use('/events', apiLimiter);
 app.use('/auth', apiLimiter);
+app.use('/audit-logs', apiLimiter);
 app.use('/webhook', webhookLimiter);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
@@ -287,6 +289,18 @@ app.post('/settings/test', authMiddleware, async (req, res) => {
     } else {
       return res.status(400).json({ error: 'Unknown channel' });
     }
+
+    // Log the audit event
+    await logAuditEvent({
+      userId: req.user?.id || null,
+      username: req.user?.login || 'unknown',
+      action: 'notification_test',
+      resourceType: 'settings',
+      resourceId: channel,
+      details: { channel, success: true },
+      ipAddress: req.ip,
+    });
+
     res.json({ success: true, message: `Test sent to ${channel}` });
   } catch (err) {
     res.status(500).json({ error: 'Failed to send test notification' });
@@ -311,6 +325,18 @@ app.post('/rerun', authMiddleware, async (req, res) => {
       {},
       { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } }
     );
+
+    // Log the audit event
+    await logAuditEvent({
+      userId: req.user?.id || null,
+      username: req.user?.login || 'unknown',
+      action: 'workflow_rerun',
+      resourceType: 'workflow_run',
+      resourceId: `${owner}/${repo}/runs/${runId}`,
+      details: { owner, repo, runId, run_url },
+      ipAddress: req.ip,
+    });
+
     res.json({ success: true, message: `Re-run triggered for run ${runId}` });
   } catch (err) {
     const status = err.response?.status || 500;
@@ -362,6 +388,18 @@ app.post('/auth/github', async (req, res) => {
     }
 
     res.cookie('github_token', access_token, getTokenCookieOptions());
+
+    // Log the audit event
+    await logAuditEvent({
+      userId: null, // Will be set after user lookup
+      username: githubUser.login,
+      action: 'user_login',
+      resourceType: 'auth',
+      resourceId: github_id,
+      details: { login: githubUser.login, avatar_url: githubUser.avatar_url },
+      ipAddress: req.ip,
+    });
+
     res.json({
       user: { login: githubUser.login, avatar_url: githubUser.avatar_url },
     });
@@ -382,9 +420,31 @@ app.get('/auth/me', authMiddleware, (req, res) => {
   res.json({ authenticated: true, tenant_id: req.tenant_id || null });
 });
 
+// Audit Logs — get audit trail
+app.get('/audit-logs', authMiddleware, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+  const { action, startDate, endDate } = req.query;
+
+  try {
+    const result = await getAuditLogs({
+      page,
+      limit,
+      action,
+      startDate,
+      endDate,
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch audit logs');
+    res.status(500).json({ error: 'Failed to fetch audit logs' });
+  }
+});
+
 // ── Start ─────────────────────────────────────────────────────────────────────
-server.listen(port, () => {
+server.listen(port, async () => {
   logger.info(`Backend server listening at http://localhost:${port}`);
+  await initAuditTable();
   startRetentionJob();
 });
 

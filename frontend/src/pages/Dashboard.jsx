@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, ShieldAlert, BarChart3, CloudRain, LogOut, RotateCcw, Settings, RefreshCw, Search, Clock, TrendingUp, TrendingDown } from 'lucide-react';
+import { Activity, ShieldAlert, BarChart3, CloudRain, LogOut, RotateCcw, Settings, RefreshCw, Search, Clock, TrendingUp, TrendingDown, FileText } from 'lucide-react';
 import api from '../api';
 import { format } from 'date-fns';
 import FilterBar from '../components/FilterBar';
@@ -120,9 +120,10 @@ const Dashboard = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('github_token');
-    localStorage.removeItem('github_user');
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch { /* ignore */ }
     navigate('/login');
   };
 
@@ -163,6 +164,9 @@ const Dashboard = () => {
           </button>
           <button className="glowing-btn" onClick={() => navigate('/dashboard/settings')} style={{ padding: '6px 12px', fontSize: '11px' }}>
             <Settings size={12} /> Settings
+          </button>
+          <button className="glowing-btn" onClick={() => navigate('/dashboard/audit')} style={{ padding: '6px 12px', fontSize: '11px' }}>
+            <FileText size={12} /> Audit
           </button>
           <button className="glowing-btn" onClick={handleLogout} style={{ padding: '6px 12px', fontSize: '11px' }}>
             <LogOut size={12} /> Logout
