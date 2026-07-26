@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, ShieldAlert, BarChart3, CloudRain, LogOut, RotateCcw, Settings, RefreshCw, Search, Clock, TrendingUp, TrendingDown, FileText, Users } from 'lucide-react';
+import { Activity, ShieldAlert, BarChart3, CloudRain, LogOut, RotateCcw, Settings, RefreshCw, Search, Clock, TrendingUp, TrendingDown, FileText, Users, GitBranch } from 'lucide-react';
 import api from '../api';
 import { format } from 'date-fns';
 import FilterBar from '../components/FilterBar';
@@ -19,6 +19,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [rerunStatus, setRerunStatus] = useState({});
+  const [triageStatus, setTriageStatus] = useState({});
   const { toasts, addToast, removeToast } = useToast();
 
   const filtersRef = useRef(filters);
@@ -117,6 +118,27 @@ const Dashboard = () => {
     } catch (err) {
       setRerunStatus((s) => ({ ...s, [eventId]: 'error' }));
       addToast(err.response?.data?.error || 'Failed to trigger re-run', 'error');
+    }
+  };
+
+  const handleTriage = async (run_url, eventId) => {
+    setTriageStatus((s) => ({ ...s, [eventId]: 'loading' }));
+    try {
+      const res = await api.post('/triage', { run_url });
+      const { triage } = res.data;
+      
+      if (triage.assignees.length > 0) {
+        const assigneeList = triage.assignees.slice(0, 3).join(', ');
+        const confidence = Math.round(triage.confidence * 100);
+        addToast(`Triage: ${assigneeList} (${confidence}% confidence via ${triage.source})`, 'success');
+      } else {
+        addToast('No assignees found. Check if CODEOWNERS exists for this repo.', 'info');
+      }
+      
+      setTriageStatus((s) => ({ ...s, [eventId]: 'success' }));
+    } catch (err) {
+      setTriageStatus((s) => ({ ...s, [eventId]: 'error' }));
+      addToast(err.response?.data?.error || 'Triage failed', 'error');
     }
   };
 
@@ -265,15 +287,26 @@ const Dashboard = () => {
                               Inspect
                             </a>
                             {['failure', 'cancelled'].includes(evt.conclusion) && (
-                              <button
-                                className="glowing-btn"
-                                style={{ padding: '4px 8px', fontSize: '10px', opacity: rs === 'loading' ? 0.6 : 1 }}
-                                disabled={rs === 'loading' || rs === 'success'}
-                                onClick={() => handleRerun(evt.run_url, evt.id)}
-                                title="Re-run workflow"
-                              >
-                                <RotateCcw size={10} />
-                              </button>
+                              <>
+                                <button
+                                  className="glowing-btn"
+                                  style={{ padding: '4px 8px', fontSize: '10px', opacity: triageStatus[evt.id] === 'loading' ? 0.6 : 1 }}
+                                  disabled={triageStatus[evt.id] === 'loading' || triageStatus[evt.id] === 'success'}
+                                  onClick={() => handleTriage(evt.run_url, evt.id)}
+                                  title="Auto-triage failure"
+                                >
+                                  <GitBranch size={10} />
+                                </button>
+                                <button
+                                  className="glowing-btn"
+                                  style={{ padding: '4px 8px', fontSize: '10px', opacity: rerunStatus[evt.id] === 'loading' ? 0.6 : 1 }}
+                                  disabled={rerunStatus[evt.id] === 'loading' || rerunStatus[evt.id] === 'success'}
+                                  onClick={() => handleRerun(evt.run_url, evt.id)}
+                                  title="Re-run workflow"
+                                >
+                                  <RotateCcw size={10} />
+                                </button>
+                              </>
                             )}
                           </div>
                         </td>

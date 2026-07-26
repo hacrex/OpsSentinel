@@ -21,7 +21,7 @@
 
 ## 2. Actionability & Automated Remediation
 - [x] Implement 1-Click workflow re-run from Dashboard
-- [ ] Add Auto-Triage to assign failures based on `CODEOWNERS` or commits
+- [x] Add Auto-Triage to assign failures based on `CODEOWNERS` or commits
 - [ ] Integrate LLM to parse logs and summarize root causes in notifications
 
 ## 3. Reliability & Architectural Scaling

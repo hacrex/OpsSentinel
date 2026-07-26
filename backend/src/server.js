@@ -12,6 +12,7 @@ const validateEnv = require('./validateEnv');
 const { startRetentionJob } = require('./retention');
 const { notifyAll } = require('./notifier');
 const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
+const { triageFailure } = require('./triage');
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
 const { requirePermission, requireAnyPermission, getRoles, isValidRole } = require('./rbac');
@@ -488,6 +489,48 @@ app.put('/users/:id/role', authMiddleware, requirePermission('users:write'), asy
 // Roles — get all roles with permissions
 app.get('/roles', authMiddleware, (req, res) => {
   res.json(getRoles());
+});
+
+// Triage — auto-assign failure owners based on CODEOWNERS or commits
+app.post('/triage', authMiddleware, requirePermission('workflow:rerun'), async (req, res) => {
+  const { run_url } = req.body;
+  const token = req.token;
+
+  if (!run_url) return res.status(400).json({ error: 'run_url required' });
+
+  const match = run_url.match(/github\.com\/([^/]+)\/([^/]+)\/actions\/runs\/(\d+)/);
+  if (!match) return res.status(400).json({ error: 'Invalid run_url format' });
+
+  const [, owner, repo, runId] = match;
+
+  try {
+    const result = await triageFailure({
+      owner,
+      repo,
+      runId: parseInt(runId),
+      workflowName: null,
+      token,
+    });
+
+    // Log the audit event
+    await logAuditEvent({
+      userId: req.user?.id || null,
+      username: req.user?.login || 'unknown',
+      action: 'auto_triage',
+      resourceType: 'workflow_run',
+      resourceId: `${owner}/${repo}/runs/${runId}`,
+      details: { assignees: result.assignees, source: result.source, confidence: result.confidence },
+      ipAddress: req.ip,
+    });
+
+    res.json({
+      success: true,
+      triage: result,
+    });
+  } catch (err) {
+    logger.error({ err }, 'Triage failed');
+    res.status(500).json({ error: 'Triage failed' });
+  }
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
