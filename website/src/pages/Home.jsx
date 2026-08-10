@@ -1,433 +1,383 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, GitBranch, Globe, AlertTriangle, RefreshCw, Bell, Shield, LineChart, Database, Terminal, ArrowRight, Star, Users, Clock, Check, X, Play, ChevronRight } from 'lucide-react';
+import {
+  Activity, Shield, GitBranch, AlertTriangle, BarChart3,
+  Bell, Lock, Terminal, Layers, Server, Settings, Zap,
+  CheckCircle, XCircle, ArrowRight, Cpu, Eye, FileCode,
+  Workflow, Brain, Target
+} from 'lucide-react';
 import Layout from '../components/Layout';
 
-const typingTexts = [
-  'git clone github.com/hacrex/OpsSentinel',
-  'docker-compose up -d',
-  'open http://localhost',
-];
-
 function TypingCode() {
-  const [textIndex, setTextIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const commands = [
+    'git clone github.com/hacrex/OpsSentinel',
+    'docker-compose up -d',
+    'open http://localhost:3000',
+  ];
+  const [index, setIndex] = useState(0);
+  const [text, setText] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    const currentText = typingTexts[textIndex];
-    const timeout = setTimeout(() => {
-      if (!isDeleting && charIndex < currentText.length) {
-        setCharIndex(charIndex + 1);
-      } else if (!isDeleting && charIndex === currentText.length) {
-        setTimeout(() => setIsDeleting(true), 2000);
-      } else if (isDeleting && charIndex > 0) {
-        setCharIndex(charIndex - 1);
-      } else if (isDeleting && charIndex === 0) {
-        setIsDeleting(false);
-        setTextIndex((textIndex + 1) % typingTexts.length);
+  useState(() => {
+    let timeout;
+    const current = commands[index];
+    if (!deleting) {
+      if (text.length < current.length) {
+        timeout = setTimeout(() => setText(current.slice(0, text.length + 1)), 60);
+      } else {
+        timeout = setTimeout(() => setDeleting(true), 2000);
       }
-    }, isDeleting ? 30 : 80);
+    } else {
+      if (text.length > 0) {
+        timeout = setTimeout(() => setText(text.slice(0, -1)), 30);
+      } else {
+        setDeleting(false);
+        setIndex((prev) => (prev + 1) % commands.length);
+      }
+    }
     return () => clearTimeout(timeout);
-  }, [charIndex, isDeleting, textIndex]);
+  });
 
   return (
-    <code>
-      $ {typingTexts[textIndex].slice(0, charIndex)}
-      <span style={{ borderRight: '2px solid var(--text-dim)', marginLeft: '2px' }} />
-    </code>
+    <div className="hero-code">
+      <div className="preview-header">
+        <div className="preview-dots">
+          <span style={{ background: '#ff5f57' }}></span>
+          <span style={{ background: '#ffbd2e' }}></span>
+          <span style={{ background: '#28c840' }}></span>
+        </div>
+        <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>terminal</span>
+      </div>
+      <div className="code-content">
+        <span style={{ color: '#22c55e' }}>$</span> <span>{text}</span>
+        <span className="cursor">|</span>
+      </div>
+    </div>
   );
 }
 
-export default function Home() {
-  const [email, setEmail] = useState('');
+const features = [
+  {
+    icon: <BarChart3 size={20} />,
+    title: 'CI/CD Observability',
+    description: 'Real-time dashboard for GitHub Actions, GitLab CI, Jenkins. Track workflows, jobs, and steps across all repositories.',
+  },
+  {
+    icon: <Brain size={20} />,
+    title: 'AI Failure Analysis',
+    description: 'LLM-powered root cause analysis. Failure fingerprinting groups similar failures. Flaky test detection with recommendations.',
+  },
+  {
+    icon: <Layers size={20} />,
+    title: 'Multi-Engine IaC',
+    description: 'OpenTofu, Terraform, Pulumi, CloudFormation, Crossplane. Plan, approve, apply — all from one control plane.',
+  },
+  {
+    icon: <Settings size={20} />,
+    title: 'Configuration Management',
+    description: 'Ansible, Chef, Puppet, SaltStack. Run playbooks, enforce compliance, detect configuration drift.',
+  },
+  {
+    icon: <AlertTriangle size={20} />,
+    title: 'Incident Management',
+    description: 'Auto-create incidents from repeated failures. Track severity, timeline, and resolution. Integrate with GitHub Issues.',
+  },
+  {
+    icon: <Target size={20} />,
+    title: 'DORA Metrics',
+    description: 'Deployment frequency, lead time, change failure rate, MTTR. Industry benchmarks to measure your team.',
+  },
+  {
+    icon: <Workflow size={20} />,
+    title: 'Cross-Domain Correlation',
+    description: 'Connect commit to build to deploy to incident. See the full chain when something goes wrong.',
+  },
+  {
+    icon: <Eye size={20} />,
+    title: 'Drift Detection',
+    description: 'Detect infrastructure and configuration drift across all engines. Get alerted before it causes incidents.',
+  },
+  {
+    icon: <Lock size={20} />,
+    title: 'Policy Engine',
+    description: 'Require approvals, enforce gates, audit all actions. Policy-driven automation with guardrails.',
+  },
+];
 
+const tools = [
+  { name: 'OpenTofu', category: 'IaC', color: '#22c55e' },
+  { name: 'Terraform', category: 'IaC', color: '#7b61ff' },
+  { name: 'Pulumi', category: 'IaC', color: '#f59e0b' },
+  { name: 'Ansible', category: 'Config', color: '#22c55e' },
+  { name: 'Chef', category: 'Config', color: '#f59e0b' },
+  { name: 'Puppet', category: 'Config', color: '#7b61ff' },
+  { name: 'GitHub Actions', category: 'CI/CD', color: '#38bdf8' },
+  { name: 'Kubernetes', category: 'Deploy', color: '#38bdf8' },
+];
+
+export default function Home() {
   return (
     <Layout>
-      {/* Hero */}
       <section className="hero">
-        <div className="hero-badge">
-          <Terminal size={12} />
-          Open Source & Free
-        </div>
-        <h1 className="hero-title">
-          Stop Digging Through<br />GitHub Actions Logs
-        </h1>
-        <p className="hero-subtitle">
-          One dashboard for all your CI/CD pipelines. Real-time alerts.
-          Flaky test detection. 1-click re-runs. Deploy in 3 minutes.
-        </p>
-        <div className="hero-actions">
-          <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn-primary">
-            Get Started Free <ArrowRight size={16} />
-          </a>
-          <Link to="/features" className="btn-secondary">
-            See Features
-          </Link>
-        </div>
-        <div className="hero-code">
-          <TypingCode />
-        </div>
-      </section>
-
-      {/* Trust Badges */}
-      <section style={{ padding: '24px 24px 0', textAlign: 'center' }}>
-        <div className="trust-badges">
-          <div className="trust-badge">
-            <Star size={14} />
-            <span>MIT License</span>
-          </div>
-          <div className="trust-badge">
-            <Database size={14} />
-            <span>Docker Ready</span>
-          </div>
-          <div className="trust-badge">
-            <Shield size={14} />
-            <span>GitHub Actions</span>
-          </div>
-          <div className="trust-badge">
-            <Globe size={14} />
-            <span>Self-Hosted</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Dashboard Preview */}
-      <section className="section" style={{ paddingTop: '48px' }}>
-        <div className="dashboard-preview">
-          <div className="preview-header">
-            <div className="preview-dots">
-              <span /><span /><span />
-            </div>
-            <span className="preview-title">OpsSentinel Dashboard</span>
-          </div>
-          <div className="preview-content">
-            <div className="preview-sidebar">
-              <div className="preview-nav-item active">Dashboard</div>
-              <div className="preview-nav-item">Repositories</div>
-              <div className="preview-nav-item">Settings</div>
-            </div>
-            <div className="preview-main">
-              <div className="preview-stats">
-                <div className="preview-stat">
-                  <span className="preview-stat-value">1,247</span>
-                  <span className="preview-stat-label">Total Runs</span>
-                </div>
-                <div className="preview-stat">
-                  <span className="preview-stat-value">98.2%</span>
-                  <span className="preview-stat-label">Success Rate</span>
-                </div>
-                <div className="preview-stat">
-                  <span className="preview-stat-value">23</span>
-                  <span className="preview-stat-label">Failures</span>
-                </div>
-                <div className="preview-stat">
-                  <span className="preview-stat-value">4.2m</span>
-                  <span className="preview-stat-label">Avg MTTR</span>
-                </div>
-              </div>
-              <div className="preview-chart">
-                <div className="preview-chart-bar" style={{ height: '40%' }} />
-                <div className="preview-chart-bar" style={{ height: '60%' }} />
-                <div className="preview-chart-bar" style={{ height: '30%' }} />
-                <div className="preview-chart-bar" style={{ height: '80%' }} />
-                <div className="preview-chart-bar" style={{ height: '45%' }} />
-                <div className="preview-chart-bar" style={{ height: '90%' }} />
-                <div className="preview-chart-bar" style={{ height: '35%' }} />
-              </div>
-              <div className="preview-table">
-                <div className="preview-row">
-                  <span className="preview-repo">frontend/build</span>
-                  <span className="preview-status success">passed</span>
-                  <span className="preview-time">2m ago</span>
-                </div>
-                <div className="preview-row">
-                  <span className="preview-repo">api/deploy</span>
-                  <span className="preview-status failure">failed</span>
-                  <span className="preview-time">15m ago</span>
-                </div>
-                <div className="preview-row">
-                  <span className="preview-repo">backend/test</span>
-                  <span className="preview-status success">passed</span>
-                  <span className="preview-time">1h ago</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Problem */}
-      <section className="section">
-        <div className="section-header">
-          <div className="section-label">Why OpsSentinel</div>
-          <h2 className="section-title">The Problem</h2>
-        </div>
-        <div className="problem-grid">
-          <div className="problem-card problem-card--bad">
-            <div className="problem-icon problem-icon--bad">
-              <AlertTriangle size={18} />
-            </div>
-            <h3>Without OpsSentinel</h3>
-            <ul>
-              <li>Check 50+ repos for failed Actions</li>
-              <li>Miss failures until standup</li>
-              <li>No visibility into flaky tests</li>
-              <li>Manual investigation of every failure</li>
-            </ul>
-          </div>
-          <div className="problem-card problem-card--good">
-            <div className="problem-icon problem-icon--good">
-              <Zap size={18} />
-            </div>
-            <h3>With OpsSentinel</h3>
-            <ul>
-              <li>One dashboard for all pipelines</li>
-              <li>Instant Slack/Teams/Email alerts</li>
-              <li>Auto-detect flaky workflows</li>
-              <li>1-click re-run failed jobs</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="section">
-        <div className="section-header">
-          <div className="section-label">Features</div>
-          <h2 className="section-title">Everything You Need</h2>
-          <p className="section-subtitle">
-            Built for DevOps teams who want visibility without the complexity.
+        <div className="container">
+          <span className="hero-badge">Open Source & Free Forever</span>
+          <h1 className="hero-title">
+            The Open-Source<br />
+            <span style={{ color: 'var(--accent)' }}>GitOps Control Plane</span>
+          </h1>
+          <p className="hero-subtitle">
+            Connect your CI/CD pipelines, infrastructure automation (Terraform, OpenTofu, Pulumi),
+            configuration management (Ansible, Chef, Puppet), and incident response into one
+            intelligent platform with AI-powered failure analysis.
           </p>
-        </div>
-        <div className="features-grid">
-          <div className="card feature-card">
-            <div className="card-icon"><Globe size={16} /></div>
-            <h3>Real-Time Dashboard</h3>
-            <p>WebSocket-powered live updates deliver pipeline status the instant events occur. No polling, no delays.</p>
-            <ul className="feature-list">
-              <li>Instant WebSocket updates</li>
-              <li>Multi-repo overview</li>
-              <li>Filter by status</li>
-            </ul>
-          </div>
-          <div className="card feature-card">
-            <div className="card-icon"><LineChart size={16} /></div>
-            <h3>Repo Analytics</h3>
-            <p>Deep visibility into each repository's health. Track success rates, MTTR, and spot trends.</p>
-            <ul className="feature-list">
-              <li>Success rate tracking</li>
-              <li>Mean Time To Recovery</li>
-              <li>30-day trend charts</li>
-            </ul>
-          </div>
-          <div className="card feature-card">
-            <div className="card-icon"><AlertTriangle size={16} /></div>
-            <h3>Flaky Detection</h3>
-            <p>Automatically identifies workflows with high failure rates. Stop wasting time investigating.</p>
-            <ul className="feature-list">
-              <li>{'>'}30% failure threshold</li>
-              <li>5+ runs minimum</li>
-              <li>Visual "FLAKY" badges</li>
-            </ul>
-          </div>
-          <div className="card feature-card">
-            <div className="card-icon"><RefreshCw size={16} /></div>
-            <h3>1-Click Re-run</h3>
-            <p>Trigger workflow re-runs directly from the dashboard. Fix it right where you see it.</p>
-            <ul className="feature-list">
-              <li>Failed workflows</li>
-              <li>Cancelled workflows</li>
-              <li>Status feedback</li>
-            </ul>
-          </div>
-          <div className="card feature-card">
-            <div className="card-icon"><Bell size={16} /></div>
-            <h3>Multi-Channel Alerts</h3>
-            <p>Get notified instantly when builds fail. Choose the channel that works for your team.</p>
-            <ul className="feature-list">
-              <li>Slack integration</li>
-              <li>Microsoft Teams</li>
-              <li>Email (SMTP)</li>
-            </ul>
-          </div>
-          <div className="card feature-card">
-            <div className="card-icon"><Shield size={16} /></div>
-            <h3>Secure by Design</h3>
-            <p>Your CI/CD data is sensitive. OpsSentinel is built with security-first principles.</p>
-            <ul className="feature-list">
-              <li>HMAC SHA256 verification</li>
-              <li>GitHub OAuth</li>
-              <li>Rate limiting</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* Comparison */}
-      <section className="section">
-        <div className="section-header">
-          <div className="section-label">Compare</div>
-          <h2 className="section-title">Why Not Build Your Own?</h2>
-        </div>
-        <div className="comparison-table">
-          <table>
-            <thead>
-              <tr>
-                <th></th>
-                <th>Build Yourself</th>
-                <th className="highlight">OpsSentinel</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Time to Setup</td>
-                <td><X size={14} className="icon-bad" /> Days of work</td>
-                <td className="highlight"><Check size={14} className="icon-good" /> 3 minutes</td>
-              </tr>
-              <tr>
-                <td>Maintenance</td>
-                <td><X size={14} className="icon-bad" /> Ongoing</td>
-                <td className="highlight"><Check size={14} className="icon-good" /> Zero</td>
-              </tr>
-              <tr>
-                <td>Cost</td>
-                <td><X size={14} className="icon-bad" /> Engineering hours</td>
-                <td className="highlight"><Check size={14} className="icon-good" /> Free forever</td>
-              </tr>
-              <tr>
-                <td>Real-time Updates</td>
-                <td><X size={14} className="icon-bad" /> Build from scratch</td>
-                <td className="highlight"><Check size={14} className="icon-good" /> Built-in</td>
-              </tr>
-              <tr>
-                <td>Notifications</td>
-                <td><X size={14} className="icon-bad" /> DIY</td>
-                <td className="highlight"><Check size={14} className="icon-good" /> Slack, Teams, Email</td>
-              </tr>
-              <tr>
-                <td>Flaky Detection</td>
-                <td><X size={14} className="icon-bad" /> Complex analytics</td>
-                <td className="highlight"><Check size={14} className="icon-good" /> Automatic</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* How */}
-      <section className="section">
-        <div className="section-header">
-          <div className="section-label">Setup</div>
-          <h2 className="section-title">Three Steps</h2>
-        </div>
-        <div className="steps-grid">
-          <div className="step-card">
-            <div className="step-number">01</div>
-            <h3>Clone</h3>
-            <div className="step-code">cp .env.example .env</div>
-            <p>Add your GitHub credentials</p>
-          </div>
-          <div className="step-card">
-            <div className="step-number">02</div>
-            <h3>Deploy</h3>
-            <div className="step-code">docker-compose up -d</div>
-            <p>Everything included</p>
-          </div>
-          <div className="step-card">
-            <div className="step-number">03</div>
-            <h3>Connect</h3>
-            <div className="step-code">Settings → Webhooks</div>
-            <p>Point your repos here</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Who Uses This */}
-      <section className="section">
-        <div className="section-header">
-          <div className="section-label">For Teams</div>
-          <h2 className="section-title">Built for You</h2>
-        </div>
-        <div className="features-grid" style={{ maxWidth: '720px', margin: '0 auto' }}>
-          <div className="card use-case-card">
-            <div className="use-case-icon">
-              <Users size={18} />
-            </div>
-            <h3>Startups</h3>
-            <p>5-20 repos. Run on a $5/mo VPS. Get visibility without the overhead.</p>
-          </div>
-          <div className="card use-case-card">
-            <div className="use-case-icon">
-              <Clock size={18} />
-            </div>
-            <h3>Growing Teams</h3>
-            <p>50-200 repos. Multiple squads. PostgreSQL for scale, alerts for the org.</p>
-          </div>
-          <div className="card use-case-card">
-            <div className="use-case-icon">
-              <Shield size={18} />
-            </div>
-            <h3>Enterprise</h3>
-            <p>200+ repos. Self-hosted on your infrastructure. Compliance-ready.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Social Proof */}
-      <section style={{ padding: '48px 24px', textAlign: 'center' }}>
-        <p className="social-proof-text">
-          Trusted by DevOps teams worldwide
-        </p>
-        <div className="social-proof-stats">
-          <div className="social-proof-stat">
-            <Star size={16} />
-            <span>Open Source</span>
-          </div>
-          <div className="social-proof-stat">
-            <Database size={16} />
-            <span>100+ Deploys</span>
-          </div>
-          <div className="social-proof-stat">
-            <Globe size={16} />
-            <span>Self-Hosted</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Newsletter */}
-      <section className="section" style={{ paddingTop: 0 }}>
-        <div className="newsletter-card">
-          <h3>Stay Updated</h3>
-          <p>Get notified about new features and releases.</p>
-          <form className="newsletter-form" onSubmit={(e) => { e.preventDefault(); setEmail(''); alert('Thanks for subscribing!'); }}>
-            <input
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <button type="submit" className="btn-primary">Subscribe</button>
-          </form>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="cta">
-        <div className="cta-content">
-          <h2>Start Monitoring Today</h2>
-          <p>Free and open source. Deploy in minutes.</p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn-primary">
-              View on GitHub <ArrowRight size={14} />
+          <div className="hero-actions">
+            <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn btn-primary">
+              <Github size={16} />
+              View on GitHub
             </a>
-            <Link to="/docs" className="btn-secondary">
-              Read the Docs
+            <Link to="/features" className="btn btn-secondary">
+              See Features
+              <ArrowRight size={16} />
             </Link>
+          </div>
+          <TypingCode />
+          <div className="trust-badges">
+            <span className="trust-badge"><Shield size={14} /> MIT License</span>
+            <span className="trust-badge"><Server size={14} /> Self-Hosted</span>
+            <span className="trust-badge"><Layers size={14} /> Multi-Engine IaC</span>
+            <span className="trust-badge"><Brain size={14} /> AI-Powered</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-label">The Problem</span>
+            <h2 className="section-title">Your Tools Don't Talk to Each Other</h2>
+            <p className="section-subtitle">
+              Modern teams use 5-15 tools across the delivery lifecycle. Each tool sees only its own domain.
+              When something fails, you manually correlate across dashboards, logs, and alerts.
+            </p>
+          </div>
+          <div className="problem-grid">
+            <div className="problem-card">
+              <div className="problem-icon"><XCircle size={24} style={{ color: '#ef4444' }} /></div>
+              <h3>Without OpsSentinel</h3>
+              <ul className="feature-list">
+                <li>GitHub Actions shows "failed" — but why?</li>
+                <li>Terraform change invisible to CI/CD monitoring</li>
+                <li>Ansible drift detected by nobody</li>
+                <li>Incident has no infrastructure context</li>
+                <li>5 tools, 5 dashboards, 0 answers</li>
+              </ul>
+            </div>
+            <div className="problem-card" style={{ borderColor: 'var(--accent)' }}>
+              <div className="problem-icon"><CheckCircle size={24} style={{ color: 'var(--accent)' }} /></div>
+              <h3>With OpsSentinel</h3>
+              <ul className="feature-list">
+                <li>AI analyzes logs and finds root cause</li>
+                <li>Infrastructure changes correlated with deployments</li>
+                <li>Configuration drift detected and alerted</li>
+                <li>Incidents have full context: commit to deploy</li>
+                <li>One platform, one view, full understanding</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-label">Core Features</span>
+            <h2 className="section-title">Everything You Need to Understand Your Operations</h2>
+          </div>
+          <div className="features-grid">
+            {features.map((feature) => (
+              <div key={feature.title} className="card feature-card">
+                <div className="card-icon">{feature.icon}</div>
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-label">Supported Tools</span>
+            <h2 className="section-title">One Platform. Every Tool.</h2>
+            <p className="section-subtitle">
+              OpsSentinel connects to your existing tools. No migration required. No vendor lock-in.
+            </p>
+          </div>
+          <div className="tools-grid">
+            {tools.map((tool) => (
+              <div key={tool.name} className="tool-card">
+                <span className="tool-category" style={{ color: tool.color }}>{tool.category}</span>
+                <span className="tool-name">{tool.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          <div className="architecture-diagram">
+            <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '32px' }}>How It Works</h2>
+            <pre className="architecture-pre">{`
+                         OPSSENTINEL
+                      Control Plane
+                           |
+          +----------------+----------------+
+          |                |                |
+          v                v                v
+     PROVISION         CONFIGURE         DEPLOY
+     OpenTofu           Ansible          CI/CD
+     Terraform          Chef          GitHub Actions
+     Pulumi             Puppet         GitLab CI
+          |                |                |
+          +----------------+----------------+
+                           |
+                      INTELLIGENCE
+                    AI Analysis
+                   Failure Intel
+                  Drift Detection
+                           |
+                      RECOVER
+                   Incidents
+                   Remediation
+                    Rollbacks
+            `}</pre>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          <div className="steps-grid">
+            <div className="step-card">
+              <div className="step-number">1</div>
+              <h3>Clone & Deploy</h3>
+              <p>Docker Compose up. Three containers: PostgreSQL, Backend, Frontend. Running in minutes.</p>
+              <div className="step-code">docker-compose up -d</div>
+            </div>
+            <div className="step-card">
+              <div className="step-number">2</div>
+              <h3>Connect Your Tools</h3>
+              <p>Add GitHub webhooks, configure IaC projects, connect Ansible inventories. One API for everything.</p>
+            </div>
+            <div className="step-card">
+              <div className="step-number">3</div>
+              <h3>Understand Everything</h3>
+              <p>See the full picture. AI-powered analysis. Cross-domain correlation. Incident management.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-label">Why OpsSentinel</span>
+            <h2 className="section-title">Not Just Another Tool. The Missing Layer.</h2>
+          </div>
+          <div className="comparison-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Capability</th>
+                  <th>Spacelift / env0</th>
+                  <th>PagerDuty / OpsGenie</th>
+                  <th>Datadog / Grafana</th>
+                  <th style={{ color: 'var(--accent)' }}>OpsSentinel</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>CI/CD Observability</td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td>Partial</td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                </tr>
+                <tr>
+                  <td>Failure Intelligence</td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                </tr>
+                <tr>
+                  <td>Multi-Engine IaC</td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                </tr>
+                <tr>
+                  <td>Incident Management</td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                </tr>
+                <tr>
+                  <td>Cross-Domain Correlation</td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                </tr>
+                <tr>
+                  <td>Open Source</td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                </tr>
+                <tr>
+                  <td>Self-Hosted</td>
+                  <td>Partial</td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section className="section cta">
+        <div className="container">
+          <div className="cta-content">
+            <h2>Start Understanding Your Operations Today</h2>
+            <p>Free. Open source. Self-hosted. Connect your first tool in minutes.</p>
+            <div className="hero-actions">
+              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn btn-primary">
+                Get Started Free
+              </a>
+              <Link to="/features" className="btn btn-secondary">
+                Explore Features
+                <ArrowRight size={16} />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
     </Layout>
+  );
+}
+
+function Github({ size }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+    </svg>
   );
 }

@@ -60,11 +60,25 @@ OpsSentinel is organized around six core pillars:
 
 # 3. Provision — Infrastructure Automation
 
-OpsSentinel integrates with Infrastructure as Code engines rather than attempting to replace them.
+OpsSentinel integrates with Infrastructure as Code engines rather than attempting to replace them. OpsSentinel provides a unified control plane across all major IaC and configuration management tools.
 
-## OpenTofu
+## Supported IaC Engines
 
-### Features
+OpsSentinel supports multiple IaC engines through a pluggable integration architecture:
+
+| Engine | License | Language | Primary Use |
+|--------|---------|----------|-------------|
+| OpenTofu | MPL 2.0 (Open Source) | HCL | Multi-cloud provisioning |
+| Terraform | BSL (Commercial) | HCL | Multi-cloud provisioning |
+| Pulumi | Apache 2.0 (Open Source) | TypeScript, Python, Go, C#, Java | Multi-cloud provisioning |
+| CloudFormation | AWS Service | JSON/YAML | AWS-native provisioning |
+| Crossplane | Apache 2.0 (Open Source) | YAML (Kubernetes CRDs) | Kubernetes-native provisioning |
+
+### OpenTofu (Preferred Open-Source Engine)
+
+OpenTofu is the preferred open-source IaC engine for OpsSentinel.
+
+#### Features
 
 - OpenTofu project management
 - Workspace management
@@ -87,7 +101,7 @@ OpsSentinel integrates with Infrastructure as Code engines rather than attemptin
 - Failure analysis
 - Infrastructure change history
 
-### Workflow
+#### Workflow
 
 ```text
 Git Commit
@@ -107,20 +121,195 @@ Environment Updated
 
 ---
 
-## Terraform Compatibility
+### Terraform
 
-Where practical, OpsSentinel should support existing Terraform projects.
+OpsSentinel provides full Terraform support as a first-class integration alongside OpenTofu.
 
-Capabilities:
+#### Features
 
 - Terraform project discovery
-- Terraform plan
-- Terraform apply
-- State management integration
-- Terraform module workflows
-- Migration path from Terraform to OpenTofu
+- Workspace management
+- Plan execution and output parsing
+- Apply execution
+- Destroy operations
+- State management integration (local and remote backends)
+- Terraform Cloud / HCP Terraform integration
+- Terraform Enterprise integration
+- Module registry integration
+- Provider version management
+- Variable and variable set management
+- Run history and audit
+- Drift detection
+- Import existing resources
+- State locking and conflict resolution
 
-OpenTofu remains the preferred open-source IaC engine.
+#### Migration Support
+
+- Terraform to OpenTofu migration assistant
+- State file compatibility verification
+- Provider compatibility checks
+- HCL syntax validation across engines
+
+#### Workflow
+
+```text
+Git Commit (Terraform files)
+    ↓
+Terraform Init
+    ↓
+Terraform Plan
+    ↓
+Change Review + Cost Estimation
+    ↓
+Approval (Policy Gate)
+    ↓
+Terraform Apply
+    ↓
+Drift Detection Schedule
+    ↓
+Environment Updated
+```
+
+---
+
+### Pulumi
+
+OpsSentinel integrates with Pulumi for teams using general-purpose programming languages for infrastructure.
+
+#### Features
+
+- Pulumi project discovery
+- Stack management
+- Program execution (TypeScript, Python, Go, C#, Java)
+- Preview execution (plan equivalent)
+- Update execution (apply equivalent)
+- Destroy operations
+- State management (Pulumi Cloud and self-managed backends)
+- Secret management integration
+- Component and resource tracking
+- Dependency graph visualization
+- Policy as Code (CrossGuard) integration
+- Import existing resources
+- Stack references and output sharing
+- Configuration management
+- Execution logs and output
+
+#### Supported Languages
+
+- TypeScript / JavaScript
+- Python
+- Go
+- C# (.NET)
+- Java
+- YAML (for simple configurations)
+
+#### Workflow
+
+```text
+Git Commit (Pulumi program)
+    ↓
+Pulumi Preview
+    ↓
+Change Review + Diff Visualization
+    ↓
+Approval (Policy Gate)
+    ↓
+Pulumi Update
+    ↓
+Verification
+    ↓
+Environment Updated
+```
+
+---
+
+### CloudFormation
+
+OpsSentinel provides integration with AWS CloudFormation for AWS-native infrastructure.
+
+#### Features
+
+- Stack management
+- Change set creation and review
+- Stack set management (multi-account, multi-region)
+- Template validation
+- Drift detection
+- Stack event history
+- Resource tracking
+- Nested stack support
+- Custom resource monitoring
+- Stack policy management
+- Import existing resources
+- Execution logs
+
+#### Workflow
+
+```text
+Git Commit (CloudFormation template)
+    ↓
+Change Set Creation
+    ↓
+Change Review
+    ↓
+Approval
+    ↓
+Stack Execute
+    ↓
+Verification
+    ↓
+Environment Updated
+```
+
+---
+
+### Crossplane
+
+OpsSentinel integrates with Crossplane for Kubernetes-native infrastructure management.
+
+#### Features
+
+- Composition management
+- Claim management
+- Resource tracking
+- Dependency graph visualization
+- Drift detection
+- Status monitoring
+- Event history
+- Provider configuration
+- Function pipeline management
+- Crossplane package management
+
+---
+
+### Multi-Engine Orchestration
+
+OpsSentinel can orchestrate across multiple IaC engines in a single workflow:
+
+```text
+                    OpsSentinel
+                  Control Plane
+                       │
+    ┌──────────┬───────┴───────┬──────────┐
+    │          │               │          │
+    ▼          ▼               ▼          ▼
+OpenTofu   Terraform        Pulumi    CloudFormation
+    │          │               │          │
+    └──────────┴───────┬───────┴──────────┘
+                       │
+                       ▼
+              Unified State View
+              Cross-Engine Drift
+              Correlated Changes
+```
+
+#### Cross-Engine Capabilities
+
+- Unified infrastructure inventory across all engines
+- Cross-engine dependency mapping
+- Correlated change tracking (Terraform change + Ansible config + GitHub deployment)
+- Aggregated drift detection across all engines
+- Single approval workflow for multi-engine changes
+- Cost estimation across all providers
 
 ---
 
@@ -162,11 +351,26 @@ Kubernetes
 
 ---
 
-# 5. Configure — Ansible Automation
+# 5. Configure — Configuration Management
 
-OpsSentinel integrates with Ansible for configuration management and server automation.
+OpsSentinel integrates with configuration management tools for server automation, application deployment, and ongoing system maintenance.
 
-## Ansible Features
+## Supported Configuration Management Tools
+
+| Tool | License | Architecture | Primary Use |
+|------|---------|--------------|-------------|
+| Ansible | GPL v3 (Open Source) | Agentless (SSH/WinRM) | Automation, configuration, deployment |
+| Chef | Apache 2.0 (Open Source) | Agent-based | Infrastructure automation, compliance |
+| Puppet | Apache 2.0 (Open Source) | Agent-based | Configuration management, compliance |
+| SaltStack | Apache 2.0 (Open Source) | Agent-based (optional) | Event-driven automation, remote execution |
+
+---
+
+## Ansible
+
+OpsSentinel integrates with Ansible for agentless configuration management and automation.
+
+### Features
 
 - Inventory management
 - Dynamic inventory
@@ -184,8 +388,11 @@ OpsSentinel integrates with Ansible for configuration management and server auto
 - Failure detection
 - Execution retry
 - Host-level results
+- Ansible Galaxy integration
+- AWX/Tower integration
+- Callback plugin for real-time reporting
 
-### Configuration Workflow
+### Ansible Workflow
 
 ```text
 Inventory
@@ -202,6 +409,201 @@ Configuration Drift Check
 ```
 
 ---
+
+## Chef
+
+OpsSentinel integrates with Chef for infrastructure automation and compliance enforcement.
+
+### Features
+
+- Chef Server integration
+- Node management
+- Cookbook management
+- Recipe execution
+- Role management
+- Environment management
+- Data bag management
+- Attribute management
+- Chef Infra Client run monitoring
+- Compliance profiles (InSpec)
+- Policy group management
+- Chef Habitat integration
+- Chef Automate integration
+- Chef Workflow (Push Jobs)
+- Run history and audit
+- Node convergence status
+- Drift detection
+- Execution logs
+
+### Chef Concepts Integration
+
+```text
+Chef Infra Server
+    ├── Node (Managed Server)
+    │     └── Chef Client Agent
+    │           ├── Ohai (System Facts)
+    │           ├── Cookbook (Configuration)
+    │           │     └── Recipe (Tasks)
+    │           │           └── Resource (Declarative)
+    │           └── converge → desired state
+    ├── Policy
+    │     ├── Roles
+    │     ├── Environments
+    │     ├── Data Bags
+    │     └── Attributes
+    └── Reporting & Compliance
+          └── InSpec Profiles
+```
+
+### Chef Workflow
+
+```text
+Cookbook Development
+    ↓
+Chef Server Push / Pull
+    ↓
+Approval (Policy Gate)
+    ↓
+Chef Client Run
+    ↓
+Convergence Check
+    ↓
+Compliance Scan
+    ↓
+Drift Detection
+    ↓
+Remediation (if needed)
+```
+
+---
+
+## Puppet
+
+OpsSentinel integrates with Puppet for enterprise configuration management and compliance enforcement.
+
+### Features
+
+- Puppet Server integration
+- Node/agent management
+- Module management
+- Manifest management
+- Hiera data management
+- Facts integration
+- PuppetDB integration
+- Catalog compilation monitoring
+    ↓
+Agent run monitoring
+- Compliance reporting
+- Policy enforcement
+- drift detection
+- Puppet Enterprise integration
+- Bolt task execution
+- Plan management
+- Execution logs
+- Node group management
+- Environment management
+
+### Puppet Concepts Integration
+
+```text
+Puppet Server
+    ├── Manifests (.pp files)
+    │     ├── Classes
+    │     ├── Defines
+    │     └── Templates
+    ├── Modules
+    │     ├── Manifests
+    │     ├── Files
+    │     ├── Templates
+    │     └── Facts
+    ├── Hiera (Data Layer)
+    │     ├── Common
+    │     ├── Per-OS
+    │     ├── Per-Environment
+    │     └── Per-Node
+    └── PuppetDB
+          ├── Facts
+          ├── Catalogs
+          └── Reports
+```
+
+### Puppet Workflow
+
+```text
+Code Commit (Manifests/Modules)
+    ↓
+Puppet Server Catalog Compilation
+    ↓
+Approval (Policy Gate)
+    ↓
+Agent Run (Every 30 min or Triggered)
+    ↓
+Catalog Application
+    ↓
+Resource Enforcement
+    ↓
+Compliance Report
+    ↓
+PuppetDB Update
+    ↓
+Drift Detection
+```
+
+---
+
+## SaltStack (Salt)
+
+OpsSentinel integrates with SaltStack for event-driven automation and remote execution.
+
+### Features
+
+- Salt Master integration
+- Minion management
+- State management
+- Pillar data management
+- Execution modules
+- Returners integration
+- Reactor system
+- Beacon monitoring
+- Event bus integration
+- Remote execution
+- Orchestration runner
+- Job management
+- Schedule management
+- Execution logs
+- Minion connectivity monitoring
+
+---
+
+## Cross-Tool Configuration Intelligence
+
+OpsSentinel provides unified visibility across all configuration management tools:
+
+```text
+           OpsSentinel Configuration Layer
+                       │
+    ┌──────────┬───────┴───────┬──────────┐
+    │          │               │          │
+    ▼          ▼               ▼          ▼
+  Ansible     Chef           Puppet     SaltStack
+    │          │               │          │
+    └──────────┴───────┬───────┴──────────┘
+                       │
+                       ▼
+            Unified Configuration View
+            Cross-Tool Drift Detection
+            Correlated Changes
+```
+
+### Cross-Tool Capabilities
+
+- Unified host inventory across all tools
+- Cross-tool dependency mapping
+- Correlated change tracking
+- Aggregated drift detection
+- Single approval workflow for multi-tool changes
+- Compliance status across all tools
+- Configuration drift correlation with infrastructure changes
 
 # 6. Server & Host Management
 
@@ -969,8 +1371,11 @@ failures
 failure_fingerprints
 incidents
 deployments
-infrastructure_runs
-configuration_runs
+infrastructure_runs          # OpenTofu / Terraform / Pulumi / CloudFormation runs
+infrastructure_states        # State tracking across engines
+infrastructure_drift         # Drift detection events
+configuration_runs           # Ansible / Chef / Puppet / SaltStack runs
+configuration_drift          # Configuration drift events
 automation_workflows
 workflow_executions
 secrets
@@ -1005,6 +1410,19 @@ OpsSentinel should expose an API-first architecture.
 /api/secrets
 /api/integrations
 /api/audit
+
+IaC Engine APIs:
+/api/infrastructure/opentofu
+/api/infrastructure/terraform
+/api/infrastructure/pulumi
+/api/infrastructure/cloudformation
+/api/infrastructure/crossplane
+
+Configuration Management APIs:
+/api/configuration/ansible
+/api/configuration/chef
+/api/configuration/puppet
+/api/configuration/saltstack
 ```
 
 ---
@@ -1179,14 +1597,29 @@ GitHub remains the primary integration.
 - CircleCI
 - Azure DevOps
 
-## Infrastructure
+## Infrastructure (IaC & Configuration Management)
 
-- OpenTofu
-- Terraform
-- Ansible
+### Infrastructure as Code
+
+- OpenTofu (preferred open-source)
+- Terraform (full support)
+- Pulumi (TypeScript, Python, Go, C#, Java)
+- CloudFormation (AWS-native)
+- Crossplane (Kubernetes-native)
+
+### Configuration Management
+
+- Ansible (agentless)
+- Chef (agent-based)
+- Puppet (agent-based)
+- SaltStack (agent-based, optional)
+
+### Container & Orchestration
+
 - Kubernetes
 - Helm
 - Argo CD
+- Flux CD
 
 ## Cloud
 
@@ -1221,25 +1654,53 @@ GitHub remains the primary integration.
               ▼                     ▼                     ▼
         Source Control          Automation           Integrations
               │                     │                     │
-        ┌─────┴─────┐        ┌──────┴──────┐       ┌──────┴──────┐
-        │           │        │             │       │             │
-      GitHub      GitLab   OpenTofu      Ansible   Cloud       Kubernetes
-        │                      │             │
-        └──────────┬───────────┴─────────────┘
-                   ▼
-             Workflow Engine
-                   │
-          ┌────────┼────────┐
-          ▼        ▼        ▼
-       Observe   Analyze  Recover
-          │        │        │
-          ▼        ▼        ▼
-       Metrics     AI     Remediation
-          │        │        │
-          └────────┼────────┘
-                   ▼
-             Audit + Policy
+        ┌─────┴─────┐       ┌──────┴──────┐       ┌──────┴──────┐
+        │           │       │             │       │             │
+      GitHub      GitLab   │             │     Cloud       Kubernetes
+        │                  │             │
+        └──────────┬───────┤             │
+                   │       │             │
+                   ▼       ▼             ▼
+              ┌────┴────────────┐   ┌────┴────────────┐
+              │   IaC Engines   │   │ Config Tools    │
+              ├─────────────────┤   ├─────────────────┤
+              │ • OpenTofu      │   │ • Ansible       │
+              │ • Terraform     │   │ • Chef          │
+              │ • Pulumi        │   │ • Puppet        │
+              │ • CloudFormation│   │ • SaltStack     │
+              │ • Crossplane    │   │                 │
+              └────────┬────────┘   └────────┬────────┘
+                       │                     │
+                       └──────────┬──────────┘
+                                  │
+                                  ▼
+                           Workflow Engine
+                                  │
+                     ┌────────────┼────────────┐
+                     ▼            ▼            ▼
+                  Observe      Analyze      Recover
+                     │            │            │
+                     ▼            ▼            ▼
+                  Metrics         AI       Remediation
+                     │            │            │
+                     └────────────┼────────────┘
+                                  │
+                                  ▼
+                           Audit + Policy
 ```
+
+### Architecture Layers
+
+| Layer | Components | Purpose |
+|-------|-----------|---------|
+| **Source Control** | GitHub, GitLab, Bitbucket | Code, configuration, and infrastructure source of truth |
+| **IaC Engines** | OpenTofu, Terraform, Pulumi, CloudFormation, Crossplane | Infrastructure provisioning across clouds |
+| **Config Tools** | Ansible, Chef, Puppet, SaltStack | Server configuration and application deployment |
+| **Workflow Engine** | OpsSentinel core | Orchestrate, approve, and track all operations |
+| **Observe** | Metrics, dashboards, health scores | Real-time operational visibility |
+| **Analyze** | AI/ML, failure fingerprinting, root cause analysis | Intelligence and pattern recognition |
+| **Recover** | Remediation, reruns, rollbacks | Automated and manual recovery |
+| **Audit + Policy** | RBAC, policies, compliance, audit logs | Governance and control |
 
 ---
 
@@ -1453,43 +1914,58 @@ The final platform:
 
 ```text
                          OPS SENTINEL
-                  Open-Source Control Plane
-                              │
-       ┌──────────────────────┼──────────────────────┐
-       │                      │                      │
-   PROVISION              CONFIGURE              DEPLOY
-   OpenTofu               Ansible                CI/CD
-       │                      │                      │
-       └──────────────────────┼──────────────────────┘
-                              │
-                         AUTOMATE
-                              │
-                    ┌─────────┼─────────┐
-                    │         │         │
-                  GitOps    Secrets   Policies
-                    │         │         │
-                    └─────────┼─────────┘
-                              │
-                         OPERATE
-                              │
-                 ┌────────────┼────────────┐
-                 │            │            │
-              Observe      Analyze       Recover
-                 │            │            │
-                 └────────────┼────────────┘
-                              │
-                           GOVERN
-                              │
-                    RBAC • Audit • SSO
+                   Open-Source Control Plane
+                               │
+       ┌───────────────────────┼───────────────────────┐
+       │                       │                       │
+   PROVISION               CONFIGURE                DEPLOY
+   OpenTofu                Ansible                   CI/CD
+   Terraform               Chef                   GitHub Actions
+   Pulumi                  Puppet                 GitLab CI
+   CloudFormation          SaltStack              Jenkins
+   Crossplane                                      ArgoCD
+       │                       │                       │
+       └───────────────────────┼───────────────────────┘
+                               │
+                          AUTOMATE
+                               │
+                     ┌─────────┼─────────┐
+                     │         │         │
+                   GitOps    Secrets   Policies
+                     │         │         │
+                     └─────────┼─────────┘
+                               │
+                          OPERATE
+                               │
+                  ┌────────────┼────────────┐
+                  │            │            │
+               Observe      Analyze       Recover
+                  │            │            │
+                  └────────────┼────────────┘
+                               │
+                            GOVERN
+                               │
+                     RBAC • Audit • SSO
 ```
+
+### Supported Tools Matrix
+
+| Category | Tools |
+|----------|-------|
+| **Infrastructure as Code** | OpenTofu, Terraform, Pulumi, CloudFormation, Crossplane |
+| **Configuration Management** | Ansible, Chef, Puppet, SaltStack |
+| **CI/CD** | GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure DevOps |
+| **GitOps** | ArgoCD, FluxCD |
+| **Container Orchestration** | Kubernetes, Helm |
+| **Source Control** | GitHub, GitLab, Bitbucket |
 
 ---
 
 # 46. Product Promise
 
-> **Provision infrastructure. Configure systems. Deliver applications. Automate operations. Observe reliability. Recover failures. Govern everything through GitOps.**
+> **Provision infrastructure with OpenTofu, Terraform, Pulumi. Configure systems with Ansible, Chef, Puppet. Deliver applications with CI/CD. Automate operations through GitOps. Observe reliability. Recover failures. Govern everything.**
 
-OpsSentinel's goal is not to replace OpenTofu, Ansible, Kubernetes, GitHub Actions, or other best-of-breed tools.
+OpsSentinel's goal is not to replace OpenTofu, Terraform, Pulumi, Ansible, Chef, Puppet, Kubernetes, GitHub Actions, or other best-of-breed tools.
 
 **OpsSentinel connects them into one operational control plane.**
 

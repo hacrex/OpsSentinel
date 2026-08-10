@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Activity, Github, Sun, Moon, Star } from 'lucide-react';
+import { Activity, Github, Sun, Moon, Star, Menu, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 function GitHubStars() {
@@ -39,7 +39,12 @@ export default function Layout({ children }) {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const isActive = (path) => location.pathname === path ? 'active' : '';
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -56,8 +61,10 @@ export default function Layout({ children }) {
           <Activity size={18} />
           OpsSentinel
         </Link>
-        <div className="nav-links">
+        <div className={`nav-links ${mobileOpen ? 'nav-links-open' : ''}`}>
           <Link to="/features" className={isActive('/features')}>Features</Link>
+          <Link to="/infrastructure" className={isActive('/infrastructure')}>Infrastructure</Link>
+          <Link to="/configuration" className={isActive('/configuration')}>Configuration</Link>
           <Link to="/pricing" className={isActive('/pricing')}>Pricing</Link>
           <Link to="/docs" className={isActive('/docs')}>Docs</Link>
           <button
@@ -69,6 +76,13 @@ export default function Layout({ children }) {
           </button>
           <GitHubStars />
         </div>
+        <button
+          className="mobile-menu-btn"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Toggle menu"
+        >
+          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
       </nav>
       <main style={{ flex: 1 }}>
         {children}
@@ -80,7 +94,7 @@ export default function Layout({ children }) {
               <Activity size={18} />
               OpsSentinel
             </Link>
-            <p>Open source CI/CD observability for GitHub Actions. Monitor all your pipelines in one place.</p>
+            <p>The open-source GitOps control plane. Connect CI/CD, infrastructure automation, and incident management into one intelligent platform.</p>
             <div className="footer-social">
               <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" aria-label="GitHub">
                 <Github size={18} />
@@ -91,13 +105,13 @@ export default function Layout({ children }) {
             <div className="footer-col">
               <h4>Product</h4>
               <Link to="/features">Features</Link>
+              <Link to="/infrastructure">Infrastructure</Link>
+              <Link to="/configuration">Configuration</Link>
               <Link to="/pricing">Pricing</Link>
-              <Link to="/docs">Documentation</Link>
-              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer">GitHub</a>
             </div>
             <div className="footer-col">
               <h4>Resources</h4>
-              <a href="https://github.com/hacrex/OpsSentinel/blob/main/Documentation.md" target="_blank" rel="noreferrer">Docs</a>
+              <Link to="/docs">Documentation</Link>
               <a href="https://github.com/hacrex/OpsSentinel/blob/main/CONTRIBUTING.md" target="_blank" rel="noreferrer">Contributing</a>
               <a href="https://github.com/hacrex/OpsSentinel/blob/main/DEPLOYMENT.md" target="_blank" rel="noreferrer">Deployment</a>
               <a href="https://github.com/hacrex/OpsSentinel/issues" target="_blank" rel="noreferrer">Support</a>
@@ -110,7 +124,7 @@ export default function Layout({ children }) {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} OpsSentinel. Built with ❤️ by the community.</p>
+          <p>&copy; {new Date().getFullYear()} OpsSentinel. Built with love by the community.</p>
         </div>
       </footer>
     </div>
