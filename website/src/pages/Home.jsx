@@ -8,35 +8,33 @@ import {
 } from 'lucide-react';
 import Layout from '../components/Layout';
 
+const typingTexts = [
+  'git clone github.com/hacrex/OpsSentinel',
+  'docker-compose up -d',
+  'open http://localhost:3000',
+];
+
 function TypingCode() {
-  const commands = [
-    'git clone github.com/hacrex/OpsSentinel',
-    'docker-compose up -d',
-    'open http://localhost:3000',
-  ];
-  const [index, setIndex] = useState(0);
-  const [text, setText] = useState('');
-  const [deleting, setDeleting] = useState(false);
+  const [textIndex, setTextIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    let timeout;
-    const current = commands[index];
-    if (!deleting) {
-      if (text.length < current.length) {
-        timeout = setTimeout(() => setText(current.slice(0, text.length + 1)), 60);
-      } else {
-        timeout = setTimeout(() => setDeleting(true), 2000);
+    const currentText = typingTexts[textIndex];
+    const timeout = setTimeout(() => {
+      if (!isDeleting && charIndex < currentText.length) {
+        setCharIndex(charIndex + 1);
+      } else if (!isDeleting && charIndex === currentText.length) {
+        setTimeout(() => setIsDeleting(true), 2000);
+      } else if (isDeleting && charIndex > 0) {
+        setCharIndex(charIndex - 1);
+      } else if (isDeleting && charIndex === 0) {
+        setIsDeleting(false);
+        setTextIndex((textIndex + 1) % typingTexts.length);
       }
-    } else {
-      if (text.length > 0) {
-        timeout = setTimeout(() => setText(text.slice(0, -1)), 30);
-      } else {
-        setDeleting(false);
-        setIndex((prev) => (prev + 1) % commands.length);
-      }
-    }
+    }, isDeleting ? 30 : 80);
     return () => clearTimeout(timeout);
-  }, [index, text, deleting, commands]);
+  }, [charIndex, isDeleting, textIndex]);
 
   return (
     <div className="hero-code">
@@ -48,10 +46,10 @@ function TypingCode() {
         </div>
         <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>terminal</span>
       </div>
-      <div className="code-content">
-        <span style={{ color: '#22c55e' }}>$</span> <span>{text}</span>
-        <span className="cursor">|</span>
-      </div>
+      <code className="code-content">
+        <span style={{ color: '#22c55e' }}>$</span> {typingTexts[textIndex].slice(0, charIndex)}
+        <span style={{ borderRight: '2px solid var(--text)', marginLeft: '2px' }} />
+      </code>
     </div>
   );
 }
