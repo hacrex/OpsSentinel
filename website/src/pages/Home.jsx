@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Activity, Shield, GitBranch, AlertTriangle, BarChart3,
@@ -18,7 +18,7 @@ function TypingCode() {
   const [text, setText] = useState('');
   const [deleting, setDeleting] = useState(false);
 
-  useState(() => {
+  useEffect(() => {
     let timeout;
     const current = commands[index];
     if (!deleting) {
@@ -36,7 +36,7 @@ function TypingCode() {
       }
     }
     return () => clearTimeout(timeout);
-  });
+  }, [index, text, deleting, commands]);
 
   return (
     <div className="hero-code">
