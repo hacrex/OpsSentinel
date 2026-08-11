@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Shield, Server, Cloud, GitBranch, Layers, Zap, CheckCircle, ArrowRight } from 'lucide-react';
+import { Shield, Server, Cloud, GitBranch, Layers, Zap, CheckCircle } from 'lucide-react';
 import Layout from '../components/Layout';
 
 const engines = [
@@ -7,7 +7,7 @@ const engines = [
     name: 'OpenTofu',
     badge: 'Preferred',
     badgeColor: '#22c55e',
-    description: 'The open-source IaC engine. Full support for plan, apply, destroy, state management, drift detection, and workspace operations.',
+    description: 'The community-driven IaC engine. Full support for plan, apply, destroy, state management, drift detection, and workspace operations.',
     features: ['Plan & Apply', 'State Management', 'Drift Detection', 'Module Registry', 'Workspace Management', 'Plan Approval'],
     icon: <Shield size={24} />,
   },
@@ -15,7 +15,7 @@ const engines = [
     name: 'Terraform',
     badge: 'Full Support',
     badgeColor: '#7b61ff',
-    description: 'Complete Terraform support including Terraform Cloud and Enterprise integration. Drop-in replacement for Terraform Cloud workflows.',
+    description: 'Complete Terraform support including Terraform Cloud and Enterprise integration. A drop-in replacement for Terraform Cloud workflows.',
     features: ['Plan & Apply', 'Remote State', 'Terraform Cloud', 'Module Registry', 'Cost Estimation', 'Migration to OpenTofu'],
     icon: <Layers size={24} />,
   },
@@ -31,7 +31,7 @@ const engines = [
     name: 'CloudFormation',
     badge: 'AWS Native',
     badgeColor: '#f97316',
-    description: 'AWS-native infrastructure management. Stack sets, change sets, drift detection, and nested stack support.',
+    description: 'AWS-native infrastructure as code. Stack sets, change sets, drift detection, and nested stack support — all managed from OpsSentinel.',
     features: ['Stack Management', 'Change Sets', 'Stack Sets', 'Drift Detection', 'Nested Stacks', 'Resource Tracking'],
     icon: <Cloud size={24} />,
   },
@@ -39,7 +39,7 @@ const engines = [
     name: 'Crossplane',
     badge: 'K8s Native',
     badgeColor: '#38bdf8',
-    description: 'Kubernetes-native infrastructure management. Manage cloud resources as Kubernetes custom resources.',
+    description: 'Kubernetes-native infrastructure as code. Manage cloud resources as custom resources. Compose, claim, and package your infrastructure.',
     features: ['Compositions', 'Claims', 'Provider Config', 'Functions', 'Package Management', 'Drift Detection'],
     icon: <Server size={24} />,
   },
@@ -48,32 +48,32 @@ const engines = [
 const capabilities = [
   {
     title: 'Unified Infrastructure View',
-    description: 'See all your infrastructure across OpenTofu, Terraform, Pulumi, and CloudFormation in one dashboard.',
+    description: 'See all your infrastructure across OpenTofu, Terraform, Pulumi, and CloudFormation in a single dashboard. No more tab-switching.',
     icon: <Layers size={20} />,
   },
   {
     title: 'Cross-Engine Drift Detection',
-    description: 'Detect configuration drift across all IaC engines on a schedule or on-demand.',
+    description: 'Detect configuration drift across all IaC engines — on a schedule or on-demand. Catch unauthorized changes before they cascade.',
     icon: <Shield size={20} />,
   },
   {
     title: 'Plan Approval Workflows',
-    description: 'Require approval before applying infrastructure changes. Policy gates for production environments.',
+    description: 'Require approval before applying infrastructure changes. Enforce policy gates for production. Full audit trail on every action.',
     icon: <CheckCircle size={20} />,
   },
   {
     title: 'Correlated Change Tracking',
-    description: 'See how infrastructure changes relate to CI/CD deployments and configuration updates.',
+    description: 'See how infrastructure changes relate to CI/CD deployments and configuration updates. One timeline, full context.',
     icon: <GitBranch size={20} />,
   },
   {
     title: 'State Management',
-    description: 'Track state across all engines. Local, remote, and cloud backends supported.',
+    description: 'Track state across all engines. Local, remote, and cloud backends supported. No vendor lock-in.',
     icon: <Server size={20} />,
   },
   {
     title: 'Multi-Engine Orchestration',
-    description: 'Run OpenTofu + Ansible in a single workflow. Provision infrastructure, then configure it.',
+    description: 'Run OpenTofu + Ansible in a single workflow. Provision infrastructure, then configure it — atomically.',
     icon: <Zap size={20} />,
   },
 ];
@@ -166,7 +166,7 @@ export default function Infrastructure() {
       <section className="section cta">
         <div className="container">
           <div className="cta-content">
-            <h2>Ready to unify your infrastructure?</h2>
+            <h2>Unify Your Infrastructure Today</h2>
             <p>Connect your first IaC project in minutes. OpenTofu, Terraform, Pulumi, CloudFormation, or Crossplane.</p>
             <div className="hero-actions">
               <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn btn-primary">

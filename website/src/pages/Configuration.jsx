@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Terminal, Shield, Settings, Server, Zap, CheckCircle, ArrowRight } from 'lucide-react';
+import { Terminal, Shield, Settings, Server, Zap, CheckCircle } from 'lucide-react';
 import Layout from '../components/Layout';
 
 const tools = [
@@ -7,7 +7,7 @@ const tools = [
     name: 'Ansible',
     badge: 'Agentless',
     badgeColor: '#22c55e',
-    description: 'Agentless automation over SSH/WinRM. Run playbooks, manage inventory, and configure servers without installing agents.',
+    description: 'Agentless automation over SSH/WinRM. Run playbooks, manage inventory, and configure servers without installing anything on target hosts.',
     features: ['Playbook Execution', 'Inventory Management', 'Role Management', 'Vault Integration', 'Ad-Hoc Commands', 'Host-Level Results'],
     icon: <Terminal size={24} />,
   },
@@ -15,7 +15,7 @@ const tools = [
     name: 'Chef',
     badge: 'Agent-Based',
     badgeColor: '#f59e0b',
-    description: 'Infrastructure automation with Ruby recipes and cookbooks. Continuous convergence and compliance enforcement.',
+    description: 'Infrastructure automation with Ruby recipes and cookbooks. Continuous convergence, compliance enforcement, and node management.',
     features: ['Cookbook Management', 'Recipe Execution', 'Node Convergence', 'InSpec Compliance', 'Policy Groups', 'Chef Automate'],
     icon: <Settings size={24} />,
   },
@@ -23,7 +23,7 @@ const tools = [
     name: 'Puppet',
     badge: 'Agent-Based',
     badgeColor: '#7b61ff',
-    description: 'Enterprise configuration management with declarative manifests. Enforce desired state across thousands of nodes.',
+    description: 'Enterprise configuration management with declarative manifests. Enforce desired state across thousands of nodes with confidence.',
     features: ['Manifest Management', 'Module System', 'Hiera Data', 'PuppetDB', 'Compliance Reporting', 'Bolt Tasks'],
     icon: <Shield size={24} />,
   },
@@ -31,7 +31,7 @@ const tools = [
     name: 'SaltStack',
     badge: 'Event-Driven',
     badgeColor: '#38bdf8',
-    description: 'Event-driven automation with high performance. Remote execution, state management, and reactive automation.',
+    description: 'Event-driven automation with high performance. Remote execution, state management, and reactive automation at scale.',
     features: ['State Management', 'Remote Execution', 'Pillar Data', 'Reactor System', 'Beacon Monitoring', 'Orchestration'],
     icon: <Server size={24} />,
   },
@@ -40,32 +40,32 @@ const tools = [
 const capabilities = [
   {
     title: 'Unified Configuration View',
-    description: 'See all your configuration management across Ansible, Chef, Puppet, and SaltStack in one dashboard.',
+    description: 'See all your configuration management across Ansible, Chef, Puppet, and SaltStack in a single dashboard. No more context-switching.',
     icon: <Settings size={20} />,
   },
   {
     title: 'Configuration Drift Detection',
-    description: 'Detect when servers drift from their desired configuration state across all tools.',
+    description: 'Detect when servers drift from their desired state across all tools. Get alerted before drift becomes an outage.',
     icon: <Shield size={20} />,
   },
   {
     title: 'Execution Monitoring',
-    description: 'Track playbook runs, Chef client runs, Puppet agent runs, and Salt state applications in real-time.',
+    description: 'Track playbook runs, Chef client runs, Puppet agent runs, and Salt state applications in real time.',
     icon: <Terminal size={20} />,
   },
   {
     title: 'Host-Level Results',
-    description: 'See per-host results for every configuration run. Know exactly which servers succeeded or failed.',
+    description: 'See per-host results for every configuration run. Know exactly which servers succeeded, which failed, and why.',
     icon: <Server size={20} />,
   },
   {
     title: 'Approval Workflows',
-    description: 'Require approval before running configuration changes in production environments.',
+    description: 'Require approval before running configuration changes in production. Full audit trail on every action.',
     icon: <CheckCircle size={20} />,
   },
   {
     title: 'Cross-Tool Correlation',
-    description: 'Correlate configuration changes with infrastructure changes and CI/CD deployments.',
+    description: 'Correlate configuration changes with infrastructure changes and CI/CD deployments. See the full picture.',
     icon: <Zap size={20} />,
   },
 ];
@@ -81,7 +81,7 @@ export default function Configuration() {
             <p className="section-subtitle">
               OpsSentinel integrates with Ansible, Chef, Puppet, and SaltStack.
               Manage server configuration, enforce compliance, and detect drift
-              from a single operational control plane.
+              — all from a single operational control plane.
             </p>
           </div>
         </div>
@@ -138,21 +138,21 @@ export default function Configuration() {
             <div className="problem-card">
               <h3>Without OpsSentinel</h3>
               <ul className="feature-list">
-                <li>Ansible logs in one place, Chef in another</li>
-                <li>No visibility into configuration drift</li>
-                <li>Manual correlation of config changes to incidents</li>
-                <li>No unified approval workflow</li>
-                <li>Configuration and infrastructure are disconnected</li>
+                <li>Ansible logs in one tool, Chef in another, Puppet elsewhere</li>
+                <li>No visibility into configuration drift across your fleet</li>
+                <li>Manual correlation of config changes to production incidents</li>
+                <li>No unified approval workflow — each tool has its own process</li>
+                <li>Infrastructure and configuration exist in separate silos</li>
               </ul>
             </div>
             <div className="problem-card" style={{ borderColor: 'var(--accent)' }}>
               <h3>With OpsSentinel</h3>
               <ul className="feature-list">
-                <li>Unified view across all config tools</li>
-                <li>Automatic drift detection and alerts</li>
-                <li>Config changes correlated with deployments</li>
-                <li>Single approval workflow for all changes</li>
-                <li>Infrastructure + Config + CI/CD connected</li>
+                <li>Unified view across all configuration management tools</li>
+                <li>Automatic drift detection with instant alerts</li>
+                <li>Config changes correlated with deployments and incidents</li>
+                <li>Single approval workflow for all changes — one process</li>
+                <li>Infrastructure + Configuration + CI/CD connected end-to-end</li>
               </ul>
             </div>
           </div>
@@ -162,7 +162,7 @@ export default function Configuration() {
       <section className="section cta">
         <div className="container">
           <div className="cta-content">
-            <h2>Ready to unify your configuration management?</h2>
+            <h2>Take Control of Configuration</h2>
             <p>Connect Ansible, Chef, Puppet, or SaltStack in minutes. See all your server configuration in one place.</p>
             <div className="hero-actions">
               <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn btn-primary">

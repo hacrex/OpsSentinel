@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Activity, Shield, GitBranch, AlertTriangle, BarChart3,
-  Bell, Lock, Terminal, Layers, Server, Settings, Zap,
-  CheckCircle, XCircle, ArrowRight, Cpu, Eye, FileCode,
+  Shield, AlertTriangle, BarChart3,
+  Lock, Layers, Server, Settings, Github,
+  CheckCircle, XCircle, ArrowRight, Eye,
   Workflow, Brain, Target
 } from 'lucide-react';
 import Layout from '../components/Layout';
@@ -21,11 +21,12 @@ function TypingCode() {
 
   useEffect(() => {
     const currentText = typingTexts[textIndex];
+    let pauseTimeout;
     const timeout = setTimeout(() => {
       if (!isDeleting && charIndex < currentText.length) {
         setCharIndex(charIndex + 1);
       } else if (!isDeleting && charIndex === currentText.length) {
-        setTimeout(() => setIsDeleting(true), 2000);
+        pauseTimeout = setTimeout(() => setIsDeleting(true), 2000);
       } else if (isDeleting && charIndex > 0) {
         setCharIndex(charIndex - 1);
       } else if (isDeleting && charIndex === 0) {
@@ -33,7 +34,10 @@ function TypingCode() {
         setTextIndex((textIndex + 1) % typingTexts.length);
       }
     }, isDeleting ? 30 : 80);
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      if (pauseTimeout) clearTimeout(pauseTimeout);
+    };
   }, [charIndex, isDeleting, textIndex]);
 
   return (
@@ -58,47 +62,47 @@ const features = [
   {
     icon: <BarChart3 size={20} />,
     title: 'CI/CD Observability',
-    description: 'Real-time dashboard for GitHub Actions, GitLab CI, Jenkins. Track workflows, jobs, and steps across all repositories.',
+    description: 'Live dashboard for GitHub Actions, GitLab CI, and Jenkins. Track workflows, jobs, and steps across every repository in real time.',
   },
   {
     icon: <Brain size={20} />,
     title: 'AI Failure Analysis',
-    description: 'LLM-powered root cause analysis. Failure fingerprinting groups similar failures. Flaky test detection with recommendations.',
+    description: 'LLM-powered root cause analysis. Failure fingerprinting clusters similar issues. Flaky test detection with actionable recommendations.',
   },
   {
     icon: <Layers size={20} />,
     title: 'Multi-Engine IaC',
-    description: 'OpenTofu, Terraform, Pulumi, CloudFormation, Crossplane. Plan, approve, apply — all from one control plane.',
+    description: 'OpenTofu, Terraform, Pulumi, CloudFormation, Crossplane. Plan, approve, and apply infrastructure from a single control plane.',
   },
   {
     icon: <Settings size={20} />,
     title: 'Configuration Management',
-    description: 'Ansible, Chef, Puppet, SaltStack. Run playbooks, enforce compliance, detect configuration drift.',
+    description: 'Ansible, Chef, Puppet, SaltStack. Run playbooks, enforce compliance, and catch configuration drift before it causes outages.',
   },
   {
     icon: <AlertTriangle size={20} />,
     title: 'Incident Management',
-    description: 'Auto-create incidents from repeated failures. Track severity, timeline, and resolution. Integrate with GitHub Issues.',
+    description: 'Automatically open incidents from repeated failures. Track severity, timeline, and resolution — all linked to GitHub Issues.',
   },
   {
     icon: <Target size={20} />,
     title: 'DORA Metrics',
-    description: 'Deployment frequency, lead time, change failure rate, MTTR. Industry benchmarks to measure your team.',
+    description: 'Deployment frequency, lead time, change failure rate, MTTR. Measure your team against industry benchmarks.',
   },
   {
     icon: <Workflow size={20} />,
     title: 'Cross-Domain Correlation',
-    description: 'Connect commit to build to deploy to incident. See the full chain when something goes wrong.',
+    description: 'Trace a commit through build, deploy, and incident. See the full chain the moment something breaks.',
   },
   {
     icon: <Eye size={20} />,
     title: 'Drift Detection',
-    description: 'Detect infrastructure and configuration drift across all engines. Get alerted before it causes incidents.',
+    description: 'Detect infrastructure and configuration drift across all engines. Get alerted before drift becomes downtime.',
   },
   {
     icon: <Lock size={20} />,
     title: 'Policy Engine',
-    description: 'Require approvals, enforce gates, audit all actions. Policy-driven automation with guardrails.',
+    description: 'Require approvals, enforce gates, and audit every action. Policy-driven automation with built-in guardrails.',
   },
 ];
 
@@ -124,9 +128,8 @@ export default function Home() {
             <span style={{ color: 'var(--accent)' }}>GitOps Control Plane</span>
           </h1>
           <p className="hero-subtitle">
-            Connect your CI/CD pipelines, infrastructure automation (Terraform, OpenTofu, Pulumi),
-            configuration management (Ansible, Chef, Puppet), and incident response into one
-            intelligent platform with AI-powered failure analysis.
+            Unify CI/CD pipelines, infrastructure automation, configuration management,
+            and incident response into a single platform — powered by AI.
           </p>
           <div className="hero-actions">
             <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn btn-primary">
@@ -154,8 +157,8 @@ export default function Home() {
             <span className="section-label">The Problem</span>
             <h2 className="section-title">Your Tools Don't Talk to Each Other</h2>
             <p className="section-subtitle">
-              Modern teams use 5-15 tools across the delivery lifecycle. Each tool sees only its own domain.
-              When something fails, you manually correlate across dashboards, logs, and alerts.
+              Modern teams juggle 5–15 tools across the delivery lifecycle. Each one sees only its own slice.
+              When things break, you're left stitching together dashboards, logs, and alerts by hand.
             </p>
           </div>
           <div className="problem-grid">
@@ -163,22 +166,22 @@ export default function Home() {
               <div className="problem-icon"><XCircle size={24} style={{ color: '#ef4444' }} /></div>
               <h3>Without OpsSentinel</h3>
               <ul className="feature-list">
-                <li>GitHub Actions shows "failed" — but why?</li>
-                <li>Terraform change invisible to CI/CD monitoring</li>
-                <li>Ansible drift detected by nobody</li>
-                <li>Incident has no infrastructure context</li>
-                <li>5 tools, 5 dashboards, 0 answers</li>
+                <li>GitHub Actions fails — but the root cause is buried in Terraform</li>
+                <li>Infrastructure changes are invisible to your CI/CD pipeline</li>
+                <li>Ansible drift goes undetected until production breaks</li>
+                <li>Incidents lack context: which commit, which deploy, which change</li>
+                <li>Five tools, five dashboards, zero answers</li>
               </ul>
             </div>
             <div className="problem-card" style={{ borderColor: 'var(--accent)' }}>
               <div className="problem-icon"><CheckCircle size={24} style={{ color: 'var(--accent)' }} /></div>
               <h3>With OpsSentinel</h3>
               <ul className="feature-list">
-                <li>AI analyzes logs and finds root cause</li>
-                <li>Infrastructure changes correlated with deployments</li>
-                <li>Configuration drift detected and alerted</li>
-                <li>Incidents have full context: commit to deploy</li>
-                <li>One platform, one view, full understanding</li>
+                <li>AI analyzes logs and surfaces the root cause in seconds</li>
+                <li>Infrastructure changes are correlated with every deployment</li>
+                <li>Configuration drift is detected and alerted automatically</li>
+                <li>Incidents carry full context: commit to deploy to infra</li>
+                <li>One platform, one view, complete operational clarity</li>
               </ul>
             </div>
           </div>
@@ -189,7 +192,7 @@ export default function Home() {
         <div className="container">
           <div className="section-header">
             <span className="section-label">Core Features</span>
-            <h2 className="section-title">Everything You Need to Understand Your Operations</h2>
+            <h2 className="section-title">Everything You Need to Own Your Operations</h2>
           </div>
           <div className="features-grid">
             {features.map((feature) => (
@@ -209,7 +212,7 @@ export default function Home() {
             <span className="section-label">Supported Tools</span>
             <h2 className="section-title">One Platform. Every Tool.</h2>
             <p className="section-subtitle">
-              OpsSentinel connects to your existing tools. No migration required. No vendor lock-in.
+              Plug in your existing stack. No migrations. No vendor lock-in. Just visibility.
             </p>
           </div>
           <div className="tools-grid">
@@ -261,18 +264,18 @@ export default function Home() {
             <div className="step-card">
               <div className="step-number">1</div>
               <h3>Clone & Deploy</h3>
-              <p>Docker Compose up. Three containers: PostgreSQL, Backend, Frontend. Running in minutes.</p>
+              <p>One command. Three containers: PostgreSQL, Backend, Frontend. Running in under five minutes.</p>
               <div className="step-code">docker-compose up -d</div>
             </div>
             <div className="step-card">
               <div className="step-number">2</div>
               <h3>Connect Your Tools</h3>
-              <p>Add GitHub webhooks, configure IaC projects, connect Ansible inventories. One API for everything.</p>
+              <p>Add GitHub webhooks, point to your IaC projects, link Ansible inventories. One API for all of it.</p>
             </div>
             <div className="step-card">
               <div className="step-number">3</div>
-              <h3>Understand Everything</h3>
-              <p>See the full picture. AI-powered analysis. Cross-domain correlation. Incident management.</p>
+              <h3>See Everything</h3>
+              <p>Full-stack visibility. AI-driven analysis. Cross-domain correlation. Incidents that resolve themselves.</p>
             </div>
           </div>
         </div>
@@ -298,52 +301,52 @@ export default function Home() {
               <tbody>
                 <tr>
                   <td>CI/CD Observability</td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
                   <td>Partial</td>
-                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} aria-label="Supported" /></td>
                 </tr>
                 <tr>
                   <td>Failure Intelligence</td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} aria-label="Supported" /></td>
                 </tr>
                 <tr>
                   <td>Multi-Engine IaC</td>
-                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} aria-label="Supported" /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} aria-label="Supported" /></td>
                 </tr>
                 <tr>
                   <td>Incident Management</td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} aria-label="Supported" /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} aria-label="Supported" /></td>
                 </tr>
                 <tr>
                   <td>Cross-Domain Correlation</td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} aria-label="Supported" /></td>
                 </tr>
                 <tr>
                   <td>Open Source</td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} aria-label="Supported" /></td>
                 </tr>
                 <tr>
                   <td>Self-Hosted</td>
                   <td>Partial</td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><XCircle size={16} style={{ color: '#ef4444' }} /></td>
-                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><XCircle size={16} style={{ color: '#ef4444' }} aria-label="Not supported" /></td>
+                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} aria-label="Supported" /></td>
                 </tr>
               </tbody>
             </table>
@@ -354,8 +357,8 @@ export default function Home() {
       <section className="section cta">
         <div className="container">
           <div className="cta-content">
-            <h2>Start Understanding Your Operations Today</h2>
-            <p>Free. Open source. Self-hosted. Connect your first tool in minutes.</p>
+            <h2>Stop Guessing. Start Knowing.</h2>
+            <p>Open source. Self-hosted. Up and running in minutes.</p>
             <div className="hero-actions">
               <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn btn-primary">
                 Get Started Free
@@ -372,10 +375,4 @@ export default function Home() {
   );
 }
 
-function Github({ size }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-    </svg>
-  );
-}
+

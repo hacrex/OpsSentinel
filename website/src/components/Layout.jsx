@@ -56,6 +56,7 @@ export default function Layout({ children }) {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <a href="#main-content" className="skip-link">Skip to content</a>
       <nav className={`nav ${scrolled ? 'nav-scrolled' : ''}`}>
         <Link to="/" className="nav-logo">
           <Activity size={18} />
@@ -80,11 +81,12 @@ export default function Layout({ children }) {
           className="mobile-menu-btn"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
+          aria-expanded={mobileOpen}
         >
           {mobileOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </nav>
-      <main style={{ flex: 1 }}>
+      <main id="main-content" style={{ flex: 1 }}>
         {children}
       </main>
       <footer className="footer">
@@ -94,7 +96,7 @@ export default function Layout({ children }) {
               <Activity size={18} />
               OpsSentinel
             </Link>
-            <p>The open-source GitOps control plane. Connect CI/CD, infrastructure automation, and incident management into one intelligent platform.</p>
+            <p>The open-source GitOps control plane. Unify CI/CD, infrastructure automation, configuration management, and incident response — powered by AI.</p>
             <div className="footer-social">
               <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" aria-label="GitHub">
                 <Github size={18} />

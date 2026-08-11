@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Book, Settings, Shield, Rocket, ExternalLink, Loader2 } from 'lucide-react';
+import { Book, Settings, Shield, Rocket, ExternalLink } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Layout from '../components/Layout';
