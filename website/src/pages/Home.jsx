@@ -48,7 +48,7 @@ function TypingCode() {
           <span style={{ background: '#ffbd2e' }}></span>
           <span style={{ background: '#28c840' }}></span>
         </div>
-        <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>terminal</span>
+        <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>command line</span>
       </div>
       <code className="code-content">
         <span style={{ color: '#22c55e' }}>$</span> {typingTexts[textIndex].slice(0, charIndex)}
