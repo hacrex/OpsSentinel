@@ -16,10 +16,7 @@ const Login = () => {
     if (code) {
       api.post('/auth/github', { code })
         .then((res) => {
-          const data = res.data;
-          if (data.token) {
-            localStorage.setItem('github_token', data.token);
-            if (data.user) localStorage.setItem('github_user', JSON.stringify(data.user));
+          if (res.data.user) {
             navigate('/');
           }
         })

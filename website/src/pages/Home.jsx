@@ -42,14 +42,6 @@ function TypingCode() {
 
   return (
     <div className="hero-code">
-      <div className="preview-header">
-        <div className="preview-dots">
-          <span style={{ background: '#ff5f57' }}></span>
-          <span style={{ background: '#ffbd2e' }}></span>
-          <span style={{ background: '#28c840' }}></span>
-        </div>
-        <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>command line</span>
-      </div>
       <code className="code-content">
         <span style={{ color: '#22c55e' }}>$</span> {typingTexts[textIndex].slice(0, charIndex)}
         <span style={{ borderRight: '2px solid var(--text)', marginLeft: '2px' }} />

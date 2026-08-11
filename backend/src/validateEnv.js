@@ -11,6 +11,16 @@ function validateEnv() {
       console.warn(msg);
     }
   }
+
+  // Block BYPASS_AUTH in production
+  if (process.env.BYPASS_AUTH === 'true' && process.env.NODE_ENV === 'production') {
+    console.error('[startup] FATAL: BYPASS_AUTH=true is not allowed in production. Remove it or set NODE_ENV=development.');
+    process.exit(1);
+  }
+
+  if (process.env.BYPASS_AUTH === 'true') {
+    console.warn('[startup] ⚠️  BYPASS_AUTH is enabled — authentication is DISABLED. This is for local development only.');
+  }
 }
 
 module.exports = validateEnv;

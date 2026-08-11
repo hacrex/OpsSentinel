@@ -9,7 +9,7 @@ const plans = [
     period: 'forever',
     badge: 'Open Source',
     badgeColor: '#22c55e',
-    description: 'Full control. Your data. Your infrastructure.',
+    description: 'Full control. Your data. Your infrastructure. No limits.',
     features: [
       'CI/CD Observability (GitHub Actions, GitLab CI, Jenkins)',
       'AI-Powered Failure Analysis',
@@ -37,16 +37,16 @@ const plans = [
     period: '/month',
     badge: 'Coming Soon',
     badgeColor: '#f59e0b',
-    description: 'Managed OpsSentinel. Zero operational overhead.',
+    description: 'Managed OpsSentinel. Zero operational overhead. We handle the infrastructure.',
     features: [
       'Everything in Self-Hosted',
-      'Managed Infrastructure',
-      'Auto Updates & Backups',
-      '99.9% SLA',
+      'Fully Managed Infrastructure',
+      'Automatic Updates & Backups',
+      '99.9% Uptime SLA',
       'Priority Support',
       'Multi-Tenant Dashboard',
       'SSO/SAML Integration',
-      'Advanced RBAC',
+      'Advanced RBAC & Permissions',
       'Compliance Reports',
       'Custom Integrations',
     ],
@@ -59,11 +59,11 @@ const plans = [
 const faq = [
   {
     q: 'Is OpsSentinel really free?',
-    a: 'Yes. OpsSentinel is MIT licensed and completely free to self-host. No feature limits, no user caps, no hidden fees.',
+    a: 'Yes. OpsSentinel is MIT licensed and completely free to self-host. No feature limits, no user caps, no hidden fees. If you need managed infrastructure, our Cloud plan launches soon.',
   },
   {
     q: 'What do I need to run OpsSentinel?',
-    a: 'Docker and Docker Compose. That\'s it. Three containers: PostgreSQL, Backend, Frontend. Runs on any Linux, Mac, or Windows machine with Docker.',
+    a: 'Docker and Docker Compose. Three containers: PostgreSQL, Backend, Frontend. Runs on any Linux, Mac, or Windows machine with Docker installed.',
   },
   {
     q: 'Does my data leave my server?',
@@ -71,15 +71,15 @@ const faq = [
   },
   {
     q: 'Which IaC tools are supported?',
-    a: 'OpenTofu, Terraform, Pulumi, CloudFormation, and Crossplane for infrastructure. Ansible, Chef, Puppet, and SaltStack for configuration management.',
+    a: 'OpenTofu, Terraform, Pulumi, CloudFormation, and Crossplane for infrastructure. Ansible, Chef, Puppet, and SaltStack for configuration management. All from one dashboard.',
   },
   {
     q: 'Can I use GitHub Enterprise?',
-    a: 'Yes. OpsSentinel works with GitHub.com and GitHub Enterprise (cloud and self-hosted). Webhook and OAuth configuration is the same.',
+    a: 'Yes. OpsSentinel works with GitHub.com and GitHub Enterprise (cloud and self-hosted). Webhook and OAuth configuration follows the same process.',
   },
   {
     q: 'How does AI failure analysis work?',
-    a: 'OpsSentinel fetches failed job logs from GitHub, extracts error patterns, and sends them to an LLM (GPT-4o-mini or Claude 3 Haiku). It returns a category, likely root cause, suggested fix, and confidence score. You bring your own API key.',
+    a: 'OpsSentinel fetches failed job logs, extracts error patterns, and sends them to an LLM (GPT-4o-mini or Claude 3 Haiku). It returns a category, likely root cause, suggested fix, and confidence score. You bring your own API key.',
   },
   {
     q: 'Can I contribute?',
@@ -94,10 +94,10 @@ export default function Pricing() {
         <div className="container">
           <div className="section-header">
             <span className="section-label">Pricing</span>
-            <h1 className="section-title">Free to Self-Host. Forever.</h1>
+            <h1 className="section-title">Free to Self-Host. No Catch.</h1>
             <p className="section-subtitle">
               OpsSentinel is open source. Deploy it yourself with Docker Compose.
-              No feature limits. No user caps. No vendor lock-in.
+              No feature limits. No user caps. No vendor lock-in. Period.
             </p>
           </div>
         </div>
@@ -157,17 +157,17 @@ export default function Pricing() {
             <div className="pricing-trust-item">
               <Shield size={20} />
               <h4>Open Source</h4>
-              <p>MIT licensed. Full source code available. No black boxes.</p>
+              <p>MIT licensed. Full source code on GitHub. Audit it, fork it, ship it.</p>
             </div>
             <div className="pricing-trust-item">
               <Server size={20} />
-              <h4>Your Data</h4>
-              <p>Self-hosted. Data stays on your servers. No external dependencies.</p>
+              <h4>Your Data, Your Rules</h4>
+              <p>Self-hosted. Data stays on your servers. No external dependencies you don't choose.</p>
             </div>
             <div className="pricing-trust-item">
               <Lock size={20} />
               <h4>No Lock-in</h4>
-              <p>Export your data anytime. Standard PostgreSQL. No proprietary formats.</p>
+              <p>Export your data anytime. Standard PostgreSQL. No proprietary formats. Leave whenever you want.</p>
             </div>
           </div>
         </div>
@@ -190,8 +190,8 @@ export default function Pricing() {
       <section className="section cta">
         <div className="container">
           <div className="cta-content">
-            <h2>Get Started Today</h2>
-            <p>Free. Open source. Self-hosted. Running in minutes.</p>
+            <h2>Deploy in Minutes. See Value in Hours.</h2>
+            <p>Open source. Self-hosted. No credit card. No signup required.</p>
             <div className="hero-actions">
               <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn btn-primary">
                 <Github size={16} />
