@@ -21,7 +21,7 @@ function GitHubStars() {
     <a
       href="https://github.com/hacrex/OpsSentinel"
       target="_blank"
-      rel="noreferrer"
+      rel="noopener noreferrer"
       className="nav-cta github-btn"
     >
       <Github size={14} />
@@ -98,7 +98,7 @@ export default function Layout({ children }) {
             </Link>
             <p>The open-source GitOps control plane. Unify CI/CD, infrastructure automation, configuration management, and incident response — powered by AI.</p>
             <div className="footer-social">
-              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" aria-label="GitHub">
+              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                 <Github size={18} />
               </a>
             </div>
@@ -114,14 +114,14 @@ export default function Layout({ children }) {
             <div className="footer-col">
               <h4>Resources</h4>
               <Link to="/docs">Documentation</Link>
-              <a href="https://github.com/hacrex/OpsSentinel/blob/main/CONTRIBUTING.md" target="_blank" rel="noreferrer">Contributing</a>
-              <a href="https://github.com/hacrex/OpsSentinel/blob/main/DEPLOYMENT.md" target="_blank" rel="noreferrer">Deployment</a>
-              <a href="https://github.com/hacrex/OpsSentinel/issues" target="_blank" rel="noreferrer">Support</a>
+              <a href="https://github.com/hacrex/OpsSentinel/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a>
+              <a href="https://github.com/hacrex/OpsSentinel/blob/main/DEPLOYMENT.md" target="_blank" rel="noopener noreferrer">Deployment</a>
+              <a href="https://github.com/hacrex/OpsSentinel/issues" target="_blank" rel="noopener noreferrer">Support</a>
             </div>
             <div className="footer-col">
               <h4>Legal</h4>
-              <a href="https://github.com/hacrex/OpsSentinel/blob/main/LICENSE" target="_blank" rel="noreferrer">MIT License</a>
-              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer">Source Code</a>
+              <a href="https://github.com/hacrex/OpsSentinel/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
+              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer">Source Code</a>
             </div>
           </div>
         </div>

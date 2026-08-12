@@ -123,7 +123,7 @@ export default function Home() {
             Unify CI/CD pipelines, infrastructure automation, configuration management and incident response into a single platform. Powered by AI.
           </p>
           <div className="hero-actions">
-            <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn btn-primary">
+            <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
               <Github size={16} />
               View on GitHub
             </a>
@@ -372,7 +372,7 @@ export default function Home() {
             <h2>Stop Guessing. Start Knowing.</h2>
             <p>Open source. Self-hosted. Up and running in minutes.</p>
             <div className="hero-actions">
-              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn btn-primary">
+              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                 Get Started Free
               </a>
               <Link to="/features" className="btn btn-secondary">

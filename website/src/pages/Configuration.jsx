@@ -165,7 +165,7 @@ export default function Configuration() {
             <h2>Take Control of Configuration</h2>
             <p>Connect Ansible, Chef, Puppet, or SaltStack in minutes. See all your server configuration in one place.</p>
             <div className="hero-actions">
-              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn btn-primary">
+              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                 Get Started Free
               </a>
               <Link to="/pricing" className="btn btn-secondary">

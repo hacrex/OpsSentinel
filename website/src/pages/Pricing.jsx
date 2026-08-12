@@ -129,7 +129,7 @@ export default function Pricing() {
                   <a
                     href={plan.ctaLink}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="btn btn-primary"
                     style={{ width: '100%', justifyContent: 'center' }}
                   >
@@ -193,7 +193,7 @@ export default function Pricing() {
             <h2>Deploy in Minutes. See Value in Hours.</h2>
             <p>Open source. Self-hosted. No credit card. No signup required.</p>
             <div className="hero-actions">
-              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn btn-primary">
+              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                 <Github size={16} />
                 View on GitHub
               </a>

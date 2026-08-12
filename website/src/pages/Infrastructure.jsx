@@ -184,7 +184,7 @@ export default function Infrastructure() {
             <h2>Unify Your Infrastructure Today</h2>
             <p>Connect your first IaC project in minutes. OpenTofu, Terraform, Pulumi, CloudFormation, or Crossplane.</p>
             <div className="hero-actions">
-              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn btn-primary">
+              <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                 Get Started Free
               </a>
               <Link to="/pricing" className="btn btn-secondary">

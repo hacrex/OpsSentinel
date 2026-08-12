@@ -62,7 +62,7 @@ export default function Docs() {
             <a
               href="https://github.com/hacrex/OpsSentinel"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="doc-nav-item"
             >
               <ExternalLink size={18} />
@@ -71,7 +71,7 @@ export default function Docs() {
             <a
               href="https://github.com/hacrex/OpsSentinel/issues"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="doc-nav-item"
             >
               <ExternalLink size={18} />
