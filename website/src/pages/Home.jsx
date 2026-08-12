@@ -120,25 +120,24 @@ export default function Home() {
             <span style={{ color: 'var(--accent)' }}>GitOps Control Plane</span>
           </h1>
           <p className="hero-subtitle">
-            Unify CI/CD pipelines, infrastructure automation, configuration management,
-            and incident response into a single platform — powered by AI.
+            Unify CI/CD pipelines, infrastructure automation, configuration management and incident response into a single platform - powered by AI.
           </p>
           <div className="hero-actions">
             <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noreferrer" className="btn btn-primary">
-              <Github size={16} />
+              <Github size={14} />
               View on GitHub
             </a>
             <Link to="/features" className="btn btn-secondary">
               See Features
-              <ArrowRight size={16} />
+              <ArrowRight size={14} />
             </Link>
           </div>
           <TypingCode />
           <div className="trust-badges">
-            <span className="trust-badge"><Shield size={14} /> MIT License</span>
-            <span className="trust-badge"><Server size={14} /> Self-Hosted</span>
-            <span className="trust-badge"><Layers size={14} /> Multi-Engine IaC</span>
-            <span className="trust-badge"><Brain size={14} /> AI-Powered</span>
+            <span className="trust-badge"><Shield size={12} /> MIT License</span>
+            <span className="trust-badge"><Server size={12} /> Self-Hosted</span>
+            <span className="trust-badge"><Layers size={12} /> Multi-Engine IaC</span>
+            <span className="trust-badge"><Brain size={12} /> AI-Powered</span>
           </div>
         </div>
       </section>
