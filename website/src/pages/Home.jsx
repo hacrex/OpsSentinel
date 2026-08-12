@@ -223,30 +223,49 @@ export default function Home() {
         <div className="container">
           <div className="architecture-diagram">
             <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '32px' }}>How It Works</h2>
-            <pre className="architecture-pre">{`
-                         OPSSENTINEL
-                      Control Plane
-                           |
-          +----------------+----------------+
-          |                |                |
-          v                v                v
-     PROVISION         CONFIGURE         DEPLOY
-     OpenTofu           Ansible          CI/CD
-     Terraform          Chef          GitHub Actions
-     Pulumi             Puppet         GitLab CI
-          |                |                |
-          +----------------+----------------+
-                           |
-                      INTELLIGENCE
-                    AI Analysis
-                   Failure Intel
-                  Drift Detection
-                           |
-                      RECOVER
-                   Incidents
-                   Remediation
-                    Rollbacks
-            `}</pre>
+            <div className="architecture-svg">
+              <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+                <rect x="300" y="20" width="200" height="50" rx="8" fill="#161616" stroke="#38bdf8" strokeWidth="2"/>
+                <text x="400" y="52" text-anchor="middle" fill="#ffffff" fontSize="18" fontWeight="600">OPSSENTINEL</text>
+                <text x="400" y="70" text-anchor="middle" fill="#a3a3a3" fontSize="12">Control Plane</text>
+
+                <line x1="400" y1="70" x2="400" y2="110" stroke="#38bdf8" strokeWidth="2" strokeDasharray="4,4"/>
+
+                <rect x="100" y="110" width="160" height="50" rx="8" fill="#161616" stroke="#262626"/>
+                <text x="180" y="140" text-anchor="middle" fill="#ffffff" fontSize="14" fontWeight="500">Provision</text>
+                <text x="180" y="156" text-anchor="middle" fill="#a3a3a3" fontSize="11">OpenTofu</text>
+                <text x="180" y="170" text-anchor="middle" fill="#a3a3a3" fontSize="10">Terraform</text>
+                <text x="180" y="184" text-anchor="middle" fill="#a3a3a3" fontSize="10">Pulumi</text>
+
+                <rect x="320" y="110" width="160" height="50" rx="8" fill="#161616" stroke="#262626"/>
+                <text x="400" y="140" text-anchor="middle" fill="#ffffff" fontSize="14" fontWeight="500">Configure</text>
+                <text x="400" y="156" text-anchor="middle" fill="#a3a3a3" fontSize="11">Ansible</text>
+                <text x="400" y="170" text-anchor="middle" fill="#a3a3a3" fontSize="10">Chef</text>
+                <text x="400" y="184" text-anchor="middle" fill="#a3a3a3" fontSize="10">Puppet</text>
+
+                <rect x="540" y="110" width="160" height="50" rx="8" fill="#161616" stroke="#262626"/>
+                <text x="620" y="140" text-anchor="middle" fill="#ffffff" fontSize="14" fontWeight="500">Deploy</text>
+                <text x="620" y="156" text-anchor="middle" fill="#a3a3a3" fontSize="11">GitHub Actions</text>
+                <text x="620" y="170" text-anchor="middle" fill="#a3a3a3" fontSize="10">GitLab CI</text>
+
+                <line x1="180" y1="160" x2="320" y2="160" stroke="#38bdf8" strokeWidth="2"/>
+                <text x="250" y="155" text-anchor="middle" fill="#38bdf8" fontSize="10">converge</text>
+
+                <line x1="460" y1="160" x2="540" y2="160" stroke="#38bdf8" strokeWidth="2"/>
+                <text x="500" y="155" text-anchor="middle" fill="#38bdf8" fontSize="10">connect</text>
+
+                <rect x="200" y="190" width="400" height="70" rx="8" fill="#161616" stroke="#38bdf8" strokeWidth="1"/>
+                <text x="400" y="215" text-anchor="middle" fill="#38bdf8" fontSize="14" fontWeight="600">INTELLIGENCE</text>
+                <text x="400" y="235" text-anchor="middle" fill="#a3a3a3" fontSize="11">AI Analysis | Failure Intel | Drift Detection</text>
+                <text x="400" y="250" text-anchor="middle" fill="#a3a3a3" fontSize="11">Root Cause | Correlation | Recommendations</text>
+
+                <line x1="400" y1="260" x2="400" y2="280" stroke="#38bdf8" strokeWidth="2" strokeDasharray="4,4"/>
+
+                <rect x="300" y="280" width="200" height="50" rx="8" fill="#161616" stroke="#262626"/>
+                <text x="400" y="310" text-anchor="middle" fill="#ffffff" fontSize="14" fontWeight="500">Recover</text>
+                <text x="400" y="328" text-anchor="middle" fill="#a3a3a3" fontSize="10">Incidents | Remediation | Rollbacks</text>
+              </svg>
+            </div>
           </div>
         </div>
       </section>

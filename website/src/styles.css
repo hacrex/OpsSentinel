@@ -1592,6 +1592,17 @@ code {
   overflow-x: auto;
 }
 
+.architecture-svg {
+  display: flex;
+  justify-content: center;
+}
+
+.architecture-svg svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
 .architecture-pre {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 13px;
