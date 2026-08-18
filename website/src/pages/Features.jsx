@@ -8,6 +8,7 @@ import Layout from '../components/Layout';
 
 const featureSections = [
   {
+    status: 'available',
     label: 'Available today',
     title: 'GitHub-Native CI/CD Observability',
     description: 'OpsSentinel currently focuses on making GitHub Actions failures easier to understand, triage, and recover from. The product is self-hosted and built around your existing GitHub workflows.',
@@ -21,6 +22,7 @@ const featureSections = [
     ],
   },
   {
+    status: 'available',
     label: 'Operations foundation',
     title: 'Secure, Self-Hosted, and Extensible',
     description: 'The current release provides the operational foundation for teams that want visibility without handing their pipeline data to another SaaS platform.',
@@ -34,6 +36,7 @@ const featureSections = [
     ],
   },
   {
+    status: 'roadmap',
     label: 'Roadmap',
     title: 'A Foundation for Broader GitOps Workflows',
     description: 'The broader GitOps control-plane vision is planned, not presented as shipped functionality. These areas are where future releases can extend the current GitHub-native foundation.',
@@ -67,7 +70,12 @@ export default function Features() {
         <section key={section.label} className="section" style={{ background: idx % 2 === 1 ? 'var(--surface)' : 'transparent' }}>
           <div className="container">
             <div className="section-header">
-              <span className="section-label">{section.label}</span>
+              <div className="section-heading-meta">
+                <span className="section-label">{section.label}</span>
+                <span className={`status-pill status-pill-${section.status}`}>
+                  {section.status === 'roadmap' ? 'Roadmap' : 'Available'}
+                </span>
+              </div>
               <h2 className="section-title">{section.title}</h2>
               <p className="section-subtitle">{section.description}</p>
             </div>

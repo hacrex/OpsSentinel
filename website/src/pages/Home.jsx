@@ -4,7 +4,7 @@ import {
   Shield, AlertTriangle, BarChart3,
   Lock, Layers, Server, Settings, Github,
   CheckCircle, XCircle, ArrowRight, Eye,
-  Workflow, Brain, Target
+  Workflow, Brain, Target, Clipboard, Check
 } from 'lucide-react';
 import Layout from '../components/Layout';
 
@@ -52,50 +52,72 @@ function TypingCode() {
 
 const features = [
   {
+    status: 'available',
     icon: <BarChart3 size={20} />,
     title: 'CI/CD Observability',
     description: 'Live dashboard for GitHub Actions. Track workflow runs and repository events in real time with WebSocket-powered updates.',
   },
   {
+    status: 'available',
     icon: <Brain size={20} />,
     title: 'AI Failure Analysis',
     description: 'Use a supported LLM provider to analyze failed workflow logs, surface likely root causes, and suggest next steps.',
   },
   {
+    status: 'available',
     icon: <Layers size={20} />,
     title: 'Failure Triage',
     description: 'Use repository context, changed files, and CODEOWNERS data to route workflow failures toward the right owners.',
   },
   {
+    status: 'available',
     icon: <Settings size={20} />,
     title: 'Verified Webhooks',
     description: 'Validate GitHub webhook signatures with HMAC SHA-256 before workflow events enter the system.',
   },
   {
+    status: 'available',
     icon: <AlertTriangle size={20} />,
     title: 'Failure History & MTTR',
     description: 'Persist workflow events, identify repeated failures, and track mean time to recovery across repositories.',
   },
   {
+    status: 'available',
     icon: <Target size={20} />,
     title: 'One-Click Re-Runs',
     description: 'Trigger a GitHub workflow re-run directly from the dashboard when retrying is the right next action.',
   },
   {
+    status: 'available',
     icon: <Workflow size={20} />,
     title: 'Roles & Permissions',
     description: 'Control sensitive workflow and administration actions with the existing role and permission model.',
   },
   {
+    status: 'available',
     icon: <Eye size={20} />,
     title: 'Self-Hosted by Design',
     description: 'Run the application on your own infrastructure with Docker Compose and keep workflow data under your control.',
   },
   {
+    status: 'roadmap',
     icon: <Lock size={20} />,
     title: 'Roadmap: Broader GitOps',
     description: 'Future releases can extend the current GitHub-native foundation into IaC, configuration management, and wider GitOps workflows.',
   },
+];
+
+const workflowStages = [
+  { label: 'Receive', detail: 'GitHub webhooks and workflow events', icon: <Workflow size={18} /> },
+  { label: 'Analyze', detail: 'Live status and AI-assisted failure intelligence', icon: <Brain size={18} /> },
+  { label: 'Triage', detail: 'Repository context, CODEOWNERS, and ownership', icon: <Target size={18} /> },
+  { label: 'Recover', detail: 'Re-run workflows and measure MTTR', icon: <CheckCircle size={18} /> },
+];
+
+const installCommands = [
+  { label: 'Clone', command: 'git clone https://github.com/hacrex/OpsSentinel.git' },
+  { label: 'Configure', command: 'cd OpsSentinel && cp .env.example .env' },
+  { label: 'Start', command: 'docker compose up -d --build' },
 ];
 
 const tools = [
@@ -108,6 +130,50 @@ const tools = [
   { name: 'OpenAI / Anthropic', category: 'AI', color: '#22c55e' },
   { name: 'REST API', category: 'Integrate', color: '#38bdf8' },
 ];
+
+function InstallPanel() {
+  const [copiedCommand, setCopiedCommand] = useState(null);
+
+  const handleCopy = async (command) => {
+    try {
+      await navigator.clipboard.writeText(command);
+      setCopiedCommand(command);
+      window.setTimeout(() => setCopiedCommand(null), 1800);
+    } catch {
+      setCopiedCommand(null);
+    }
+  };
+
+  return (
+    <div className="install-panel" aria-labelledby="install-panel-title">
+      <div className="install-panel-header">
+        <div>
+          <span className="section-label">Quick start</span>
+          <h3 id="install-panel-title">Run OpsSentinel locally</h3>
+        </div>
+        <span className="status-pill status-pill-available">Self-hosted</span>
+      </div>
+      <p>Three small steps from clone to a running local control plane. Add GitHub credentials in `.env` before starting.</p>
+      <div className="install-commands">
+        {installCommands.map((item) => (
+          <div className="install-command" key={item.label}>
+            <span className="install-command-label">{item.label}</span>
+            <code>{item.command}</code>
+            <button
+              type="button"
+              className="copy-command-btn"
+              onClick={() => handleCopy(item.command)}
+              aria-label={`Copy ${item.label} command`}
+            >
+              {copiedCommand === item.command ? <Check size={15} /> : <Clipboard size={15} />}
+              <span>{copiedCommand === item.command ? 'Copied' : 'Copy'}</span>
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   return (
@@ -133,7 +199,7 @@ export default function Home() {
             </Link>
           </div>
           <TypingCode />
-
+          <InstallPanel />
 
           <div className="trust-badges">
             <span className="trust-badge"><Shield size={14} /> MIT License</span>
@@ -191,6 +257,11 @@ export default function Home() {
             {features.map((feature) => (
               <div key={feature.title} className="card feature-card">
                 <div className="card-icon">{feature.icon}</div>
+                <div className="feature-card-meta">
+                  <span className={`status-pill status-pill-${feature.status}`}>
+                    {feature.status === 'roadmap' ? 'Roadmap' : 'Available'}
+                  </span>
+                </div>
                 <h3>{feature.title}</h3>
                 <p>{feature.description}</p>
               </div>
@@ -266,6 +337,26 @@ export default function Home() {
                 <text x="400" y="328" text-anchor="middle" fill="#a3a3a3" fontSize="10">Triage | Re-Runs | Audit Trail</text>
               </svg>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section workflow-section">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-label">Operational loop</span>
+            <h2 className="section-title">From Event to Recovery</h2>
+            <p className="section-subtitle">A focused workflow for turning a failed GitHub run into a clear next action.</p>
+          </div>
+          <div className="workflow-track">
+            {workflowStages.map((stage, index) => (
+              <div className="workflow-stage" key={stage.label}>
+                <div className="workflow-stage-icon">{stage.icon}</div>
+                <span className="workflow-stage-index">0{index + 1}</span>
+                <h3>{stage.label}</h3>
+                <p>{stage.detail}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

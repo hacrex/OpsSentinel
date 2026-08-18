@@ -64,11 +64,17 @@ export default function Layout({ children }) {
           OpsSentinel
         </Link>
         <div className={`nav-links ${mobileOpen ? 'nav-links-open' : ''}`}>
-          <Link to="/features" className={isActive('/features')}>Features</Link>
-          <Link to="/infrastructure" className={isActive('/infrastructure')}>Infrastructure</Link>
-          <Link to="/configuration" className={isActive('/configuration')}>Configuration</Link>
-          <Link to="/pricing" className={isActive('/pricing')}>Pricing</Link>
-          <Link to="/docs" className={isActive('/docs')}>Docs</Link>
+          <div className="nav-group" aria-label="Product">
+            <span className="sr-only">Product</span>
+            <Link to="/features" className={isActive('/features')} aria-current={location.pathname === '/features' ? 'page' : undefined}>Features</Link>
+            <Link to="/infrastructure" className={isActive('/infrastructure')} aria-current={location.pathname === '/infrastructure' ? 'page' : undefined}>Infrastructure</Link>
+            <Link to="/configuration" className={isActive('/configuration')} aria-current={location.pathname === '/configuration' ? 'page' : undefined}>Configuration</Link>
+          </div>
+          <div className="nav-group nav-group-secondary" aria-label="Resources">
+            <span className="sr-only">Resources</span>
+            <Link to="/pricing" className={isActive('/pricing')} aria-current={location.pathname === '/pricing' ? 'page' : undefined}>Pricing</Link>
+            <Link to="/docs" className={isActive('/docs')} aria-current={location.pathname === '/docs' ? 'page' : undefined}>Docs</Link>
+          </div>
           <button
             className="theme-toggle"
             onClick={toggleTheme}
