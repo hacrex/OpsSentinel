@@ -5,7 +5,7 @@
 <h1 align="center">OpsSentinel</h1>
 
 <p align="center">
-  <strong>The open-source, GitHub-native CI/CD observability platform for real-time failure insights.</strong>
+  <strong>The open-source, GitHub-native CI/CD observability platform for real-time failure insights </strong>
 </p>
 
 <p align="center">
