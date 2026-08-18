@@ -1,6 +1,6 @@
 # OpsSentinel Marketing Website
 
-This is the marketing/landing page website for OpsSentinel, separate from the application frontend.
+This is the static marketing and documentation site for OpsSentinel, separate from the application frontend. The current release is positioned around self-hosted, GitHub-native CI/CD observability: live workflow visibility, AI-assisted failure analysis, triage, MTTR tracking, and one-click workflow re-runs. Broader IaC, configuration-management, and cross-provider GitOps capabilities are roadmap areas unless explicitly marked otherwise on the site.
 
 ## Structure
 
@@ -8,56 +8,55 @@ This is the marketing/landing page website for OpsSentinel, separate from the ap
 website/
 ├── src/
 │   ├── pages/
-│   │   ├── Home.jsx      # Landing page
-│   │   ├── Features.jsx   # Features page
-│   │   ├── Pricing.jsx    # Pricing page
-│   │   ├── Docs.jsx       # Documentation page
-│   │   └── NotFound.jsx   # 404 page
+│   │   ├── Home.jsx            # Homepage and current-release positioning
+│   │   ├── Features.jsx        # Available capabilities and roadmap scope
+│   │   ├── Infrastructure.jsx  # Infrastructure roadmap/context page
+│   │   ├── Configuration.jsx   # Configuration-management roadmap/context page
+│   │   ├── Pricing.jsx         # Self-hosted pricing and roadmap offering
+│   │   ├── Docs.jsx             # GitHub-backed Markdown documentation viewer
+│   │   └── NotFound.jsx         # 404 page
 │   ├── components/
-│   │   └── Layout.jsx     # Shared layout (nav, footer)
-│   ├── styles.css         # Global styles
-│   ├── App.jsx            # Router
-│   └── main.jsx           # Entry point
-├── public/
-│   └── favicon.svg        # Site favicon
-├── index.html             # HTML template
-├── package.json           # Dependencies
-├── vite.config.js         # Vite configuration
-└── Dockerfile             # Production build
+│   │   └── Layout.jsx           # Shared navigation, theme toggle, and footer
+│   ├── context/
+│   │   └── ThemeContext.jsx     # Light/dark theme state
+│   ├── styles.css               # Global styles and responsive layout rules
+│   ├── App.jsx                  # Client-side route definitions
+│   └── main.jsx                 # Application entry point
+├── public/                      # Small static assets such as the favicon
+├── index.html                   # HTML shell and SEO/social metadata
+├── package.json                 # Dependencies and scripts
+├── eslint.config.js             # Website-local ESLint 9 flat configuration
+├── vite.config.js               # Vite build, chunking, and sitemap configuration
+└── Dockerfile                   # Production NGINX container
 ```
 
 ## Development
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-## Build
+## Quality checks
 
 ```bash
+npm run lint
 npm run build
 ```
 
-Output is in `dist/` folder.
+`npm run lint` uses the website-local ESLint 9 flat configuration. `npm run build` creates the production bundle in `dist/` and generates the sitemap and robots files through the Vite configuration.
 
 ## Deployment
 
 ### Static Hosting (Recommended)
-Deploy the `dist/` folder to:
-- Netlify
-- Vercel
-- Cloudflare Pages
-- AWS S3 + CloudFront
+Deploy the `dist/` folder to Netlify, Vercel, Cloudflare Pages, or another static host that supports SPA fallback rewrites. The repository includes `vercel.json` for Vercel routing.
 
 ### Docker
 ```bash
 docker build -t opsentinel-website .
-docker run -p 80:80 opsentinel-website
+docker run --rm -p 8080:80 opsentinel-website
 ```
 
-## Environment Variables
+## Runtime notes
 
-This is a static site with no environment variables needed. All links point to:
-- GitHub repo: `https://github.com/hacrex/OpsSentinel`
-- App: Separate deployment of the `frontend/` directory
+The static site does not require environment variables. The documentation route fetches Markdown from the public `main` branch of the GitHub repository, so documentation testing requires network access. The primary site action points to the public [OpsSentinel GitHub repository](https://github.com/hacrex/OpsSentinel). The application frontend is maintained separately under `frontend/`; deploy it independently if a live application environment is available.

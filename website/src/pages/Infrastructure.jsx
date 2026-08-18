@@ -5,41 +5,41 @@ import Layout from '../components/Layout';
 const engines = [
   {
     name: 'OpenTofu',
-    badge: 'Preferred',
+    badge: 'Roadmap',
     badgeColor: '#22c55e',
-    description: 'The community-driven IaC engine. Full support for plan, apply, destroy, state management, drift detection, and workspace operations.',
+    description: 'A planned integration for teams that want an open-source IaC engine connected to the OpsSentinel control plane.',
     features: ['Plan & Apply', 'State Management', 'Drift Detection', 'Module Registry', 'Workspace Management', 'Plan Approval'],
     icon: <Shield size={24} />,
   },
   {
     name: 'Terraform',
-    badge: 'Full Support',
+    badge: 'Roadmap',
     badgeColor: '#7b61ff',
-    description: 'Complete Terraform support including Terraform Cloud and Enterprise integration. A drop-in replacement for Terraform Cloud workflows.',
+    description: 'A planned integration for Terraform workflows, with future support shaped by community demand and implementation scope.',
     features: ['Plan & Apply', 'Remote State', 'Terraform Cloud', 'Module Registry', 'Cost Estimation', 'Migration to OpenTofu'],
     icon: <Layers size={24} />,
   },
   {
     name: 'Pulumi',
-    badge: 'Supported',
+    badge: 'Roadmap',
     badgeColor: '#f59e0b',
-    description: 'Define infrastructure with TypeScript, Python, Go, C#, or Java. Full preview, update, and destroy support with state management.',
+    description: 'A planned integration for teams that define infrastructure with general-purpose programming languages.',
     features: ['TypeScript', 'Python', 'Go', 'C# / .NET', 'Java', 'Pulumi Cloud & Self-Managed Backends'],
     icon: <GitBranch size={24} />,
   },
   {
     name: 'CloudFormation',
-    badge: 'AWS Native',
+    badge: 'Roadmap',
     badgeColor: '#f97316',
-    description: 'AWS-native infrastructure as code. Stack sets, change sets, drift detection, and nested stack support — all managed from OpsSentinel.',
+    description: 'A planned integration for AWS-native infrastructure workflows.',
     features: ['Stack Management', 'Change Sets', 'Stack Sets', 'Drift Detection', 'Nested Stacks', 'Resource Tracking'],
     icon: <Cloud size={24} />,
   },
   {
     name: 'Crossplane',
-    badge: 'K8s Native',
+    badge: 'Roadmap',
     badgeColor: '#38bdf8',
-    description: 'Kubernetes-native infrastructure as code. Manage cloud resources as custom resources. Compose, claim, and package your infrastructure.',
+    description: 'A planned integration for Kubernetes-native infrastructure workflows.',
     features: ['Compositions', 'Claims', 'Provider Config', 'Functions', 'Package Management', 'Drift Detection'],
     icon: <Server size={24} />,
   },
@@ -47,33 +47,33 @@ const engines = [
 
 const capabilities = [
   {
-    title: 'Unified Infrastructure View',
-    description: 'See all your infrastructure across OpenTofu, Terraform, Pulumi, and CloudFormation in a single dashboard. No more tab-switching.',
+    title: 'Future Unified Infrastructure View',
+    description: 'The roadmap envisions a single view for infrastructure state alongside GitHub workflow events and deployments.',
     icon: <Layers size={20} />,
   },
   {
     title: 'Cross-Engine Drift Detection',
-    description: 'Detect configuration drift across all IaC engines — on a schedule or on-demand. Catch unauthorized changes before they cascade.',
+    description: 'Cross-engine drift detection is a future capability, not part of the current GitHub-native release.',
     icon: <Shield size={20} />,
   },
   {
     title: 'Plan Approval Workflows',
-    description: 'Require approval before applying infrastructure changes. Enforce policy gates for production. Full audit trail on every action.',
+    description: 'Approval workflows for infrastructure changes are planned for a future control-plane release.',
     icon: <CheckCircle size={20} />,
   },
   {
     title: 'Correlated Change Tracking',
-    description: 'See how infrastructure changes relate to CI/CD deployments and configuration updates. One timeline, full context.',
+    description: 'Broader change correlation is planned as infrastructure and configuration connectors become available.',
     icon: <GitBranch size={20} />,
   },
   {
     title: 'State Management',
-    description: 'Track state across all engines. Local, remote, and cloud backends supported. No vendor lock-in.',
+    description: 'State management across IaC engines is a roadmap area; the current release stores GitHub workflow events.',
     icon: <Server size={20} />,
   },
   {
     title: 'Multi-Engine Orchestration',
-    description: 'Run OpenTofu + Ansible in a single workflow. Provision infrastructure, then configure it — atomically.',
+    description: 'Cross-domain orchestration is part of the longer-term GitOps vision and is not presented as shipped today.',
     icon: <Zap size={20} />,
   },
 ];
@@ -87,9 +87,8 @@ export default function Infrastructure() {
             <span className="section-label">Infrastructure Automation</span>
             <h1 className="section-title">One Platform. Every IaC Engine.</h1>
             <p className="section-subtitle">
-              OpsSentinel integrates with OpenTofu, Terraform, Pulumi, CloudFormation, and Crossplane.
-              Manage all your infrastructure from a single control plane with unified drift detection,
-              plan approval workflows, and cross-engine correlation.
+              The current release focuses on GitHub Actions observability. OpenTofu, Terraform, Pulumi, CloudFormation,
+              and Crossplane connectors are roadmap areas for a future infrastructure control plane.
             </p>
           </div>
         </div>
@@ -97,7 +96,7 @@ export default function Infrastructure() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '48px' }}>Supported Engines</h2>
+          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '48px' }}>Planned Engine Integrations</h2>
           <div className="engines-grid">
             {engines.map((engine) => (
               <div key={engine.name} className="engine-card">
@@ -127,7 +126,7 @@ export default function Infrastructure() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '48px' }}>Cross-Engine Capabilities</h2>
+          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '48px' }}>Roadmap Capabilities</h2>
           <div className="features-grid">
             {capabilities.map((cap) => (
               <div key={cap.title} className="card feature-card">
@@ -143,7 +142,7 @@ export default function Infrastructure() {
       <section className="section">
         <div className="container">
           <div className="architecture-diagram">
-            <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '32px' }}>Multi-Engine Architecture</h2>
+            <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '32px' }}>Illustrative Future Architecture</h2>
             <div className="architecture-svg">
               <svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
                 <rect x="200" y="20" width="300" height="50" rx="8" fill="#161616" stroke="#38bdf8" strokeWidth="2"/>
@@ -153,15 +152,15 @@ export default function Infrastructure() {
 
                 <rect x="75" y="100" width="130" height="55" rx="8" fill="#161616" stroke="#262626"/>
                 <text x="140" y="132" text-anchor="middle" fill="#ffffff" fontSize="14" fontWeight="600">OpenTofu</text>
-                <text x="140" y="152" text-anchor="middle" fill="#a3a3a3" fontSize="11">12 projects</text>
+                <text x="140" y="152" text-anchor="middle" fill="#a3a3a3" fontSize="11">planned connector</text>
 
                 <rect x="285" y="100" width="130" height="55" rx="8" fill="#161616" stroke="#262626"/>
                 <text x="350" y="132" text-anchor="middle" fill="#ffffff" fontSize="14" fontWeight="600">Terraform</text>
-                <text x="350" y="152" text-anchor="middle" fill="#a3a3a3" fontSize="11">8 projects</text>
+                <text x="350" y="152" text-anchor="middle" fill="#a3a3a3" fontSize="11">planned connector</text>
 
                 <rect x="500" y="100" width="130" height="55" rx="8" fill="#161616" stroke="#262626"/>
                 <text x="565" y="132" text-anchor="middle" fill="#ffffff" fontSize="14" fontWeight="600">Pulumi</text>
-                <text x="565" y="152" text-anchor="middle" fill="#a3a3a3" fontSize="11">3 projects</text>
+                <text x="565" y="152" text-anchor="middle" fill="#a3a3a3" fontSize="11">planned connector</text>
 
                 <line x1="140" y1="155" x2="285" y2="155" stroke="#38bdf8" strokeWidth="2"/>
                 <line x1="415" y1="155" x2="540" y2="155" stroke="#38bdf8" strokeWidth="2"/>
@@ -181,8 +180,8 @@ export default function Infrastructure() {
       <section className="section cta">
         <div className="container">
           <div className="cta-content">
-            <h2>Unify Your Infrastructure Today</h2>
-            <p>Connect your first IaC project in minutes. OpenTofu, Terraform, Pulumi, CloudFormation, or Crossplane.</p>
+            <h2>Help Shape the Infrastructure Roadmap</h2>
+            <p>Follow the project, review the current release, and help prioritize future infrastructure integrations.</p>
             <div className="hero-actions">
               <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                 Get Started Free

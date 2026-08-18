@@ -9,23 +9,20 @@ const plans = [
     period: 'forever',
     badge: 'Open Source',
     badgeColor: '#22c55e',
-    description: 'Full control. Your data. Your infrastructure. No limits.',
+    description: 'Full control. Your data. Your infrastructure. No hosted signup or subscription required.',
     features: [
-      'CI/CD Observability (GitHub Actions, GitLab CI, Jenkins)',
-      'AI-Powered Failure Analysis',
-      'Failure Fingerprinting & Clustering',
-      'Multi-Engine IaC (OpenTofu, Terraform, Pulumi, CloudFormation)',
-      'Configuration Management (Ansible, Chef, Puppet)',
-      'Incident Management',
-      'Deployment Tracking & DORA Metrics',
-      'Drift Detection',
-      'Policy Engine',
-      'RBAC & Audit Logging',
-      'Slack, Teams, Email Notifications',
-      'Docker Compose Deployment',
-      'SQLite (dev) + PostgreSQL (prod)',
-      'Unlimited Repositories',
-      'Unlimited Users',
+      'GitHub Actions workflow observability',
+      'Real-time dashboard updates',
+      'AI-assisted failure analysis with your provider',
+      'Failure pattern and flaky-workflow detection',
+      'Workflow triage with repository context',
+      'MTTR tracking and event history',
+      'One-click GitHub workflow re-runs',
+      'GitHub OAuth and verified webhooks',
+      'Roles, permissions, and audit logging',
+      'Docker Compose deployment',
+      'SQLite for development and PostgreSQL for production',
+      'Self-hosted data control',
     ],
     cta: 'Get Started Free',
     ctaLink: 'https://github.com/hacrex/OpsSentinel',
@@ -35,31 +32,28 @@ const plans = [
     name: 'Cloud',
     price: '$49',
     period: '/month',
-    badge: 'Coming Soon',
+    badge: 'Roadmap',
     badgeColor: '#f59e0b',
-    description: 'Managed OpsSentinel. Zero operational overhead. We handle the infrastructure.',
+    description: 'A future managed offering for teams that want hosted infrastructure and operational support.',
     features: [
       'Everything in Self-Hosted',
-      'Fully Managed Infrastructure',
-      'Automatic Updates & Backups',
-      '99.9% Uptime SLA',
-      'Priority Support',
-      'Multi-Tenant Dashboard',
-      'SSO/SAML Integration',
-      'Advanced RBAC & Permissions',
-      'Compliance Reports',
-      'Custom Integrations',
+      'Managed infrastructure',
+      'Automatic updates and backups',
+      'Priority support',
+      'Hosted team administration',
+      'Additional integrations',
+      'Availability and compliance options to be announced',
     ],
-    cta: 'Join Waitlist',
-    ctaLink: '#',
-    disabled: true,
+    cta: 'Follow Development',
+    ctaLink: 'https://github.com/hacrex/OpsSentinel/issues',
+    ctaExternal: true,
   },
 ];
 
 const faq = [
   {
     q: 'Is OpsSentinel really free?',
-    a: 'Yes. OpsSentinel is MIT licensed and completely free to self-host. No feature limits, no user caps, no hidden fees. If you need managed infrastructure, our Cloud plan launches soon.',
+    a: 'Yes. OpsSentinel is MIT licensed and free to self-host. No hosted signup or subscription is required. A managed offering remains on the roadmap.',
   },
   {
     q: 'What do I need to run OpsSentinel?',
@@ -67,11 +61,11 @@ const faq = [
   },
   {
     q: 'Does my data leave my server?',
-    a: 'No. OpsSentinel is fully self-hosted. Your data stays on your infrastructure. The only external calls are to GitHub API (for webhooks and OAuth) and optionally to OpenAI/Anthropic for AI analysis.',
+    a: 'The current release is fully self-hosted. Your workflow data stays on your infrastructure. GitHub is used for OAuth, repository access, and webhook events; an LLM provider is only contacted when you configure AI analysis.',
   },
   {
     q: 'Which IaC tools are supported?',
-    a: 'OpenTofu, Terraform, Pulumi, CloudFormation, and Crossplane for infrastructure. Ansible, Chef, Puppet, and SaltStack for configuration management. All from one dashboard.',
+    a: 'The current release focuses on GitHub Actions observability. IaC and configuration-management integrations are roadmap areas for future releases.',
   },
   {
     q: 'Can I use GitHub Enterprise?',
@@ -95,9 +89,9 @@ export default function Pricing() {
           <div className="section-header">
             <span className="section-label">Pricing</span>
             <h1 className="section-title">Free to Self-Host. No Catch.</h1>
-            <p className="section-subtitle">
-              OpsSentinel is open source. Deploy it yourself with Docker Compose.
-              No feature limits. No user caps. No vendor lock-in. Period.
+              <p className="section-subtitle">
+              OpsSentinel is open source. Deploy the current GitHub-native observability release yourself with Docker Compose.
+              No hosted signup is required.
             </p>
           </div>
         </div>
@@ -190,8 +184,8 @@ export default function Pricing() {
       <section className="section cta">
         <div className="container">
           <div className="cta-content">
-            <h2>Deploy in Minutes. See Value in Hours.</h2>
-            <p>Open source. Self-hosted. No credit card. No signup required.</p>
+            <h2>Deploy the Current Release With Confidence.</h2>
+            <p>Open source. Self-hosted. Connect GitHub and start investigating workflow failures.</p>
             <div className="hero-actions">
               <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                 <Github size={16} />

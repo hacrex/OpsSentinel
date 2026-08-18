@@ -10,7 +10,7 @@ function GitHubStars() {
     fetch('https://api.github.com/repos/hacrex/OpsSentinel')
       .then(res => res.json())
       .then(data => {
-        if (data.stargazers_count) {
+        if (typeof data.stargazers_count === 'number') {
           setStars(data.stargazers_count);
         }
       })
@@ -23,6 +23,7 @@ function GitHubStars() {
       target="_blank"
       rel="noopener noreferrer"
       className="nav-cta github-btn"
+      aria-label="View OpsSentinel on GitHub"
     >
       <Github size={14} />
       {stars !== null && (
@@ -96,7 +97,7 @@ export default function Layout({ children }) {
               <Activity size={18} />
               OpsSentinel
             </Link>
-            <p>The open-source GitOps control plane. Unify CI/CD, infrastructure automation, configuration management, and incident response — powered by AI.</p>
+            <p>Open-source, self-hosted GitHub Actions observability with live workflow visibility and AI-assisted failure analysis.</p>
             <div className="footer-social">
               <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                 <Github size={18} />

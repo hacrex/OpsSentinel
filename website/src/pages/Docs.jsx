@@ -18,28 +18,35 @@ export default function Docs() {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     const doc = docs.find(d => d.id === activeDoc);
-    if (!doc) return;
+    if (!doc) return undefined;
 
+    const controller = new AbortController();
     setLoading(true);
     setError(null);
 
-    fetch(`${GITHUB_RAW}/${doc.file}`)
+    fetch(`${GITHUB_RAW}/${doc.file}`, { signal: controller.signal })
       .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch document');
+        if (!res.ok) throw new Error(`GitHub returned ${res.status}`);
         return res.text();
       })
       .then(text => {
         setContent(text);
-        setLoading(false);
       })
       .catch(err => {
-        setError(err.message);
-        setLoading(false);
+        if (err.name !== 'AbortError') {
+          setError(err.message);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
       });
-  }, [activeDoc]);
+
+    return () => controller.abort();
+  }, [activeDoc, retryCount]);
 
   return (
     <Layout>
@@ -53,6 +60,7 @@ export default function Docs() {
                 key={doc.id}
                 className={`doc-nav-item ${activeDoc === doc.id ? 'active' : ''}`}
                 onClick={() => setActiveDoc(doc.id)}
+                aria-pressed={activeDoc === doc.id}
               >
                 <doc.icon size={18} />
                 {doc.title}
@@ -89,11 +97,11 @@ export default function Docs() {
             </div>
           ) : error ? (
             <div className="loading" style={{ color: 'var(--error)' }}>
-              <p>Failed to load documentation. Please try again later.</p>
+              <p>Failed to load documentation from GitHub. Check your connection and try again.</p>
               <button
                 className="btn-secondary"
                 style={{ marginTop: '16px' }}
-                onClick={() => setActiveDoc(activeDoc)}
+                onClick={() => setRetryCount((count) => count + 1)}
               >
                 Retry
               </button>

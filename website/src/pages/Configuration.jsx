@@ -5,33 +5,33 @@ import Layout from '../components/Layout';
 const tools = [
   {
     name: 'Ansible',
-    badge: 'Agentless',
+    badge: 'Roadmap',
     badgeColor: '#22c55e',
-    description: 'Agentless automation over SSH/WinRM. Run playbooks, manage inventory, and configure servers without installing anything on target hosts.',
+    description: 'A planned integration for agentless configuration workflows and playbook execution.',
     features: ['Playbook Execution', 'Inventory Management', 'Role Management', 'Vault Integration', 'Ad-Hoc Commands', 'Host-Level Results'],
     icon: <Terminal size={24} />,
   },
   {
     name: 'Chef',
-    badge: 'Agent-Based',
+    badge: 'Roadmap',
     badgeColor: '#f59e0b',
-    description: 'Infrastructure automation with Ruby recipes and cookbooks. Continuous convergence, compliance enforcement, and node management.',
+    description: 'A planned integration for cookbook-driven configuration and compliance workflows.',
     features: ['Cookbook Management', 'Recipe Execution', 'Node Convergence', 'InSpec Compliance', 'Policy Groups', 'Chef Automate'],
     icon: <Settings size={24} />,
   },
   {
     name: 'Puppet',
-    badge: 'Agent-Based',
+    badge: 'Roadmap',
     badgeColor: '#7b61ff',
-    description: 'Enterprise configuration management with declarative manifests. Enforce desired state across thousands of nodes with confidence.',
+    description: 'A planned integration for declarative configuration and desired-state management.',
     features: ['Manifest Management', 'Module System', 'Hiera Data', 'PuppetDB', 'Compliance Reporting', 'Bolt Tasks'],
     icon: <Shield size={24} />,
   },
   {
     name: 'SaltStack',
-    badge: 'Event-Driven',
+    badge: 'Roadmap',
     badgeColor: '#38bdf8',
-    description: 'Event-driven automation with high performance. Remote execution, state management, and reactive automation at scale.',
+    description: 'A planned integration for event-driven configuration and remote execution workflows.',
     features: ['State Management', 'Remote Execution', 'Pillar Data', 'Reactor System', 'Beacon Monitoring', 'Orchestration'],
     icon: <Server size={24} />,
   },
@@ -40,32 +40,32 @@ const tools = [
 const capabilities = [
   {
     title: 'Unified Configuration View',
-    description: 'See all your configuration management across Ansible, Chef, Puppet, and SaltStack in a single dashboard. No more context-switching.',
+    description: 'The roadmap envisions a unified configuration view alongside GitHub workflow events and deployment context.',
     icon: <Settings size={20} />,
   },
   {
     title: 'Configuration Drift Detection',
-    description: 'Detect when servers drift from their desired state across all tools. Get alerted before drift becomes an outage.',
+    description: 'Configuration drift detection is planned for a future release and is not part of the current GitHub-native product.',
     icon: <Shield size={20} />,
   },
   {
     title: 'Execution Monitoring',
-    description: 'Track playbook runs, Chef client runs, Puppet agent runs, and Salt state applications in real time.',
+    description: 'Real-time monitoring for configuration runs is a future capability that will build on the current event model.',
     icon: <Terminal size={20} />,
   },
   {
     title: 'Host-Level Results',
-    description: 'See per-host results for every configuration run. Know exactly which servers succeeded, which failed, and why.',
+    description: 'Host-level results are planned for future configuration-management connectors.',
     icon: <Server size={20} />,
   },
   {
     title: 'Approval Workflows',
-    description: 'Require approval before running configuration changes in production. Full audit trail on every action.',
+    description: 'Approval workflows for configuration changes are part of the longer-term operations roadmap.',
     icon: <CheckCircle size={20} />,
   },
   {
     title: 'Cross-Tool Correlation',
-    description: 'Correlate configuration changes with infrastructure changes and CI/CD deployments. See the full picture.',
+    description: 'Cross-tool correlation is planned as additional operations integrations become available.',
     icon: <Zap size={20} />,
   },
 ];
@@ -79,9 +79,8 @@ export default function Configuration() {
             <span className="section-label">Configuration Management</span>
             <h1 className="section-title">Configure Servers. Enforce Compliance.</h1>
             <p className="section-subtitle">
-              OpsSentinel integrates with Ansible, Chef, Puppet, and SaltStack.
-              Manage server configuration, enforce compliance, and detect drift
-              — all from a single operational control plane.
+              The current release focuses on GitHub Actions observability. Ansible, Chef, Puppet, and SaltStack
+              integrations are roadmap areas for a future configuration-management layer.
             </p>
           </div>
         </div>
@@ -89,7 +88,7 @@ export default function Configuration() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '48px' }}>Supported Tools</h2>
+          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '48px' }}>Planned Tool Integrations</h2>
           <div className="engines-grid">
             {tools.map((tool) => (
               <div key={tool.name} className="engine-card">
@@ -119,7 +118,7 @@ export default function Configuration() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '48px' }}>Cross-Tool Capabilities</h2>
+          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '48px' }}>Roadmap Capabilities</h2>
           <div className="features-grid">
             {capabilities.map((cap) => (
               <div key={cap.title} className="card feature-card">
@@ -146,13 +145,13 @@ export default function Configuration() {
               </ul>
             </div>
             <div className="problem-card" style={{ borderColor: 'var(--accent)' }}>
-              <h3>With OpsSentinel</h3>
+              <h3>With the Roadmap in Place</h3>
               <ul className="feature-list">
-                <li>Unified view across all configuration management tools</li>
-                <li>Automatic drift detection with instant alerts</li>
-                <li>Config changes correlated with deployments and incidents</li>
-                <li>Single approval workflow for all changes — one process</li>
-                <li>Infrastructure + Configuration + CI/CD connected end-to-end</li>
+                <li>A unified view across configuration tools and GitHub workflows</li>
+                <li>Drift detection with actionable alerts</li>
+                <li>Configuration changes correlated with deployments and incidents</li>
+                <li>Approval workflows with a consistent audit trail</li>
+                <li>Infrastructure, configuration, and CI/CD connected end-to-end</li>
               </ul>
             </div>
           </div>
@@ -162,8 +161,8 @@ export default function Configuration() {
       <section className="section cta">
         <div className="container">
           <div className="cta-content">
-            <h2>Take Control of Configuration</h2>
-            <p>Connect Ansible, Chef, Puppet, or SaltStack in minutes. See all your server configuration in one place.</p>
+            <h2>Help Shape Configuration Support</h2>
+            <p>Follow the project and help prioritize the configuration-management integrations on the roadmap.</p>
             <div className="hero-actions">
               <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                 Get Started Free

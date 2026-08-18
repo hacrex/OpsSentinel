@@ -8,81 +8,42 @@ import Layout from '../components/Layout';
 
 const featureSections = [
   {
-    label: 'CI/CD Intelligence',
-    title: 'Know Why Builds Fail — Before You Start Digging',
-    description: 'Go beyond "build failed." OpsSentinel fingerprints failures, clusters recurring issues, and uses AI to surface the root cause with a suggested fix.',
+    label: 'Available today',
+    title: 'GitHub-Native CI/CD Observability',
+    description: 'OpsSentinel currently focuses on making GitHub Actions failures easier to understand, triage, and recover from. The product is self-hosted and built around your existing GitHub workflows.',
     features: [
-      { icon: <BarChart3 size={18} />, name: 'Real-Time Dashboard', desc: 'WebSocket-powered live updates across all repositories and workflows. No refresh needed.' },
-      { icon: <Brain size={18} />, name: 'AI Root Cause Analysis', desc: 'LLM-powered log analysis via GPT-4o-mini or Claude 3 Haiku. Returns category, likely cause, suggested fix, and confidence score.' },
-      { icon: <FileCode size={18} />, name: 'Failure Fingerprinting', desc: 'Group similar failures across repos. Track patterns over time. Instantly identify known issues vs. new regressions.' },
-      { icon: <AlertTriangle size={18} />, name: 'Flaky Test Detection', desc: 'Identify workflows with high failure rates. Track flakiness patterns over time. Get recommendations to stabilize.' },
-      { icon: <Workflow size={18} />, name: 'Auto-Triage', desc: 'Parse CODEOWNERS, match changed files, and assign failure owners with confidence scores — automatically.' },
-      { icon: <Target size={18} />, name: 'Pipeline Health Score', desc: 'Composite score from success rate, MTTR, flakiness, and duration. One number to gauge pipeline health.' },
+      { icon: <BarChart3 size={18} />, name: 'Real-Time Dashboard', desc: 'WebSocket-powered live updates for workflow runs and repository events. No refresh needed.' },
+      { icon: <Brain size={18} />, name: 'LLM Failure Analysis', desc: 'Analyze failed workflow logs with a supported LLM provider and receive a category, likely root cause, suggested fix, and confidence score.' },
+      { icon: <AlertTriangle size={18} />, name: 'Flaky Workflow Detection', desc: 'Identify workflows with repeated failures and surface patterns that deserve attention.' },
+      { icon: <Workflow size={18} />, name: 'Failure Triage', desc: 'Use repository context, changed files, and CODEOWNERS data to help route failures to the right owners.' },
+      { icon: <Target size={18} />, name: 'MTTR Tracking', desc: 'Measure mean time to recovery for workflow failures and follow how reliability changes over time.' },
+      { icon: <Zap size={18} />, name: 'One-Click Re-Run', desc: 'Trigger a GitHub workflow re-run directly from the dashboard when a retry is the right next action.' },
     ],
   },
   {
-    label: 'Infrastructure Automation',
-    title: 'Every IaC Engine. One Control Plane.',
-    description: 'OpenTofu, Terraform, Pulumi, CloudFormation, Crossplane — managed from OpsSentinel with unified drift detection, plan approval, and cross-engine correlation.',
+    label: 'Operations foundation',
+    title: 'Secure, Self-Hosted, and Extensible',
+    description: 'The current release provides the operational foundation for teams that want visibility without handing their pipeline data to another SaaS platform.',
     features: [
-      { icon: <Layers size={18} />, name: 'Multi-Engine Support', desc: 'Five IaC engines in one dashboard: OpenTofu, Terraform, Pulumi, CloudFormation, and Crossplane.' },
-      { icon: <Eye size={18} />, name: 'Drift Detection', desc: 'Scheduled and on-demand drift detection across all IaC engines. Catch unauthorized changes before they cascade.' },
-      { icon: <Lock size={18} />, name: 'Plan Approval', desc: 'Require approval before applying infrastructure changes. Enforce policy gates for production environments.' },
-      { icon: <GitBranch size={18} />, name: 'State Management', desc: 'Track state across all engines. Supports local, remote, and cloud backends without lock-in.' },
-      { icon: <Zap size={18} />, name: 'Multi-Engine Orchestration', desc: 'Run OpenTofu + Ansible in a single workflow. Provision infrastructure, then configure it — atomically.' },
-      { icon: <Shield size={18} />, name: 'Change Correlation', desc: 'See how infrastructure changes relate to CI/CD deployments and configuration updates in one timeline.' },
+      { icon: <GitBranch size={18} />, name: 'GitHub OAuth', desc: 'Authenticate through GitHub and keep repository access connected to the identity system your team already uses.' },
+      { icon: <Shield size={18} />, name: 'Verified Webhooks', desc: 'Validate incoming GitHub webhook signatures with HMAC SHA-256 before processing workflow events.' },
+      { icon: <Activity size={18} />, name: 'Event History', desc: 'Persist workflow events for investigation, dashboards, and retention-based cleanup.' },
+      { icon: <Lock size={18} />, name: 'Roles and Permissions', desc: 'Use the existing role and permission model to control sensitive workflow and administration actions.' },
+      { icon: <Server size={18} />, name: 'SQLite or PostgreSQL', desc: 'Use SQLite for local development and PostgreSQL for production deployments.' },
+      { icon: <Terminal size={18} />, name: 'Docker Compose', desc: 'Run the application with the repository’s Docker-based deployment path and keep infrastructure under your control.' },
     ],
   },
   {
-    label: 'Configuration Management',
-    title: 'Configure Servers. Enforce Compliance. Detect Drift.',
-    description: 'Ansible, Chef, Puppet, SaltStack — run playbooks, enforce desired state, and catch configuration drift across your entire fleet.',
+    label: 'Roadmap',
+    title: 'A Foundation for Broader GitOps Workflows',
+    description: 'The broader GitOps control-plane vision is planned, not presented as shipped functionality. These areas are where future releases can extend the current GitHub-native foundation.',
     features: [
-      { icon: <Terminal size={18} />, name: 'Ansible Integration', desc: 'Playbook execution, inventory management, Vault integration, and host-level results in one view.' },
-      { icon: <Settings size={18} />, name: 'Chef Integration', desc: 'Cookbook management, recipe execution, InSpec compliance checks, and node convergence tracking.' },
-      { icon: <Shield size={18} />, name: 'Puppet Integration', desc: 'Manifest management, Hiera data lookups, PuppetDB queries, and compliance reporting.' },
-      { icon: <Server size={18} />, name: 'SaltStack Integration', desc: 'State management, remote execution, reactor system, and beacon monitoring — all unified.' },
-      { icon: <Eye size={18} />, name: 'Configuration Drift', desc: 'Detect when servers drift from desired state. Get alerted before drift becomes an outage.' },
-      { icon: <CheckCircle size={18} />, name: 'Approval Workflows', desc: 'Require approval before running configuration changes in production. Full audit trail.' },
-    ],
-  },
-  {
-    label: 'Incident Management',
-    title: 'From Failure to Resolution — Automated.',
-    description: 'Auto-create incidents from repeated failures. Track severity, timeline, and resolution. Integrate directly with GitHub Issues.',
-    features: [
-      { icon: <AlertTriangle size={18} />, name: 'Auto-Incident Creation', desc: 'Same failure 3+ times? Production failure? Multi-repo impact? OpsSentinel opens the incident for you.' },
-      { icon: <Activity size={18} />, name: 'Incident Timeline', desc: 'Track every event from creation to resolution — comments, status changes, assignments, and actions.' },
-      { icon: <GitBranch size={18} />, name: 'GitHub Issues Integration', desc: 'Create Issues from incidents. Auto-close when resolved. Keep your team in the tools they already use.' },
-      { icon: <Target size={18} />, name: 'MTTR Tracking', desc: 'Mean Time To Recovery per incident, per repo, per team. Identify bottlenecks in your response.' },
-      { icon: <Zap size={18} />, name: 'Recovery Actions', desc: 'Rerun a workflow, execute a playbook, trigger a rollback — all from the incident view. One click.' },
-      { icon: <Lock size={18} />, name: 'Severity Classification', desc: 'Critical, High, Medium, Low — auto-classified based on blast radius and impact.' },
-    ],
-  },
-  {
-    label: 'Deployment Intelligence',
-    title: 'Track Every Deployment. Measure What Matters.',
-    description: 'Record deployments, correlate with infrastructure changes, and calculate DORA metrics — all automatically.',
-    features: [
-      { icon: <GitBranch size={18} />, name: 'Deployment Tracking', desc: 'Track the full chain: commit → workflow → build → deploy → health check. One timeline.' },
-      { icon: <Target size={18} />, name: 'DORA Metrics', desc: 'Deployment frequency, lead time, change failure rate, MTTR. Industry benchmarks to measure your team.' },
-      { icon: <BarChart3 size={18} />, name: 'Deployment Frequency', desc: 'Per repo, per environment, per team. Spot trends and identify bottlenecks in your release cadence.' },
-      { icon: <Workflow size={18} />, name: 'Infrastructure Correlation', desc: 'See which infrastructure changes preceded a deployment — and whether they caused issues.' },
-      { icon: <Eye size={18} />, name: 'Health Checks', desc: 'Track post-deployment health status. Know immediately if a deploy succeeded or needs attention.' },
-      { icon: <Bell size={18} />, name: 'Rollback Tracking', desc: 'Track rollbacks and their reasons. Build a knowledge base of what went wrong and how it was fixed.' },
-    ],
-  },
-  {
-    label: 'Security & Governance',
-    title: 'Enterprise-Grade Control. Open-Source Freedom.',
-    description: 'RBAC, audit logging, policy engine, SSO — everything you need for compliance and governance, without the enterprise price tag.',
-    features: [
-      { icon: <Shield size={18} />, name: 'RBAC', desc: 'Viewer, Developer, Operator, Admin, Owner roles. Resource-level permissions for fine-grained access.' },
-      { icon: <Lock size={18} />, name: 'Policy Engine', desc: 'Require approvals, enforce gates, audit all actions. OPA/Rego support for custom policies.' },
-      { icon: <FileCode size={18} />, name: 'Audit Logging', desc: 'Track every action: login, workflow run, infrastructure change, incident creation. Full accountability.' },
-      { icon: <Shield size={18} />, name: 'SSO/SAML', desc: 'Okta, Google Workspace, enterprise identity providers. One login for your entire team.' },
-      { icon: <Lock size={18} />, name: 'Webhook Security', desc: 'HMAC SHA256 verification, replay protection, rate limiting. Your integrations are locked down.' },
-      { icon: <Server size={18} />, name: 'Multi-Tenancy', desc: 'Isolated tenants with separate users, repos, environments, and secrets. Perfect for teams and orgs.' },
+      { icon: <Layers size={18} />, name: 'IaC Connectors', desc: 'OpenTofu, Terraform, Pulumi, CloudFormation, and Crossplane integrations are roadmap areas for future releases.' },
+      { icon: <Settings size={18} />, name: 'Configuration Management', desc: 'Ansible, Chef, Puppet, and SaltStack support is planned for a future cross-domain operations layer.' },
+      { icon: <GitBranch size={18} />, name: 'Additional CI Providers', desc: 'GitLab CI and Bitbucket Pipelines are planned beyond the current GitHub Actions focus.' },
+      { icon: <Bell size={18} />, name: 'Incident Integrations', desc: 'Deeper incident-management and notification workflows can build on the current event and triage model.' },
+      { icon: <Eye size={18} />, name: 'Predictive Analytics', desc: 'Forecasting workflow failure probabilities and broader operational trends remains a future capability.' },
+      { icon: <FileCode size={18} />, name: 'Automated Remediation', desc: 'More automated recovery and cross-domain correlation are planned as the integration surface grows.' },
     ],
   },
 ];
@@ -94,10 +55,9 @@ export default function Features() {
         <div className="container">
           <div className="section-header">
             <span className="section-label">Features</span>
-            <h1 className="section-title">Everything You Need to Own Your Operations</h1>
+            <h1 className="section-title">Understand Pipeline Failures Without the Guesswork</h1>
             <p className="section-subtitle">
-              CI/CD intelligence, infrastructure automation, configuration management,
-              incident response, and deployment tracking — unified in one platform.
+              Start with GitHub-native CI/CD observability today, then grow toward a broader GitOps control plane as the roadmap ships.
             </p>
           </div>
         </div>
@@ -134,32 +94,32 @@ export default function Features() {
             <div className="card feature-card">
               <div className="card-icon"><Server size={20} /></div>
               <h3>Self-Hosted</h3>
-              <p>Docker Compose deployment. Your data stays on your servers. No SaaS dependency, ever.</p>
+              <p>Run the current release on your infrastructure with Docker Compose. Your workflow data stays under your control.</p>
             </div>
             <div className="card feature-card">
               <div className="card-icon"><Shield size={20} /></div>
               <h3>MIT Licensed</h3>
-              <p>Fully open source. Read the code. Fork it. Contribute. No black boxes.</p>
+              <p>Read the source, fork the project, and contribute improvements through the public repository.</p>
             </div>
             <div className="card feature-card">
               <div className="card-icon"><Layers size={20} /></div>
-              <h3>Multi-Database</h3>
-              <p>SQLite for development. PostgreSQL for production. Seamless migration between the two.</p>
+              <h3>SQLite or PostgreSQL</h3>
+              <p>Use SQLite for local development and PostgreSQL for production deployments.</p>
             </div>
             <div className="card feature-card">
               <div className="card-icon"><Zap size={20} /></div>
-              <h3>Real-Time</h3>
-              <p>WebSocket-powered live updates. No polling. Instant visibility into every pipeline.</p>
+              <h3>Real-Time Events</h3>
+              <p>WebSocket-powered updates keep the dashboard current as workflow events arrive.</p>
             </div>
             <div className="card feature-card">
               <div className="card-icon"><Lock size={20} /></div>
               <h3>Secure by Default</h3>
-              <p>OAuth, HMAC webhooks, rate limiting, security headers. Enterprise-ready out of the box.</p>
+              <p>GitHub OAuth, verified webhooks, security headers, and permission checks protect sensitive actions.</p>
             </div>
             <div className="card feature-card">
               <div className="card-icon"><Terminal size={20} /></div>
-              <h3>API-First</h3>
-              <p>Everything available through APIs. Automate, integrate, and extend without limits.</p>
+              <h3>API-First Foundation</h3>
+              <p>Use the backend API as the integration point for dashboards, automation, and future connectors.</p>
             </div>
           </div>
         </div>
@@ -168,14 +128,14 @@ export default function Features() {
       <section className="section cta">
         <div className="container">
           <div className="cta-content">
-            <h2>See It in Action</h2>
-            <p>Deploy in minutes. Connect your first tool in under an hour.</p>
+            <h2>Start With a Clearer View of CI/CD</h2>
+            <p>Deploy the open-source release, connect GitHub, and see where failures are coming from.</p>
             <div className="hero-actions">
               <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                 Get Started Free
               </a>
-              <Link to="/pricing" className="btn btn-secondary">
-                See Pricing
+              <Link to="/docs" className="btn btn-secondary">
+                Read the Docs
               </Link>
             </div>
           </div>
