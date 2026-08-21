@@ -4,7 +4,10 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Layout from '../components/Layout';
 
-const GITHUB_RAW = 'https://raw.githubusercontent.com/hacrex/OpsSentinel/main';
+const DOCS_OWNER = import.meta.env.VITE_DOCS_OWNER || 'hacrex';
+const DOCS_REPO = import.meta.env.VITE_DOCS_REPO || 'OpsSentinel';
+const DOCS_BRANCH = import.meta.env.VITE_DOCS_BRANCH || 'main';
+const GITHUB_RAW = `https://raw.githubusercontent.com/${DOCS_OWNER}/${DOCS_REPO}/${DOCS_BRANCH}`;
 
 const docs = [
   { id: 'documentation', title: 'Full Documentation', icon: Book, file: 'Documentation.md' },

@@ -2,32 +2,32 @@ import type { Route } from '@pyyupsk/vite-plugin-sitemap';
 
 export default [
   {
-    url: 'https://opsentinel.dev/',
+    url: '/',
     priority: 1.0,
     changefreq: 'daily',
   },
   {
-    url: 'https://opsentinel.dev/features',
+    url: '/features',
     priority: 0.9,
     changefreq: 'weekly',
   },
   {
-    url: 'https://opsentinel.dev/infrastructure',
+    url: '/infrastructure',
     priority: 0.8,
     changefreq: 'weekly',
   },
   {
-    url: 'https://opsentinel.dev/configuration',
+    url: '/configuration',
     priority: 0.8,
     changefreq: 'weekly',
   },
   {
-    url: 'https://opsentinel.dev/pricing',
+    url: '/pricing',
     priority: 0.9,
     changefreq: 'weekly',
   },
   {
-    url: 'https://opsentinel.dev/docs',
+    url: '/docs',
     priority: 0.7,
     changefreq: 'weekly',
   },
