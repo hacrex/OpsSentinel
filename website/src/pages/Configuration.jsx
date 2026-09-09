@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Terminal, Shield, Settings, Server, Zap, CheckCircle } from 'lucide-react';
+import { Terminal, Shield, Settings, Server, Zap, CheckCircle, FileCode, Workflow, Monitor } from 'lucide-react';
 import Layout from '../components/Layout';
 
 const tools = [
@@ -35,6 +35,38 @@ const tools = [
     features: ['State Management', 'Remote Execution', 'Pillar Data', 'Reactor System', 'Beacon Monitoring', 'Orchestration'],
     icon: <Server size={24} />,
   },
+  {
+    name: 'InSpec',
+    badge: 'Roadmap',
+    badgeColor: '#ef4444',
+    description: 'A planned integration for compliance-as-code testing and audit workflows.',
+    features: ['Profile Testing', 'Compliance Specs', 'Custom Resources', 'Chef Habitat', 'Audit Mode', 'Reporting'],
+    icon: <FileCode size={24} />,
+  },
+  {
+    name: 'PowerShell DSC',
+    badge: 'Roadmap',
+    badgeColor: '#0284c7',
+    description: 'A planned integration for Windows and .NET configuration management at scale.',
+    features: ['Desired State', 'Pull Server', 'Config Data', 'Resource Kits', 'Azure Auto-Import', 'Local Config Manager'],
+    icon: <Terminal size={24} />,
+  },
+  {
+    name: 'StackStorm',
+    badge: 'Roadmap',
+    badgeColor: '#f59e0b',
+    description: 'A planned integration for event-driven automation and complex workflow orchestration.',
+    features: ['Event Triggers', 'Action Chains', 'Workflows', 'Sensors', 'Rules Engine', 'Integrations Pack'],
+    icon: <Zap size={24} />,
+  },
+  {
+    name: 'Rudder',
+    badge: 'Roadmap',
+    badgeColor: '#16a34a',
+    description: 'A planned integration for continuous configuration and compliance management across hybrid fleets.',
+    features: ['Directives', 'Techniques', 'Compliance Reports', 'Dynamic Groups', 'Inventory', 'Change Validation'],
+    icon: <Monitor size={24} />,
+  },
 ];
 
 const capabilities = [
@@ -68,6 +100,21 @@ const capabilities = [
     description: 'Cross-tool correlation is planned as additional operations integrations become available.',
     icon: <Zap size={20} />,
   },
+  {
+    title: 'Compliance-as-Code Reporting',
+    description: 'InSpec and Rudder compliance scanning integrated with CI/CD pipelines for automated audit trails.',
+    icon: <FileCode size={20} />,
+  },
+  {
+    title: 'Event-Driven Automation',
+    description: 'StackStorm-style event triggers and rules engine for reactive configuration workflows.',
+    icon: <Workflow size={20} />,
+  },
+  {
+    title: 'Windows Configuration Management',
+    description: 'PowerShell DSC integration for managing Windows and .NET environments alongside Linux infrastructure.',
+    icon: <Monitor size={20} />,
+  },
 ];
 
 export default function Configuration() {
@@ -79,8 +126,8 @@ export default function Configuration() {
             <span className="section-label">Configuration Management</span>
             <h1 className="section-title">Configure Servers. Enforce Compliance.</h1>
             <p className="section-subtitle">
-              The current release focuses on GitHub Actions observability. Ansible, Chef, Puppet, and SaltStack
-              integrations are roadmap areas for a future configuration-management layer.
+              The current release focuses on GitHub Actions observability. Ansible, Chef, Puppet, SaltStack,
+              InSpec, PowerShell DSC, StackStorm, and Rudder integrations are roadmap areas for a future configuration-management layer.
             </p>
           </div>
         </div>
@@ -145,17 +192,19 @@ export default function Configuration() {
                 <li>No visibility into configuration drift across your fleet</li>
                 <li>Manual correlation of config changes to production incidents</li>
                 <li>No unified approval workflow — each tool has its own process</li>
-                <li>Infrastructure and configuration exist in separate silos</li>
+                <li>Windows DSC and Linux config tools exist in separate silos</li>
+                <li>Compliance reporting scattered across InSpec, Rudder, and Chef</li>
               </ul>
             </div>
             <div className="problem-card problem-card--good">
               <h3>With the Roadmap in Place</h3>
               <ul className="feature-list">
-                <li>A unified view across configuration tools and GitHub workflows</li>
-                <li>Drift detection with actionable alerts</li>
+                <li>A unified view across all configuration tools and GitHub workflows</li>
+                <li>Drift detection with actionable alerts across hybrid environments</li>
                 <li>Configuration changes correlated with deployments and incidents</li>
                 <li>Approval workflows with a consistent audit trail</li>
-                <li>Infrastructure, configuration, and CI/CD connected end-to-end</li>
+                <li>Compliance-as-code scanning integrated into CI/CD pipelines</li>
+                <li>Event-driven automation reacting to infrastructure and config changes</li>
               </ul>
             </div>
           </div>

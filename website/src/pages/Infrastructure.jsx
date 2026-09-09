@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Shield, Server, Cloud, GitBranch, Layers, Zap, CheckCircle } from 'lucide-react';
+import { Shield, Server, Cloud, GitBranch, Layers, Zap, CheckCircle, Box, Package, HardDrive } from 'lucide-react';
 import Layout from '../components/Layout';
 
 const engines = [
@@ -43,6 +43,38 @@ const engines = [
     features: ['Compositions', 'Claims', 'Provider Config', 'Functions', 'Package Management', 'Drift Detection'],
     icon: <Server size={24} />,
   },
+  {
+    name: 'AWS CDK',
+    badge: 'Roadmap',
+    badgeColor: '#f97316',
+    description: 'A planned integration for teams that define cloud infrastructure using familiar programming languages on AWS.',
+    features: ['TypeScript', 'Python', 'Java', 'Go', 'CloudFormation Synth', 'Construct Libraries'],
+    icon: <Box size={24} />,
+  },
+  {
+    name: 'Bicep',
+    badge: 'Roadmap',
+    badgeColor: '#0284c7',
+    description: 'A planned integration for Microsoft\'s declarative infrastructure-as-code language for Azure resources.',
+    features: ['ARM Templates', 'Modules', 'Extensions', 'What-If Deployments', 'Bicep Registry', 'Parameter Files'],
+    icon: <Cloud size={24} />,
+  },
+  {
+    name: 'Packer',
+    badge: 'Roadmap',
+    badgeColor: '#16a34a',
+    description: 'A planned integration for automated machine image building across multiple platforms.',
+    features: ['AMIs', 'Azure Images', 'GCE Images', 'Docker', 'Provisioners', 'Post-Processors'],
+    icon: <Package size={24} />,
+  },
+  {
+    name: 'Vagrant',
+    badge: 'Roadmap',
+    badgeColor: '#1e40af',
+    description: 'A planned integration for development environment provisioning and lifecycle management.',
+    features: ['VirtualBox', 'VMware', 'Hyper-V', 'Docker', 'Multi-Machine', 'Synced Folders'],
+    icon: <HardDrive size={24} />,
+  },
 ];
 
 const capabilities = [
@@ -76,6 +108,21 @@ const capabilities = [
     description: 'Cross-domain orchestration is part of the longer-term GitOps vision and is not presented as shipped today.',
     icon: <Zap size={20} />,
   },
+  {
+    title: 'Cost Estimation',
+    description: 'Infrastructure cost estimation and budget alerts are planned for teams that want financial visibility before deploy.',
+    icon: <Cloud size={20} />,
+  },
+  {
+    title: 'Image Pipeline Integration',
+    description: 'Packer and Vagrant integration enables automated image building and environment provisioning workflows.',
+    icon: <Package size={20} />,
+  },
+  {
+    title: 'Policy-as-Code Enforcement',
+    description: 'Sentinel and OPA policy enforcement at plan and apply time for governance and compliance requirements.',
+    icon: <Shield size={20} />,
+  },
 ];
 
 export default function Infrastructure() {
@@ -88,7 +135,7 @@ export default function Infrastructure() {
             <h1 className="section-title">One Platform. Every IaC Engine.</h1>
             <p className="section-subtitle">
               The current release focuses on GitHub Actions observability. OpenTofu, Terraform, Pulumi, CloudFormation,
-              and Crossplane connectors are roadmap areas for a future infrastructure control plane.
+              Crossplane, AWS CDK, Bicep, Packer, and Vagrant connectors are roadmap areas for a future infrastructure control plane.
             </p>
           </div>
         </div>
