@@ -73,6 +73,10 @@ OpsSentinel supports multiple IaC engines through a pluggable integration archit
 | Pulumi | Apache 2.0 (Open Source) | TypeScript, Python, Go, C#, Java | Multi-cloud provisioning |
 | CloudFormation | AWS Service | JSON/YAML | AWS-native provisioning |
 | Crossplane | Apache 2.0 (Open Source) | YAML (Kubernetes CRDs) | Kubernetes-native provisioning |
+| AWS CDK | Apache 2.0 (Open Source) | TypeScript, Python, Go, Java, C# | AWS cloud development |
+| Bicep | MIT (Open Source) | Bicep DSL | Azure-native provisioning |
+| Packer | BSL (Commercial) | HCL, JSON | Machine image building |
+| Vagrant | MIT (Open Source) | Ruby | Development environment provisioning |
 
 ### OpenTofu (Preferred Open-Source Engine)
 
@@ -302,6 +306,87 @@ OpenTofu   Terraform        Pulumi    CloudFormation
               Correlated Changes
 ```
 
+## AWS CDK
+
+AWS Cloud Development Kit support for AWS-native infrastructure.
+
+### Features
+
+- CDK project management
+- Stack management and deployment
+- App synthesis (CDK app → CloudFormation template)
+- Drift detection for deployed stacks
+- Cost estimation via AWS Pricing API
+
+### Integration Points
+
+- CDK CLI integration (cdk synth, cdk deploy, cdk diff)
+- CloudFormation stack tracking
+- AWS account/region management
+- Asset publishing to S3
+
+---
+
+## Bicep
+
+Azure-native infrastructure as code.
+
+### Features
+
+- Bicep file compilation (Bicep → ARM template)
+- What-if operation tracking
+- Module registry integration
+- Drift detection for deployed resources
+
+### Integration Points
+
+- Bicep CLI integration (az deployment)
+- Azure Resource Manager tracking
+- Azure subscription management
+- Private module registry support
+
+---
+
+## Packer
+
+Machine image building across multiple platforms.
+
+### Features
+
+- Packer template management
+- Build tracking (AMI, Azure Image, GCE Image)
+- Builder management (AWS, Azure, GCP, VMware, VirtualBox)
+- Post-processor tracking
+
+### Integration Points
+
+- Packer CLI integration (packer build, packer validate)
+- Image artifact tracking
+- Multi-platform build orchestration
+- Secret management for builder credentials
+
+---
+
+## Vagrant
+
+Development environment provisioning and management.
+
+### Features
+
+- Vagrantfile management
+- Box management (Vagrant Cloud)
+- Machine lifecycle (up, halt, destroy, provision)
+- Provider management (VirtualBox, VMware, Hyper-V, Docker)
+
+### Integration Points
+
+- Vagrant CLI integration (vagrant up, vagrant destroy)
+- Box version tracking
+- Provisioner management (Shell, Ansible, Docker)
+- Synced folder monitoring
+
+---
+
 #### Cross-Engine Capabilities
 
 - Unified infrastructure inventory across all engines
@@ -363,6 +448,10 @@ OpsSentinel integrates with configuration management tools for server automation
 | Chef | Apache 2.0 (Open Source) | Agent-based | Infrastructure automation, compliance |
 | Puppet | Apache 2.0 (Open Source) | Agent-based | Configuration management, compliance |
 | SaltStack | Apache 2.0 (Open Source) | Agent-based (optional) | Event-driven automation, remote execution |
+| InSpec | Apache 2.0 (Open Source) | Agentless | Compliance testing and auditing |
+| PowerShell DSC | MIT (Open Source) | Agent-based | Desired state configuration (Windows/Linux) |
+| StackStorm | Apache 2.0 (Open Source) | Event-driven | Event-driven automation and remediation |
+| Rudder | GPL v3 (Open Source) | Agent-based | Configuration management and compliance |
 
 ---
 
@@ -575,6 +664,144 @@ OpsSentinel integrates with SaltStack for event-driven automation and remote exe
 
 ---
 
+## InSpec
+
+OpsSentinel integrates with InSpec for compliance testing and security auditing.
+
+### Features
+
+- Profile management
+- Control authoring and execution
+- InSpec profile dependencies
+- Input files
+- Custom resources
+- Compliance reporting
+- Chef Automate integration
+- Habitat integration
+- Cloud-specific profiles (AWS, Azure, GCP)
+
+### InSpec Workflow
+
+```text
+Profile Selection
+    ↓
+Input Configuration
+    ↓
+Execution (Agentless)
+    ↓
+Results Collection
+    ↓
+Compliance Report
+    ↓
+Drift Detection (if re-run)
+```
+
+---
+
+## PowerShell DSC
+
+OpsSentinel integrates with PowerShell Desired State Configuration for Windows and Linux configuration management.
+
+### Features
+
+- DSC resource management
+- Configuration authoring
+- MOF file compilation
+- Push/Pull server integration
+- Local Configuration Manager (LCM) monitoring
+- Compliance reporting
+- drift detection
+- Partial configuration support
+- Azure Automation integration
+
+### DSC Workflow
+
+```text
+Configuration Authoring
+    ↓
+MOF Compilation
+    ↓
+LCM Apply (Push) or Pull Server
+    ↓
+Resource Enforcement
+    ↓
+Compliance Check
+    ↓
+Drift Detection
+```
+
+---
+
+## StackStorm
+
+OpsSentinel integrates with StackStorm for event-driven automation and remediation.
+
+### Features
+
+- Pack management
+- Action management
+- Rule management
+- Sensor monitoring
+- Trigger management
+- Workflow (Orquesta) management
+- Execution history
+- Audit trail integration
+- ChatOps integration
+- RBAC integration
+
+### StackStorm Workflow
+
+```text
+Event Detection
+    ↓
+Sensor Trigger
+    ↓
+Rule Evaluation
+    ↓
+Action Execution
+    ↓
+Workflow Orchestration
+    ↓
+Result Logging
+```
+
+---
+
+## Rudder
+
+OpsSentinel integrates with Rudder for configuration management and compliance reporting.
+
+### Features
+
+- Rudder Server integration
+- Node management
+- Directive management
+- Technique management
+- Rule management
+- Group management
+- Compliance reporting
+- Drift detection
+- Policy generation
+- Inventory management
+
+### Rudder Workflow
+
+```text
+Policy Authoring (Directives)
+    ↓
+Rule Definition
+    ↓
+Group Assignment
+    ↓
+Agent Run
+    ↓
+Compliance Evaluation
+    ↓
+Drift Detection
+```
+
+---
+
 ## Cross-Tool Configuration Intelligence
 
 OpsSentinel provides unified visibility across all configuration management tools:
@@ -586,6 +813,13 @@ OpsSentinel provides unified visibility across all configuration management tool
     │          │               │          │
     ▼          ▼               ▼          ▼
   Ansible     Chef           Puppet     SaltStack
+    │          │               │          │
+    └──────────┴───────┬───────┴──────────┘
+                       │
+    ┌──────────┬───────┴───────┬──────────┐
+    │          │               │          │
+    ▼          ▼               ▼          ▼
+  InSpec    PowerShell DSC  StackStorm  Rudder
     │          │               │          │
     └──────────┴───────┬───────┴──────────┘
                        │
@@ -1668,7 +1902,11 @@ GitHub remains the primary integration.
               │ • Terraform     │   │ • Chef          │
               │ • Pulumi        │   │ • Puppet        │
               │ • CloudFormation│   │ • SaltStack     │
-              │ • Crossplane    │   │                 │
+              │ • Crossplane    │   │ • InSpec        │
+              │ • AWS CDK       │   │ • PowerShell DSC│
+              │ • Bicep         │   │ • StackStorm    │
+              │ • Packer        │   │ • Rudder        │
+              │ • Vagrant       │   │                 │
               └────────┬────────┘   └────────┬────────┘
                        │                     │
                        └──────────┬──────────┘
@@ -1694,8 +1932,8 @@ GitHub remains the primary integration.
 | Layer | Components | Purpose |
 |-------|-----------|---------|
 | **Source Control** | GitHub, GitLab, Bitbucket | Code, configuration, and infrastructure source of truth |
-| **IaC Engines** | OpenTofu, Terraform, Pulumi, CloudFormation, Crossplane | Infrastructure provisioning across clouds |
-| **Config Tools** | Ansible, Chef, Puppet, SaltStack | Server configuration and application deployment |
+| **IaC Engines** | OpenTofu, Terraform, Pulumi, CloudFormation, Crossplane, AWS CDK, Bicep, Packer, Vagrant | Infrastructure provisioning and image building |
+| **Config Tools** | Ansible, Chef, Puppet, SaltStack, InSpec, PowerShell DSC, StackStorm, Rudder | Server configuration, compliance, and automation |
 | **Workflow Engine** | OpsSentinel core | Orchestrate, approve, and track all operations |
 | **Observe** | Metrics, dashboards, health scores | Real-time operational visibility |
 | **Analyze** | AI/ML, failure fingerprinting, root cause analysis | Intelligence and pattern recognition |
@@ -1923,7 +2161,11 @@ The final platform:
    Terraform               Chef                   GitHub Actions
    Pulumi                  Puppet                 GitLab CI
    CloudFormation          SaltStack              Jenkins
-   Crossplane                                      ArgoCD
+   Crossplane              PowerShell DSC            ArgoCD
+   AWS CDK                 InSpec                     │
+   Bicep                   Rudder                     │
+   Packer                  StackStorm                 │
+   Vagrant                                          │
        │                       │                       │
        └───────────────────────┼───────────────────────┘
                                │
@@ -1952,8 +2194,8 @@ The final platform:
 
 | Category | Tools |
 |----------|-------|
-| **Infrastructure as Code** | OpenTofu, Terraform, Pulumi, CloudFormation, Crossplane |
-| **Configuration Management** | Ansible, Chef, Puppet, SaltStack |
+| **Infrastructure as Code** | OpenTofu, Terraform, Pulumi, CloudFormation, Crossplane, AWS CDK, Bicep, Packer, Vagrant |
+| **Configuration Management** | Ansible, Chef, Puppet, SaltStack, InSpec, PowerShell DSC, StackStorm, Rudder |
 | **CI/CD** | GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure DevOps |
 | **GitOps** | ArgoCD, FluxCD |
 | **Container Orchestration** | Kubernetes, Helm |
@@ -1963,7 +2205,7 @@ The final platform:
 
 # 46. Product Promise
 
-> **Provision infrastructure with OpenTofu, Terraform, Pulumi. Configure systems with Ansible, Chef, Puppet. Deliver applications with CI/CD. Automate operations through GitOps. Observe reliability. Recover failures. Govern everything.**
+> **Provision infrastructure with OpenTofu, Terraform, Pulumi, CloudFormation, AWS CDK, Bicep. Build images with Packer. Manage dev environments with Vagrant. Configure systems with Ansible, Chef, Puppet, SaltStack, PowerShell DSC. Validate compliance with InSpec, Rudder. Automate operations with StackStorm. Deliver applications with CI/CD. Automate operations through GitOps. Observe reliability. Recover failures. Govern everything.**
 
 OpsSentinel's goal is not to replace OpenTofu, Terraform, Pulumi, Ansible, Chef, Puppet, Kubernetes, GitHub Actions, or other best-of-breed tools.
 

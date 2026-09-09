@@ -190,6 +190,8 @@ Ops Sentinel is actively developed. The roadmap includes:
 - **Advanced Integrations:** Upcoming support for GitLab CI, Bitbucket Pipelines, and Jira.
 - **Automated Remediation:** LLM-powered root cause summarization in notifications.
 - **Enterprise Features:** Role-Based Access Control (RBAC) and SSO/SAML integration.
+- **Additional IaC Engines:** AWS CDK, Bicep, Packer, Vagrant support for expanded infrastructure automation.
+- **Configuration Management:** InSpec, PowerShell DSC, StackStorm, Rudder integration for compliance testing and event-driven automation.
 
 ---
 

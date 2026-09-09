@@ -81,7 +81,10 @@ Each category above solves one piece of the puzzle. OpsSentinel solves the entir
 │  ┌─────────────────────────────────────────────────┐   │
 │  │         INFRASTRUCTURE AUTOMATION               │   │
 │  │  • OpenTofu / Terraform / Pulumi                │   │
+│  │  • CloudFormation / Crossplane / AWS CDK         │   │
+│  │  • Bicep / Packer / Vagrant                     │   │
 │  │  • Ansible / Chef / Puppet / SaltStack          │   │
+│  │  • InSpec / PowerShell DSC / StackStorm / Rudder│   │
 │  │  • Plan → Approval → Apply workflow             │   │
 │  │  • Drift detection across all engines           │   │
 │  └─────────────────────────────────────────────────┘   │
@@ -202,6 +205,20 @@ Unified Infrastructure View:
                     │               │               │
               Unified View    Cross-Engine     Aggregated
               of All Infra    Drift Detection  Cost Estimate
+
+  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+  │ AWS CDK     │ │ Bicep       │ │ Packer      │ │ Vagrant     │
+  │ (5 stacks)  │ │ (4 templates)│ │ (6 images)  │ │ (3 VMs)     │
+  └──────┬──────┘ └──────┬──────┘ └──────┬──────┘ └──────┬──────┘
+         │                │                │                │
+         └────────────────┴────────────────┴────────────────┘
+                                    │
+                    OpsSentinel Control Plane
+                                    │
+                    ┌───────────────┼───────────────┐
+                    │               │               │
+              Unified View    Cross-Engine     Aggregated
+              of All Infra    Drift Detection  Cost Estimate
 ```
 
 **Why This Is Unique:**
@@ -288,9 +305,17 @@ Intelligence Features:
 | **OpenTofu Support** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **Terraform Support** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **Pulumi Support** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **AWS CDK Support** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Bicep Support** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Packer Support** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Vagrant Support** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Ansible Support** | ✅ | ✅ (limited) | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Chef Support** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Puppet Support** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **InSpec Support** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **PowerShell DSC Support** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **StackStorm Support** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Rudder Support** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Incident Management** | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
 | **GitHub Issues Integration** | ✅ | ❌ | ❌ | ❌ | ❌ | Partial | ❌ |
 | **Drift Detection** | ✅ All engines | ✅ | ✅ | ✅ | ✅ K8s | ❌ | ❌ |
@@ -320,8 +345,8 @@ Intelligence Features:
 > OpsSentinel is a self-hosted, open-source GitOps control plane that provides:
 > - **CI/CD Observability** across GitHub Actions, GitLab CI, Jenkins, and more
 > - **Failure Intelligence** with fingerprinting, clustering, and LLM-powered root cause analysis
-> - **Infrastructure Automation** integration with OpenTofu, Terraform, Pulumi, CloudFormation, and Crossplane
-> - **Configuration Management** integration with Ansible, Chef, Puppet, and SaltStack
+> - **Infrastructure Automation** integration with OpenTofu, Terraform, Pulumi, CloudFormation, Crossplane, AWS CDK, Bicep, Packer, and Vagrant
+> - **Configuration Management** integration with Ansible, Chef, Puppet, SaltStack, InSpec, PowerShell DSC, StackStorm, and Rudder
 > - **Incident Management** with auto-creation from repeated failures and GitHub Issues integration
 > - **Cross-Domain Correlation** connecting commits → builds → deployments → infrastructure → incidents
 
@@ -375,7 +400,7 @@ Intelligence Features:
 1. **Open Source** — MIT license, community-driven, no vendor lock-in
 2. **Failure Intelligence** — No competitor offers AI-powered failure fingerprinting and root cause analysis
 3. **Cross-Domain Correlation** — Connecting CI/CD + Infrastructure + Incidents is unique
-4. **Multi-Engine Support** — Supporting 10+ tools in one platform is a significant integration effort
+4. **Multi-Engine Support** — Supporting 17+ tools in one platform is a significant integration effort
 5. **Self-Hosted** — Docker Compose deployment for data sovereignty
 
 ---
