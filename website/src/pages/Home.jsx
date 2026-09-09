@@ -58,85 +58,6 @@ function TypingCode() {
   );
 }
 
-function DashboardMockup() {
-  return (
-    <div className="hero-mockup" aria-hidden="true">
-      <div className="mockup-window">
-        <div className="mockup-chrome">
-          <span className="mockup-dot" />
-          <span className="mockup-dot" />
-          <span className="mockup-dot" />
-          <span className="mockup-url">localhost:3000</span>
-        </div>
-        <div className="mockup-body">
-          <div className="mockup-sidebar">
-            <div className="mockup-nav-item active" />
-            <div className="mockup-nav-item" />
-            <div className="mockup-nav-item" />
-            <div className="mockup-nav-item" />
-          </div>
-          <div className="mockup-main">
-            <div className="mockup-stats">
-              <div className="mockup-stat">
-                <span className="mockup-stat-value">1,247</span>
-                <span className="mockup-stat-label">Total Runs</span>
-              </div>
-              <div className="mockup-stat">
-                <span className="mockup-stat-value text-success">94.2%</span>
-                <span className="mockup-stat-label">Success Rate</span>
-              </div>
-              <div className="mockup-stat">
-                <span className="mockup-stat-value text-accent">12</span>
-                <span className="mockup-stat-label">Needs Attention</span>
-              </div>
-              <div className="mockup-stat">
-                <span className="mockup-stat-value">3.2m</span>
-                <span className="mockup-stat-label">Avg MTTR</span>
-              </div>
-            </div>
-            <div className="mockup-chart">
-              <div className="mockup-bar" style={{ height: '45%' }} />
-              <div className="mockup-bar" style={{ height: '72%' }} />
-              <div className="mockup-bar" style={{ height: '38%' }} />
-              <div className="mockup-bar" style={{ height: '85%' }} />
-              <div className="mockup-bar" style={{ height: '62%' }} />
-              <div className="mockup-bar" style={{ height: '91%' }} />
-              <div className="mockup-bar mockup-bar-fail" style={{ height: '28%' }} />
-              <div className="mockup-bar" style={{ height: '76%' }} />
-              <div className="mockup-bar" style={{ height: '55%' }} />
-              <div className="mockup-bar" style={{ height: '88%' }} />
-              <div className="mockup-bar" style={{ height: '42%' }} />
-              <div className="mockup-bar" style={{ height: '67%' }} />
-            </div>
-            <div className="mockup-table">
-              <div className="mockup-row mockup-row-header">
-                <span>Workflow</span>
-                <span>Status</span>
-                <span>Time</span>
-              </div>
-              <div className="mockup-row">
-                <span className="mockup-repo">deploy-prod</span>
-                <span className="text-success">Passed</span>
-                <span>2m 14s</span>
-              </div>
-              <div className="mockup-row">
-                <span className="mockup-repo">api-ci</span>
-                <span className="text-error">Failed</span>
-                <span>4m 38s</span>
-              </div>
-              <div className="mockup-row">
-                <span className="mockup-repo">frontend-build</span>
-                <span className="text-success">Passed</span>
-                <span>1m 52s</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 const features = [
   {
     status: 'available',
@@ -299,12 +220,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="hero-mockup-section">
-        <div className="container">
-          <DashboardMockup />
-        </div>
-      </section>
-
       <section className="section">
         <div className="container">
           <InstallPanel />
@@ -387,58 +302,6 @@ export default function Home() {
                 <span className="tool-name">{tool.name}</span>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="container">
-          <div className="architecture-diagram">
-            <h2 className="section-title section-title-center" style={{ marginBottom: '12px' }}>How the Current Release Works</h2>
-            <div className="architecture-svg">
-              <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Architecture diagram showing OpsSentinel receiving GitHub webhooks, analyzing with AI, and enabling recovery workflows">
-                <title>Current Release Architecture</title>
-                <rect x="300" y="20" width="200" height="50" rx="8" className="svg-box-accent" strokeWidth="2"/>
-                <text x="400" y="52" textAnchor="middle" className="svg-text" fontSize="18" fontWeight="600">OPSSENTINEL</text>
-                <text x="400" y="70" textAnchor="middle" className="svg-text-muted" fontSize="12">GitHub Control Plane</text>
-
-                <line x1="400" y1="70" x2="400" y2="110" className="svg-line" strokeWidth="2" strokeDasharray="4,4"/>
-
-                <rect x="100" y="110" width="160" height="50" rx="8" className="svg-box" strokeWidth="1"/>
-                <text x="180" y="140" textAnchor="middle" className="svg-text" fontSize="14" fontWeight="500">Receive</text>
-                <text x="180" y="156" textAnchor="middle" className="svg-text-muted" fontSize="11">GitHub Webhooks</text>
-                <text x="180" y="170" textAnchor="middle" className="svg-text-muted" fontSize="10">Workflow Runs</text>
-                <text x="180" y="184" textAnchor="middle" className="svg-text-muted" fontSize="10">Repository Events</text>
-
-                <rect x="320" y="110" width="160" height="50" rx="8" className="svg-box" strokeWidth="1"/>
-                <text x="400" y="140" textAnchor="middle" className="svg-text" fontSize="14" fontWeight="500">Analyze</text>
-                <text x="400" y="156" textAnchor="middle" className="svg-text-muted" fontSize="11">Live Dashboard</text>
-                <text x="400" y="170" textAnchor="middle" className="svg-text-muted" fontSize="10">Failure Intelligence</text>
-                <text x="400" y="184" textAnchor="middle" className="svg-text-muted" fontSize="10">MTTR Tracking</text>
-
-                <rect x="540" y="110" width="160" height="50" rx="8" className="svg-box" strokeWidth="1"/>
-                <text x="620" y="140" textAnchor="middle" className="svg-text" fontSize="14" fontWeight="500">Recover</text>
-                <text x="620" y="156" textAnchor="middle" className="svg-text-muted" fontSize="11">Triage & Re-Run</text>
-                <text x="620" y="170" textAnchor="middle" className="svg-text-muted" fontSize="10">GitHub Actions</text>
-
-                <line x1="180" y1="160" x2="320" y2="160" className="svg-line" strokeWidth="2"/>
-                <text x="250" y="155" textAnchor="middle" className="svg-accent" fontSize="10">ingest</text>
-
-                <line x1="460" y1="160" x2="540" y2="160" className="svg-line" strokeWidth="2"/>
-                <text x="500" y="155" textAnchor="middle" className="svg-accent" fontSize="10">analyze</text>
-
-                <rect x="200" y="190" width="400" height="70" rx="8" className="svg-box-accent" strokeWidth="1"/>
-                <text x="400" y="215" textAnchor="middle" className="svg-accent" fontSize="14" fontWeight="600">INTELLIGENCE</text>
-                <text x="400" y="235" textAnchor="middle" className="svg-text-muted" fontSize="11">AI Analysis | Failure Intelligence | MTTR</text>
-                <text x="400" y="250" textAnchor="middle" className="svg-text-muted" fontSize="11">Root Cause | Triage | Recommendations</text>
-
-                <line x1="400" y1="260" x2="400" y2="280" className="svg-line" strokeWidth="2" strokeDasharray="4,4"/>
-
-                <rect x="300" y="280" width="200" height="50" rx="8" className="svg-box" strokeWidth="1"/>
-                <text x="400" y="310" textAnchor="middle" className="svg-text" fontSize="14" fontWeight="500">Recover</text>
-                <text x="400" y="328" textAnchor="middle" className="svg-text-muted" fontSize="10">Triage | Re-Runs | Audit Trail</text>
-              </svg>
-            </div>
           </div>
         </div>
       </section>
