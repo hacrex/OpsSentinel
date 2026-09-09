@@ -53,7 +53,7 @@ export default function Docs() {
 
   return (
     <Layout>
-      <div className="doc-layout">
+      <div className="doc-layout page-hero">
         {/* Sidebar */}
         <aside className="doc-sidebar">
           <nav className="doc-nav">
@@ -63,13 +63,13 @@ export default function Docs() {
                 key={doc.id}
                 className={`doc-nav-item ${activeDoc === doc.id ? 'active' : ''}`}
                 onClick={() => setActiveDoc(doc.id)}
-                aria-pressed={activeDoc === doc.id}
+                aria-current={activeDoc === doc.id ? 'page' : undefined}
               >
                 <doc.icon size={18} />
                 {doc.title}
               </button>
             ))}
-            <h4 style={{ marginTop: '24px' }}>Quick Links</h4>
+            <h4 className="doc-nav-heading">Quick Links</h4>
             <a
               href="https://github.com/hacrex/OpsSentinel"
               target="_blank"
@@ -96,14 +96,13 @@ export default function Docs() {
           {loading ? (
             <div className="loading">
               <div className="loading-spinner" />
-              <span style={{ marginLeft: '12px' }}>Loading documentation...</span>
+              <span className="loading-text">Loading documentation...</span>
             </div>
           ) : error ? (
-            <div className="loading" style={{ color: 'var(--error)' }}>
+            <div className="loading text-error">
               <p>Failed to load documentation from GitHub. Check your connection and try again.</p>
               <button
-                className="btn-secondary"
-                style={{ marginTop: '16px' }}
+                className="btn btn-secondary"
                 onClick={() => setRetryCount((count) => count + 1)}
               >
                 Retry

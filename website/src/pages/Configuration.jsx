@@ -88,7 +88,9 @@ export default function Configuration() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title section-title-center">Planned Tool Integrations</h2>
+          <div className="section-header">
+            <h2 className="section-title">Planned Tool Integrations</h2>
+          </div>
           <div className="engines-grid">
             {tools.map((tool) => (
               <div key={tool.name} className="engine-card">
@@ -118,7 +120,9 @@ export default function Configuration() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title section-title-center">Roadmap Capabilities</h2>
+          <div className="section-header">
+            <h2 className="section-title">Roadmap Capabilities</h2>
+          </div>
           <div className="features-grid">
             {capabilities.map((cap) => (
               <div key={cap.title} className="card feature-card">

@@ -644,6 +644,9 @@ code {
 .features-grid .card:nth-child(4) { animation-delay: 0.25s; }
 .features-grid .card:nth-child(5) { animation-delay: 0.3s; }
 .features-grid .card:nth-child(6) { animation-delay: 0.35s; }
+.features-grid .card:nth-child(7) { animation-delay: 0.4s; }
+.features-grid .card:nth-child(8) { animation-delay: 0.45s; }
+.features-grid .card:nth-child(9) { animation-delay: 0.5s; }
 
 /* ── Button Pulse ───────────────────────────────────────────────────────── */
 @keyframes subtlePulse {
@@ -1136,7 +1139,7 @@ code {
 }
 
 .pricing-features li svg {
-  color: var(--text);
+  color: var(--accent);
   flex-shrink: 0;
 }
 
@@ -1529,7 +1532,7 @@ code {
   gap: 40px;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 100px 48px 80px;
+  padding: 120px 24px 80px;
 }
 
 .doc-sidebar {
@@ -1725,6 +1728,40 @@ code {
   to { transform: rotate(360deg); }
 }
 
+.loading-text {
+  margin-left: 12px;
+}
+
+.doc-nav-heading {
+  margin-top: 24px;
+}
+
+/* ── Not Found ──────────────────────────────────────────────────────────── */
+.not-found-hero {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.not-found-code {
+  font-size: 120px;
+  font-weight: 700;
+  opacity: 0.15;
+  letter-spacing: -4px;
+  line-height: 1;
+  margin-bottom: 8px;
+  color: var(--accent);
+}
+
+.not-found-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
 /* ── Engines Grid (IaC & Config tools) ─────────────────────────────────── */
 .engines-grid {
   display: grid;
@@ -1909,17 +1946,6 @@ code {
 .architecture-svg .svg-line {
   stroke: var(--accent);
   transition: stroke 0.3s;
-}
-
-.architecture-svg {
-  display: flex;
-  justify-content: center;
-}
-
-.architecture-svg svg {
-  max-width: 100%;
-  height: auto;
-  display: block;
 }
 
 .architecture-pre {
@@ -2266,7 +2292,7 @@ code {
 
 .install-panel h3 {
   font-size: 17px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .install-panel > p {

@@ -101,7 +101,7 @@ export default function Pricing() {
         <div className="container">
           <div className="pricing-grid">
             {plans.map((plan) => (
-              <div key={plan.name} className={`pricing-card ${plan.disabled ? 'pricing-card-disabled' : ''}`}>
+              <div key={plan.name} className="pricing-card">
                 <span className="pricing-badge" style={{ backgroundColor: plan.badgeColor + '20', color: plan.badgeColor }}>
                   {plan.badge}
                 </span>
@@ -114,30 +114,20 @@ export default function Pricing() {
                 <ul className="pricing-features">
                   {plan.features.map((feature) => (
                     <li key={feature}>
-                      <CheckCircle size={14} />
+                      <CheckCircle size={14} aria-hidden="true" />
                       {feature}
                     </li>
                   ))}
                 </ul>
-                {plan.ctaExternal ? (
-                  <a
-                    href={plan.ctaLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-primary full-width-btn"
-                  >
-                    <Github size={16} />
-                    {plan.cta}
-                  </a>
-                ) : (
-                  <button
-                    className="btn btn-primary full-width-btn"
-                    style={{ opacity: plan.disabled ? 0.5 : 1, cursor: plan.disabled ? 'not-allowed' : 'pointer' }}
-                    disabled={plan.disabled}
-                  >
-                    {plan.cta}
-                  </button>
-                )}
+                <a
+                  href={plan.ctaLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary full-width-btn"
+                >
+                  <Github size={16} />
+                  {plan.cta}
+                </a>
               </div>
             ))}
           </div>
@@ -168,7 +158,9 @@ export default function Pricing() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title section-title-center">Frequently Asked Questions</h2>
+          <div className="section-header">
+            <h2 className="section-title">Frequently Asked Questions</h2>
+          </div>
           <div className="faq-grid">
             {faq.map((item) => (
               <div key={item.q} className="faq-item">

@@ -96,7 +96,9 @@ export default function Infrastructure() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title section-title-center">Planned Engine Integrations</h2>
+          <div className="section-header">
+            <h2 className="section-title">Planned Engine Integrations</h2>
+          </div>
           <div className="engines-grid">
             {engines.map((engine) => (
               <div key={engine.name} className="engine-card">
@@ -126,7 +128,9 @@ export default function Infrastructure() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title section-title-center">Roadmap Capabilities</h2>
+          <div className="section-header">
+            <h2 className="section-title">Roadmap Capabilities</h2>
+          </div>
           <div className="features-grid">
             {capabilities.map((cap) => (
               <div key={cap.title} className="card feature-card">
@@ -144,33 +148,34 @@ export default function Infrastructure() {
           <div className="architecture-diagram">
             <h2 className="section-title section-title-lg">Illustrative Future Architecture</h2>
             <div className="architecture-svg">
-              <svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
-                <rect x="200" y="20" width="300" height="50" rx="8" fill="#161616" stroke="#38bdf8" strokeWidth="2"/>
-                <text x="350" y="52" text-anchor="middle" fill="#ffffff" fontSize="16" fontWeight="600">OpsSentinel Control Plane</text>
+              <svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustrative future architecture showing OpsSentinel Control Plane connecting to OpenTofu, Terraform, and Pulumi connectors, feeding into a Unified State View">
+                <title>Future Architecture Diagram</title>
+                <rect x="200" y="20" width="300" height="50" rx="8" className="svg-box-accent" strokeWidth="2"/>
+                <text x="350" y="52" textAnchor="middle" className="svg-text" fontSize="16" fontWeight="600">OpsSentinel Control Plane</text>
 
-                <line x1="350" y1="70" x2="350" y2="100" stroke="#38bdf8" strokeWidth="2" strokeDasharray="4,4"/>
+                <line x1="350" y1="70" x2="350" y2="100" className="svg-line" strokeWidth="2" strokeDasharray="4,4"/>
 
-                <rect x="75" y="100" width="130" height="55" rx="8" fill="#161616" stroke="#262626"/>
-                <text x="140" y="132" text-anchor="middle" fill="#ffffff" fontSize="14" fontWeight="600">OpenTofu</text>
-                <text x="140" y="152" text-anchor="middle" fill="#a3a3a3" fontSize="11">planned connector</text>
+                <rect x="75" y="100" width="130" height="55" rx="8" className="svg-box" strokeWidth="1"/>
+                <text x="140" y="132" textAnchor="middle" className="svg-text" fontSize="14" fontWeight="600">OpenTofu</text>
+                <text x="140" y="152" textAnchor="middle" className="svg-text-muted" fontSize="11">planned connector</text>
 
-                <rect x="285" y="100" width="130" height="55" rx="8" fill="#161616" stroke="#262626"/>
-                <text x="350" y="132" text-anchor="middle" fill="#ffffff" fontSize="14" fontWeight="600">Terraform</text>
-                <text x="350" y="152" text-anchor="middle" fill="#a3a3a3" fontSize="11">planned connector</text>
+                <rect x="285" y="100" width="130" height="55" rx="8" className="svg-box" strokeWidth="1"/>
+                <text x="350" y="132" textAnchor="middle" className="svg-text" fontSize="14" fontWeight="600">Terraform</text>
+                <text x="350" y="152" textAnchor="middle" className="svg-text-muted" fontSize="11">planned connector</text>
 
-                <rect x="500" y="100" width="130" height="55" rx="8" fill="#161616" stroke="#262626"/>
-                <text x="565" y="132" text-anchor="middle" fill="#ffffff" fontSize="14" fontWeight="600">Pulumi</text>
-                <text x="565" y="152" text-anchor="middle" fill="#a3a3a3" fontSize="11">planned connector</text>
+                <rect x="500" y="100" width="130" height="55" rx="8" className="svg-box" strokeWidth="1"/>
+                <text x="565" y="132" textAnchor="middle" className="svg-text" fontSize="14" fontWeight="600">Pulumi</text>
+                <text x="565" y="152" textAnchor="middle" className="svg-text-muted" fontSize="11">planned connector</text>
 
-                <line x1="140" y1="155" x2="285" y2="155" stroke="#38bdf8" strokeWidth="2"/>
-                <line x1="415" y1="155" x2="540" y2="155" stroke="#38bdf8" strokeWidth="2"/>
+                <line x1="140" y1="155" x2="285" y2="155" className="svg-line" strokeWidth="2"/>
+                <line x1="415" y1="155" x2="540" y2="155" className="svg-line" strokeWidth="2"/>
 
-                <line x1="350" y1="155" x2="350" y2="190" stroke="#38bdf8" strokeWidth="2" strokeDasharray="4,4"/>
+                <line x1="350" y1="155" x2="350" y2="190" className="svg-line" strokeWidth="2" strokeDasharray="4,4"/>
 
-                <rect x="200" y="190" width="300" height="70" rx="8" fill="#161616" stroke="#38bdf8" strokeWidth="1"/>
-                <text x="350" y="215" text-anchor="middle" fill="#38bdf8" fontSize="13" fontWeight="600">Unified State View</text>
-                <text x="350" y="235" text-anchor="middle" fill="#a3a3a3" fontSize="11">Cross-Engine Drift Detection</text>
-                <text x="350" y="252" text-anchor="middle" fill="#a3a3a3" fontSize="11">Correlated Change Tracking</text>
+                <rect x="200" y="190" width="300" height="70" rx="8" className="svg-box-accent" strokeWidth="1"/>
+                <text x="350" y="215" textAnchor="middle" className="svg-accent" fontSize="13" fontWeight="600">Unified State View</text>
+                <text x="350" y="235" textAnchor="middle" className="svg-text-muted" fontSize="11">Cross-Engine Drift Detection</text>
+                <text x="350" y="252" textAnchor="middle" className="svg-text-muted" fontSize="11">Correlated Change Tracking</text>
               </svg>
             </div>
           </div>

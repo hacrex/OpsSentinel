@@ -9,7 +9,7 @@ import {
 import Layout from '../components/Layout';
 
 const typingTexts = [
-  'git clone github.com/hacrex/OpsSentinel',
+  'git clone https://github.com/hacrex/OpsSentinel.git',
   'docker-compose up -d',
   'open http://localhost:3000',
 ];
@@ -394,9 +394,10 @@ export default function Home() {
       <section className="section">
         <div className="container">
           <div className="architecture-diagram">
-            <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '12px' }}>How the Current Release Works</h2>
+            <h2 className="section-title section-title-center" style={{ marginBottom: '12px' }}>How the Current Release Works</h2>
             <div className="architecture-svg">
-              <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+              <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Architecture diagram showing OpsSentinel receiving GitHub webhooks, analyzing with AI, and enabling recovery workflows">
+                <title>Current Release Architecture</title>
                 <rect x="300" y="20" width="200" height="50" rx="8" className="svg-box-accent" strokeWidth="2"/>
                 <text x="400" y="52" textAnchor="middle" className="svg-text" fontSize="18" fontWeight="600">OPSSENTINEL</text>
                 <text x="400" y="70" textAnchor="middle" className="svg-text-muted" fontSize="12">GitHub Control Plane</text>
