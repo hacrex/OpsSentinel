@@ -84,7 +84,7 @@ const faq = [
 export default function Pricing() {
   return (
     <Layout>
-      <section className="section" style={{ paddingTop: '120px' }}>
+      <section className="section page-hero">
         <div className="container">
           <div className="section-header">
             <span className="section-label">Pricing</span>
@@ -124,16 +124,15 @@ export default function Pricing() {
                     href={plan.ctaLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn btn-primary"
-                    style={{ width: '100%', justifyContent: 'center' }}
+                    className="btn btn-primary full-width-btn"
                   >
                     <Github size={16} />
                     {plan.cta}
                   </a>
                 ) : (
                   <button
-                    className="btn btn-primary"
-                    style={{ width: '100%', justifyContent: 'center', opacity: plan.disabled ? 0.5 : 1, cursor: plan.disabled ? 'not-allowed' : 'pointer' }}
+                    className="btn btn-primary full-width-btn"
+                    style={{ opacity: plan.disabled ? 0.5 : 1, cursor: plan.disabled ? 'not-allowed' : 'pointer' }}
                     disabled={plan.disabled}
                   >
                     {plan.cta}
@@ -169,7 +168,7 @@ export default function Pricing() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '48px' }}>Frequently Asked Questions</h2>
+          <h2 className="section-title section-title-center">Frequently Asked Questions</h2>
           <div className="faq-grid">
             {faq.map((item) => (
               <div key={item.q} className="faq-item">

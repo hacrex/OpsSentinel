@@ -181,9 +181,9 @@ export default function Home() {
       <section className="hero">
         <div className="container">
           <span className="hero-badge">Open Source · Self-Hosted</span>
-          <h1 className="hero-title">
+            <h1 className="hero-title">
             Open-Source<br />
-            <span style={{ color: 'var(--accent)' }}>CI/CD Observability</span>
+            <span className="text-accent">CI/CD Observability</span>
           </h1>
           <p className="hero-subtitle">
               GitHub-native CI/CD observability for teams that want live workflow visibility, failure intelligence, and self-hosted control. Powered by AI when you choose to connect an LLM provider.
@@ -222,7 +222,7 @@ export default function Home() {
           </div>
           <div className="problem-grid">
             <div className="problem-card">
-              <div className="problem-icon"><XCircle size={24} style={{ color: '#ef4444' }} /></div>
+              <div className="problem-icon"><XCircle size={24} className="text-error" /></div>
               <h3>Without OpsSentinel</h3>
               <ul className="feature-list">
                 <li>GitHub Actions fails, but the useful context is buried in raw logs</li>
@@ -232,8 +232,8 @@ export default function Home() {
                 <li>One failure can consume hours of manual investigation</li>
               </ul>
             </div>
-            <div className="problem-card" style={{ borderColor: 'var(--accent)' }}>
-              <div className="problem-icon"><CheckCircle size={24} style={{ color: 'var(--accent)' }} /></div>
+            <div className="problem-card problem-card--good">
+              <div className="problem-icon"><CheckCircle size={24} className="text-accent" /></div>
               <h3>With OpsSentinel</h3>
               <ul className="feature-list">
                 <li>AI-assisted analysis surfaces likely causes and suggested next steps</li>
@@ -296,45 +296,45 @@ export default function Home() {
             <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '12px' }}>How the Current Release Works</h2>
             <div className="architecture-svg">
               <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
-                <rect x="300" y="20" width="200" height="50" rx="8" fill="#161616" stroke="#38bdf8" strokeWidth="2"/>
-                <text x="400" y="52" text-anchor="middle" fill="#ffffff" fontSize="18" fontWeight="600">OPSSENTINEL</text>
-                <text x="400" y="70" text-anchor="middle" fill="#a3a3a3" fontSize="12">GitHub Control Plane</text>
+                <rect x="300" y="20" width="200" height="50" rx="8" className="svg-box-accent" strokeWidth="2"/>
+                <text x="400" y="52" textAnchor="middle" className="svg-text" fontSize="18" fontWeight="600">OPSSENTINEL</text>
+                <text x="400" y="70" textAnchor="middle" className="svg-text-muted" fontSize="12">GitHub Control Plane</text>
 
-                <line x1="400" y1="70" x2="400" y2="110" stroke="#38bdf8" strokeWidth="2" strokeDasharray="4,4"/>
+                <line x1="400" y1="70" x2="400" y2="110" className="svg-line" strokeWidth="2" strokeDasharray="4,4"/>
 
-                <rect x="100" y="110" width="160" height="50" rx="8" fill="#161616" stroke="#262626"/>
-                <text x="180" y="140" text-anchor="middle" fill="#ffffff" fontSize="14" fontWeight="500">Receive</text>
-                <text x="180" y="156" text-anchor="middle" fill="#a3a3a3" fontSize="11">GitHub Webhooks</text>
-                <text x="180" y="170" text-anchor="middle" fill="#a3a3a3" fontSize="10">Workflow Runs</text>
-                <text x="180" y="184" text-anchor="middle" fill="#a3a3a3" fontSize="10">Repository Events</text>
+                <rect x="100" y="110" width="160" height="50" rx="8" className="svg-box" strokeWidth="1"/>
+                <text x="180" y="140" textAnchor="middle" className="svg-text" fontSize="14" fontWeight="500">Receive</text>
+                <text x="180" y="156" textAnchor="middle" className="svg-text-muted" fontSize="11">GitHub Webhooks</text>
+                <text x="180" y="170" textAnchor="middle" className="svg-text-muted" fontSize="10">Workflow Runs</text>
+                <text x="180" y="184" textAnchor="middle" className="svg-text-muted" fontSize="10">Repository Events</text>
 
-                <rect x="320" y="110" width="160" height="50" rx="8" fill="#161616" stroke="#262626"/>
-                <text x="400" y="140" text-anchor="middle" fill="#ffffff" fontSize="14" fontWeight="500">Analyze</text>
-                <text x="400" y="156" text-anchor="middle" fill="#a3a3a3" fontSize="11">Live Dashboard</text>
-                <text x="400" y="170" text-anchor="middle" fill="#a3a3a3" fontSize="10">Failure Intelligence</text>
-                <text x="400" y="184" text-anchor="middle" fill="#a3a3a3" fontSize="10">MTTR Tracking</text>
+                <rect x="320" y="110" width="160" height="50" rx="8" className="svg-box" strokeWidth="1"/>
+                <text x="400" y="140" textAnchor="middle" className="svg-text" fontSize="14" fontWeight="500">Analyze</text>
+                <text x="400" y="156" textAnchor="middle" className="svg-text-muted" fontSize="11">Live Dashboard</text>
+                <text x="400" y="170" textAnchor="middle" className="svg-text-muted" fontSize="10">Failure Intelligence</text>
+                <text x="400" y="184" textAnchor="middle" className="svg-text-muted" fontSize="10">MTTR Tracking</text>
 
-                <rect x="540" y="110" width="160" height="50" rx="8" fill="#161616" stroke="#262626"/>
-                <text x="620" y="140" text-anchor="middle" fill="#ffffff" fontSize="14" fontWeight="500">Recover</text>
-                <text x="620" y="156" text-anchor="middle" fill="#a3a3a3" fontSize="11">Triage & Re-Run</text>
-                <text x="620" y="170" text-anchor="middle" fill="#a3a3a3" fontSize="10">GitHub Actions</text>
+                <rect x="540" y="110" width="160" height="50" rx="8" className="svg-box" strokeWidth="1"/>
+                <text x="620" y="140" textAnchor="middle" className="svg-text" fontSize="14" fontWeight="500">Recover</text>
+                <text x="620" y="156" textAnchor="middle" className="svg-text-muted" fontSize="11">Triage & Re-Run</text>
+                <text x="620" y="170" textAnchor="middle" className="svg-text-muted" fontSize="10">GitHub Actions</text>
 
-                <line x1="180" y1="160" x2="320" y2="160" stroke="#38bdf8" strokeWidth="2"/>
-                <text x="250" y="155" text-anchor="middle" fill="#38bdf8" fontSize="10">ingest</text>
+                <line x1="180" y1="160" x2="320" y2="160" className="svg-line" strokeWidth="2"/>
+                <text x="250" y="155" textAnchor="middle" className="svg-accent" fontSize="10">ingest</text>
 
-                <line x1="460" y1="160" x2="540" y2="160" stroke="#38bdf8" strokeWidth="2"/>
-                <text x="500" y="155" text-anchor="middle" fill="#38bdf8" fontSize="10">analyze</text>
+                <line x1="460" y1="160" x2="540" y2="160" className="svg-line" strokeWidth="2"/>
+                <text x="500" y="155" textAnchor="middle" className="svg-accent" fontSize="10">analyze</text>
 
-                <rect x="200" y="190" width="400" height="70" rx="8" fill="#161616" stroke="#38bdf8" strokeWidth="1"/>
-                <text x="400" y="215" text-anchor="middle" fill="#38bdf8" fontSize="14" fontWeight="600">INTELLIGENCE</text>
-                <text x="400" y="235" text-anchor="middle" fill="#a3a3a3" fontSize="11">AI Analysis | Failure Intelligence | MTTR</text>
-                <text x="400" y="250" text-anchor="middle" fill="#a3a3a3" fontSize="11">Root Cause | Triage | Recommendations</text>
+                <rect x="200" y="190" width="400" height="70" rx="8" className="svg-box-accent" strokeWidth="1"/>
+                <text x="400" y="215" textAnchor="middle" className="svg-accent" fontSize="14" fontWeight="600">INTELLIGENCE</text>
+                <text x="400" y="235" textAnchor="middle" className="svg-text-muted" fontSize="11">AI Analysis | Failure Intelligence | MTTR</text>
+                <text x="400" y="250" textAnchor="middle" className="svg-text-muted" fontSize="11">Root Cause | Triage | Recommendations</text>
 
-                <line x1="400" y1="260" x2="400" y2="280" stroke="#38bdf8" strokeWidth="2" strokeDasharray="4,4"/>
+                <line x1="400" y1="260" x2="400" y2="280" className="svg-line" strokeWidth="2" strokeDasharray="4,4"/>
 
-                <rect x="300" y="280" width="200" height="50" rx="8" fill="#161616" stroke="#262626"/>
-                <text x="400" y="310" text-anchor="middle" fill="#ffffff" fontSize="14" fontWeight="500">Recover</text>
-                <text x="400" y="328" text-anchor="middle" fill="#a3a3a3" fontSize="10">Triage | Re-Runs | Audit Trail</text>
+                <rect x="300" y="280" width="200" height="50" rx="8" className="svg-box" strokeWidth="1"/>
+                <text x="400" y="310" textAnchor="middle" className="svg-text" fontSize="14" fontWeight="500">Recover</text>
+                <text x="400" y="328" textAnchor="middle" className="svg-text-muted" fontSize="10">Triage | Re-Runs | Audit Trail</text>
               </svg>
             </div>
           </div>
@@ -395,24 +395,24 @@ export default function Home() {
               <thead>
                 <tr>
                   <th>Capability</th>
-                  <th style={{ color: 'var(--accent)' }}>Current release</th>
+                    <th className="text-accent">Current release</th>
                   <th>Roadmap direction</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td>GitHub Actions observability</td>
-                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} aria-label="Available" /></td>
+                  <td><CheckCircle size={16} className="text-success" aria-label="Available" /></td>
                   <td>Expand provider coverage over time</td>
                 </tr>
                 <tr>
                   <td>Failure analysis and triage</td>
-                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} aria-label="Available" /></td>
+                  <td><CheckCircle size={16} className="text-success" aria-label="Available" /></td>
                   <td>Automate more recovery workflows</td>
                 </tr>
                 <tr>
                   <td>MTTR and event history</td>
-                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} aria-label="Available" /></td>
+                  <td><CheckCircle size={16} className="text-success" aria-label="Available" /></td>
                   <td>Broader operational intelligence</td>
                 </tr>
                 <tr>
@@ -427,7 +427,7 @@ export default function Home() {
                 </tr>
                 <tr>
                   <td>Self-hosted deployment</td>
-                  <td><CheckCircle size={16} style={{ color: '#22c55e' }} aria-label="Available" /></td>
+                  <td><CheckCircle size={16} className="text-success" aria-label="Available" /></td>
                   <td>Managed offering under consideration</td>
                 </tr>
               </tbody>

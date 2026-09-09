@@ -73,7 +73,7 @@ const capabilities = [
 export default function Configuration() {
   return (
     <Layout>
-      <section className="section" style={{ paddingTop: '120px' }}>
+      <section className="section page-hero">
         <div className="container">
           <div className="section-header">
             <span className="section-label">Configuration Management</span>
@@ -88,7 +88,7 @@ export default function Configuration() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '48px' }}>Planned Tool Integrations</h2>
+          <h2 className="section-title section-title-center">Planned Tool Integrations</h2>
           <div className="engines-grid">
             {tools.map((tool) => (
               <div key={tool.name} className="engine-card">
@@ -118,7 +118,7 @@ export default function Configuration() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '48px' }}>Roadmap Capabilities</h2>
+          <h2 className="section-title section-title-center">Roadmap Capabilities</h2>
           <div className="features-grid">
             {capabilities.map((cap) => (
               <div key={cap.title} className="card feature-card">
@@ -144,7 +144,7 @@ export default function Configuration() {
                 <li>Infrastructure and configuration exist in separate silos</li>
               </ul>
             </div>
-            <div className="problem-card" style={{ borderColor: 'var(--accent)' }}>
+            <div className="problem-card problem-card--good">
               <h3>With the Roadmap in Place</h3>
               <ul className="feature-list">
                 <li>A unified view across configuration tools and GitHub workflows</li>

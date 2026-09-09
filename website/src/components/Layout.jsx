@@ -56,7 +56,7 @@ export default function Layout({ children }) {
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="layout-root">
       <a href="#main-content" className="skip-link">Skip to content</a>
       <nav className={`nav ${scrolled ? 'nav-scrolled' : ''}`}>
         <Link to="/" className="nav-logo">
@@ -93,13 +93,13 @@ export default function Layout({ children }) {
           {mobileOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </nav>
-      <main id="main-content" style={{ flex: 1 }}>
+      <main id="main-content" className="layout-main">
         {children}
       </main>
       <footer className="footer">
         <div className="footer-content">
           <div className="footer-brand">
-            <Link to="/" className="nav-logo" style={{ marginBottom: '12px' }}>
+            <Link to="/" className="nav-logo footer-logo">
               <Activity size={18} />
               OpsSentinel
             </Link>

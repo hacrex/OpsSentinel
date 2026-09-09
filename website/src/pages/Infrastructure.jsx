@@ -81,7 +81,7 @@ const capabilities = [
 export default function Infrastructure() {
   return (
     <Layout>
-      <section className="section" style={{ paddingTop: '120px' }}>
+      <section className="section page-hero">
         <div className="container">
           <div className="section-header">
             <span className="section-label">Infrastructure Automation</span>
@@ -96,7 +96,7 @@ export default function Infrastructure() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '48px' }}>Planned Engine Integrations</h2>
+          <h2 className="section-title section-title-center">Planned Engine Integrations</h2>
           <div className="engines-grid">
             {engines.map((engine) => (
               <div key={engine.name} className="engine-card">
@@ -126,7 +126,7 @@ export default function Infrastructure() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '48px' }}>Roadmap Capabilities</h2>
+          <h2 className="section-title section-title-center">Roadmap Capabilities</h2>
           <div className="features-grid">
             {capabilities.map((cap) => (
               <div key={cap.title} className="card feature-card">
@@ -142,7 +142,7 @@ export default function Infrastructure() {
       <section className="section">
         <div className="container">
           <div className="architecture-diagram">
-            <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '32px' }}>Illustrative Future Architecture</h2>
+            <h2 className="section-title section-title-lg">Illustrative Future Architecture</h2>
             <div className="architecture-svg">
               <svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
                 <rect x="200" y="20" width="300" height="50" rx="8" fill="#161616" stroke="#38bdf8" strokeWidth="2"/>

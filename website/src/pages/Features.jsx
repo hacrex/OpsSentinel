@@ -54,7 +54,7 @@ const featureSections = [
 export default function Features() {
   return (
     <Layout>
-      <section className="section" style={{ paddingTop: '120px' }}>
+      <section className="section page-hero">
         <div className="container">
           <div className="section-header">
             <span className="section-label">Features</span>
@@ -67,7 +67,7 @@ export default function Features() {
       </section>
 
       {featureSections.map((section, idx) => (
-        <section key={section.label} className="section" style={{ background: idx % 2 === 1 ? 'var(--surface)' : 'transparent' }}>
+        <section key={section.label} className={`section ${idx % 2 === 1 ? 'section-surface' : ''}`}>
           <div className="container">
             <div className="section-header">
               <div className="section-heading-meta">
