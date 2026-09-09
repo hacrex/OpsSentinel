@@ -41,8 +41,8 @@ const featureSections = [
     title: 'A Foundation for Broader GitOps Workflows',
     description: 'The broader GitOps control-plane vision is planned, not presented as shipped functionality. These areas are where future releases can extend the current GitHub-native foundation.',
     features: [
-      { icon: <Layers size={18} />, name: 'IaC Connectors', desc: 'OpenTofu, Terraform, Pulumi, CloudFormation, and Crossplane integrations are roadmap areas for future releases.' },
-      { icon: <Settings size={18} />, name: 'Configuration Management', desc: 'Ansible, Chef, Puppet, and SaltStack support is planned for a future cross-domain operations layer.' },
+      { icon: <Layers size={18} />, name: 'IaC Connectors', desc: 'OpenTofu, Terraform, Pulumi, CloudFormation, Crossplane, AWS CDK, Bicep, Packer, and Vagrant integrations are roadmap areas for future releases.' },
+      { icon: <Settings size={18} />, name: 'Configuration Management', desc: 'Ansible, Chef, Puppet, SaltStack, InSpec, PowerShell DSC, StackStorm, and Rudder support is planned for a future cross-domain operations layer.' },
       { icon: <GitBranch size={18} />, name: 'Additional CI Providers', desc: 'GitLab CI and Bitbucket Pipelines are planned beyond the current GitHub Actions focus.' },
       { icon: <Bell size={18} />, name: 'Incident Integrations', desc: 'Deeper incident-management and notification workflows can build on the current event and triage model.' },
       { icon: <Eye size={18} />, name: 'Predictive Analytics', desc: 'Forecasting workflow failure probabilities and broader operational trends remains a future capability.' },

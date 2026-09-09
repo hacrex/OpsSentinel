@@ -5,6 +5,7 @@ import Layout from '../components/Layout';
 const plans = [
   {
     name: 'Self-Hosted',
+    variant: 'primary',
     price: '$0',
     period: 'forever',
     badge: 'Open Source',
@@ -30,6 +31,7 @@ const plans = [
   },
   {
     name: 'Cloud',
+    variant: 'secondary',
     price: '$49',
     period: '/month',
     badge: 'Roadmap',
@@ -101,7 +103,7 @@ export default function Pricing() {
         <div className="container">
           <div className="pricing-grid">
             {plans.map((plan) => (
-              <div key={plan.name} className="pricing-card">
+              <div key={plan.name} className={`pricing-card pricing-card--${plan.variant}`}>
                 <span className="pricing-badge" style={{ backgroundColor: plan.badgeColor + '20', color: plan.badgeColor }}>
                   {plan.badge}
                 </span>

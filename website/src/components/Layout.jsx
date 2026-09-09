@@ -8,9 +8,12 @@ function GitHubStars() {
 
   useEffect(() => {
     fetch('https://api.github.com/repos/hacrex/OpsSentinel')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) return null;
+        return res.json();
+      })
       .then(data => {
-        if (typeof data.stargazers_count === 'number') {
+        if (data && typeof data.stargazers_count === 'number') {
           setStars(data.stargazers_count);
         }
       })

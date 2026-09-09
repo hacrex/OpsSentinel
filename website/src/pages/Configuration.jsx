@@ -197,7 +197,7 @@ export default function Configuration() {
               </ul>
             </div>
             <div className="problem-card problem-card--good">
-              <h3>With the Roadmap in Place</h3>
+              <h3>With OpsSentinel</h3>
               <ul className="feature-list">
                 <li>A unified view across all configuration tools and GitHub workflows</li>
                 <li>Drift detection with actionable alerts across hybrid environments</li>

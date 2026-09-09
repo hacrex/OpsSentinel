@@ -225,7 +225,7 @@ function InstallPanel() {
     try {
       await navigator.clipboard.writeText(command);
       setCopiedCommand(command);
-      window.setTimeout(() => setCopiedCommand(null), 1800);
+      setTimeout(() => setCopiedCommand(null), 1800);
     } catch {
       setCopiedCommand(null);
     }
@@ -497,7 +497,7 @@ export default function Home() {
               <thead>
                 <tr>
                   <th>Capability</th>
-                    <th className="text-accent">Current release</th>
+                  <th className="text-accent">Current release</th>
                   <th>Roadmap direction</th>
                 </tr>
               </thead>
@@ -520,12 +520,12 @@ export default function Home() {
                 <tr>
                   <td>IaC integrations</td>
                   <td>Not yet</td>
-                  <td>OpenTofu, Terraform, Pulumi, CloudFormation, and Crossplane</td>
+                  <td>OpenTofu, Terraform, Pulumi, CloudFormation, Crossplane, AWS CDK, Bicep, Packer, Vagrant</td>
                 </tr>
                 <tr>
                   <td>Configuration management</td>
                   <td>Not yet</td>
-                  <td>Ansible, Chef, Puppet, and SaltStack</td>
+                  <td>Ansible, Chef, Puppet, SaltStack, InSpec, PowerShell DSC, StackStorm, Rudder</td>
                 </tr>
                 <tr>
                   <td>Self-hosted deployment</td>

@@ -78,7 +78,7 @@ code {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 110;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -632,6 +632,9 @@ code {
 .section:nth-child(3) { animation-delay: 0.15s; }
 .section:nth-child(4) { animation-delay: 0.2s; }
 .section:nth-child(5) { animation-delay: 0.25s; }
+.section:nth-child(6) { animation-delay: 0.3s; }
+.section:nth-child(7) { animation-delay: 0.35s; }
+.section:nth-child(8) { animation-delay: 0.4s; }
 
 /* ── Card Stagger ───────────────────────────────────────────────────────── */
 .features-grid .card {
@@ -1847,7 +1850,7 @@ code {
 }
 
 .engine-feature-tag svg {
-  color: #22c55e;
+  color: var(--success);
 }
 
 /* ── Tools Grid ─────────────────────────────────────────────────────────── */

@@ -1,8 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Home, ArrowLeft } from 'lucide-react';
 import Layout from '../components/Layout';
 
 export default function NotFound() {
+  const navigate = useNavigate();
+
   return (
     <Layout>
       <section className="hero not-found-hero">
@@ -15,7 +17,7 @@ export default function NotFound() {
           <Link to="/" className="btn btn-primary">
             <Home size={18} /> Go Home
           </Link>
-          <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/'} className="btn btn-secondary">
+          <button onClick={() => navigate(-1)} className="btn btn-secondary">
             <ArrowLeft size={18} /> Go Back
           </button>
         </div>

@@ -12,11 +12,14 @@ FROM nginx:alpine
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# SPA fallback
+# SPA fallback with security headers
 RUN echo 'server { \
     listen 80; \
     root /usr/share/nginx/html; \
     index index.html; \
+    add_header X-Content-Type-Options "nosniff" always; \
+    add_header X-Frame-Options "SAMEORIGIN" always; \
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always; \
     location / { \
         try_files $uri $uri/ /index.html; \
     } \
