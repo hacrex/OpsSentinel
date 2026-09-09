@@ -41,11 +41,98 @@ function TypingCode() {
   }, [charIndex, isDeleting, textIndex]);
 
   return (
-    <div className="hero-code">
-      <code className="code-content">
-        <span style={{ color: '#22c55e' }}>$</span> {typingTexts[textIndex].slice(0, charIndex)}
-        <span style={{ borderRight: '2px solid var(--text)', marginLeft: '2px' }} />
-      </code>
+    <div className="hero-terminal" aria-hidden="true">
+      <div className="terminal-chrome">
+        <span className="terminal-dot" />
+        <span className="terminal-dot" />
+        <span className="terminal-dot" />
+        <span className="terminal-title">terminal</span>
+      </div>
+      <div className="terminal-body">
+        <code>
+          <span className="terminal-prompt">$</span> {typingTexts[textIndex].slice(0, charIndex)}
+          <span className="terminal-cursor" />
+        </code>
+      </div>
+    </div>
+  );
+}
+
+function DashboardMockup() {
+  return (
+    <div className="hero-mockup" aria-hidden="true">
+      <div className="mockup-window">
+        <div className="mockup-chrome">
+          <span className="mockup-dot" />
+          <span className="mockup-dot" />
+          <span className="mockup-dot" />
+          <span className="mockup-url">localhost:3000</span>
+        </div>
+        <div className="mockup-body">
+          <div className="mockup-sidebar">
+            <div className="mockup-nav-item active" />
+            <div className="mockup-nav-item" />
+            <div className="mockup-nav-item" />
+            <div className="mockup-nav-item" />
+          </div>
+          <div className="mockup-main">
+            <div className="mockup-stats">
+              <div className="mockup-stat">
+                <span className="mockup-stat-value">1,247</span>
+                <span className="mockup-stat-label">Total Runs</span>
+              </div>
+              <div className="mockup-stat">
+                <span className="mockup-stat-value text-success">94.2%</span>
+                <span className="mockup-stat-label">Success Rate</span>
+              </div>
+              <div className="mockup-stat">
+                <span className="mockup-stat-value text-accent">12</span>
+                <span className="mockup-stat-label">Needs Attention</span>
+              </div>
+              <div className="mockup-stat">
+                <span className="mockup-stat-value">3.2m</span>
+                <span className="mockup-stat-label">Avg MTTR</span>
+              </div>
+            </div>
+            <div className="mockup-chart">
+              <div className="mockup-bar" style={{ height: '45%' }} />
+              <div className="mockup-bar" style={{ height: '72%' }} />
+              <div className="mockup-bar" style={{ height: '38%' }} />
+              <div className="mockup-bar" style={{ height: '85%' }} />
+              <div className="mockup-bar" style={{ height: '62%' }} />
+              <div className="mockup-bar" style={{ height: '91%' }} />
+              <div className="mockup-bar mockup-bar-fail" style={{ height: '28%' }} />
+              <div className="mockup-bar" style={{ height: '76%' }} />
+              <div className="mockup-bar" style={{ height: '55%' }} />
+              <div className="mockup-bar" style={{ height: '88%' }} />
+              <div className="mockup-bar" style={{ height: '42%' }} />
+              <div className="mockup-bar" style={{ height: '67%' }} />
+            </div>
+            <div className="mockup-table">
+              <div className="mockup-row mockup-row-header">
+                <span>Workflow</span>
+                <span>Status</span>
+                <span>Time</span>
+              </div>
+              <div className="mockup-row">
+                <span className="mockup-repo">deploy-prod</span>
+                <span className="text-success">Passed</span>
+                <span>2m 14s</span>
+              </div>
+              <div className="mockup-row">
+                <span className="mockup-repo">api-ci</span>
+                <span className="text-error">Failed</span>
+                <span>4m 38s</span>
+              </div>
+              <div className="mockup-row">
+                <span className="mockup-repo">frontend-build</span>
+                <span className="text-success">Passed</span>
+                <span>1m 52s</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -179,34 +266,48 @@ export default function Home() {
   return (
     <Layout>
       <section className="hero">
+        <div className="hero-glow" />
         <div className="container">
-          <span className="hero-badge">Open Source · Self-Hosted</span>
-            <h1 className="hero-title">
-            Open-Source<br />
-            <span className="text-accent">CI/CD Observability</span>
+          <span className="hero-badge">
+            <span className="hero-badge-dot" />
+            Open Source &middot; Self-Hosted
+          </span>
+          <h1 className="hero-title">
+            CI/CD Observability<br />
+            <span className="text-accent">That Actually Helps</span>
           </h1>
           <p className="hero-subtitle">
-              GitHub-native CI/CD observability for teams that want live workflow visibility, failure intelligence, and self-hosted control. Powered by AI when you choose to connect an LLM provider.
+            Stop guessing why builds fail. OpsSentinel gives your team live GitHub Actions visibility, AI-powered root cause analysis, and measurable MTTR &mdash; all self-hosted.
           </p>
           <div className="hero-actions">
-            <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+            <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-lg">
               <Github size={16} />
-              View on GitHub
+              Get Started
             </a>
-            <Link to="/features" className="btn btn-secondary">
+            <Link to="/features" className="btn btn-secondary btn-lg">
               See Features
               <ArrowRight size={16} />
             </Link>
           </div>
           <TypingCode />
-          <InstallPanel />
-
           <div className="trust-badges">
-            <span className="trust-badge"><Shield size={14} /> MIT License</span>
+            <span className="trust-badge"><Shield size={14} /> MIT Licensed</span>
             <span className="trust-badge"><Server size={14} /> Self-Hosted</span>
-            <span className="trust-badge"><Layers size={14} /> GitHub Workflows</span>
+            <span className="trust-badge"><Layers size={14} /> GitHub Actions</span>
             <span className="trust-badge"><Brain size={14} /> AI-Powered</span>
           </div>
+        </div>
+      </section>
+
+      <section className="hero-mockup-section">
+        <div className="container">
+          <DashboardMockup />
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          <InstallPanel />
         </div>
       </section>
 
