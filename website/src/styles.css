@@ -51,7 +51,6 @@ body {
   font-family: var(--font);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.3s, color 0.3s;
   background-image:
     radial-gradient(ellipse at 50% 0%, var(--accent-glow) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 100%, rgba(245, 158, 11, 0.04) 0%, transparent 50%);

@@ -26,6 +26,13 @@
     <meta property="og:image:height" content="630" />
 
     <title>OpsSentinel - Open-Source CI/CD Observability</title>
+    <script>
+      (function() {
+        var t = localStorage.getItem('theme');
+        if (!t) t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
