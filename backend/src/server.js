@@ -15,7 +15,7 @@ const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
 const { triageFailure } = require('./triage');
 const { analyzeFailure, getLLMConfig } = require('./llm');
 const infra = require('./infrastructure');
-const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction, listPredictions, createPrediction, getPrediction, updatePrediction, deletePrediction } = infra;
+const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction, listPredictions, createPrediction, getPrediction, updatePrediction, deletePrediction, listDriftEvents, createDriftEvent, getDriftEvent, updateDriftEvent, deleteDriftEvent } = infra;
 const setInfraBroadcast = infra.setBroadcast;
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
@@ -1177,6 +1177,99 @@ app.delete('/predictions/:id', authMiddleware, requirePermission('infrastructure
   } catch (err) {
     logger.error({ err }, 'Failed to delete prediction');
     res.status(500).json({ error: 'Failed to delete prediction' });
+  }
+});
+
+// ── Drift Detection ──
+app.get('/drift/events', authMiddleware, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+  const { status, severity, engine } = req.query;
+
+  try {
+    const result = await listDriftEvents({
+      tenant_id: req.tenant_id || null,
+      status, severity, engine, page, limit,
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch drift events');
+    res.status(500).json({ error: 'Failed to fetch drift events' });
+  }
+});
+
+app.post('/drift/events', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { repo_name, stack_name, engine, drift_type, resource_type, resource_name, expected_state, actual_state, status, severity, source_commit, recommended_action } = req.body;
+  if (!repo_name || !stack_name || !engine || !drift_type || !resource_type || !resource_name) {
+    return res.status(400).json({ error: 'repo_name, stack_name, engine, drift_type, resource_type, resource_name required' });
+  }
+
+  try {
+    const drift = await createDriftEvent({
+      tenant_id: req.tenant_id || null,
+      repo_name, stack_name, engine, drift_type, resource_type, resource_name,
+      expected_state, actual_state, status, severity, source_commit, recommended_action,
+    });
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'drift_event_create',
+      resourceType: 'drift_event',
+      resourceId: String(drift.id),
+      details: { engine, drift_type, resource_type, resource_name, status, severity },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true, drift });
+  } catch (err) {
+    logger.error({ err }, 'Failed to create drift event');
+    res.status(500).json({ error: 'Failed to create drift event' });
+  }
+});
+
+app.get('/drift/events/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const drift = await getDriftEvent(id, req.tenant_id || null);
+    if (!drift) return res.status(404).json({ error: 'Drift event not found' });
+    res.json(drift);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch drift event');
+    res.status(500).json({ error: 'Failed to fetch drift event' });
+  }
+});
+
+app.patch('/drift/events/:id', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { id } = req.params;
+  const { status, severity, resolved_at } = req.body;
+
+  try {
+    await updateDriftEvent(id, { status, severity, resolved_at }, req.tenant_id || null);
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'drift_event_update',
+      resourceType: 'drift_event',
+      resourceId: id,
+      details: { status, severity, resolved_at },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update drift event');
+    res.status(500).json({ error: 'Failed to update drift event' });
+  }
+});
+
+app.delete('/drift/events/:id', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { id } = req.params;
+  try {
+    await deleteDriftEvent(id, req.tenant_id || null);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to delete drift event');
+    res.status(500).json({ error: 'Failed to delete drift event' });
   }
 });
 

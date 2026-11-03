@@ -211,6 +211,31 @@ const CREATE_TABLE_PG = `
   CREATE INDEX IF NOT EXISTS idx_predictions_repo_name ON predictions(repo_name);
   CREATE INDEX IF NOT EXISTS idx_predictions_target ON predictions(target_entity);
   CREATE INDEX IF NOT EXISTS idx_predictions_risk ON predictions(risk_level);
+
+  CREATE TABLE IF NOT EXISTS drift_events (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER,
+    repo_name VARCHAR(255),
+    stack_name VARCHAR(255),
+    engine VARCHAR(50),
+    drift_type VARCHAR(50),
+    resource_type VARCHAR(255),
+    resource_name VARCHAR(255),
+    expected_state TEXT,
+    actual_state TEXT,
+    status VARCHAR(50),
+    severity VARCHAR(50),
+    source_commit VARCHAR(255),
+    recommended_action TEXT,
+    detected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_drift_tenant_id ON drift_events(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_drift_stack ON drift_events(stack_name);
+  CREATE INDEX IF NOT EXISTS idx_drift_engine ON drift_events(engine);
+  CREATE INDEX IF NOT EXISTS idx_drift_status ON drift_events(status);
+  CREATE INDEX IF NOT EXISTS idx_drift_severity ON drift_events(severity);
 `;
 
 const CREATE_TABLE_SQLITE = `
@@ -419,6 +444,31 @@ const CREATE_TABLE_SQLITE = `
   CREATE INDEX IF NOT EXISTS idx_predictions_repo_name ON predictions(repo_name);
   CREATE INDEX IF NOT EXISTS idx_predictions_target ON predictions(target_entity);
   CREATE INDEX IF NOT EXISTS idx_predictions_risk ON predictions(risk_level);
+
+  CREATE TABLE IF NOT EXISTS drift_events (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER,
+    repo_name VARCHAR(255),
+    stack_name VARCHAR(255),
+    engine VARCHAR(50),
+    drift_type VARCHAR(50),
+    resource_type VARCHAR(255),
+    resource_name VARCHAR(255),
+    expected_state TEXT,
+    actual_state TEXT,
+    status VARCHAR(50),
+    severity VARCHAR(50),
+    source_commit VARCHAR(255),
+    recommended_action TEXT,
+    detected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_drift_tenant_id ON drift_events(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_drift_stack ON drift_events(stack_name);
+  CREATE INDEX IF NOT EXISTS idx_drift_engine ON drift_events(engine);
+  CREATE INDEX IF NOT EXISTS idx_drift_status ON drift_events(status);
+  CREATE INDEX IF NOT EXISTS idx_drift_severity ON drift_events(severity);
 `;
 
 // Convert SQLite ? placeholders to PostgreSQL $1, $2, ...

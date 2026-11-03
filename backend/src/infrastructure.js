@@ -764,4 +764,68 @@ async function deletePrediction(id, tenant_id) {
   return result;
 }
 
-module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction, listPredictions, createPrediction, getPrediction, updatePrediction, deletePrediction };
+async function listDriftEvents({ tenant_id, status, severity, engine, page, limit }) {
+  const conditions = [];
+  const params = [];
+  if (status) { conditions.push('status = ?'); params.push(status); }
+  if (severity) { conditions.push('severity = ?'); params.push(severity); }
+  if (engine) { conditions.push('engine = ?'); params.push(engine); }
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+
+  const offset = (page - 1) * limit;
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const countResult = await db.query(`SELECT COUNT(*) as cnt FROM drift_events ${where}`, params);
+  const total = parseInt(countResult.rows[0]?.cnt ?? 0, 10);
+
+  const dataResult = await db.query(
+    `SELECT * FROM drift_events ${where} ORDER BY detected_at DESC LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+  return { data: dataResult.rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
+}
+
+async function createDriftEvent({ tenant_id, repo_name, stack_name, engine, drift_type, resource_type, resource_name, expected_state, actual_state, status, severity, source_commit, recommended_action }) {
+  const result = await db.query(
+    `INSERT INTO drift_events (tenant_id, repo_name, stack_name, engine, drift_type, resource_type, resource_name, expected_state, actual_state, status, severity, source_commit, recommended_action) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [tenant_id, repo_name, stack_name, engine, drift_type, resource_type, resource_name, expected_state, actual_state, status || 'detected', severity || 'medium', source_commit, recommended_action]
+  );
+  return result.rows?.[0] ?? { id: null };
+}
+
+async function getDriftEvent(id, tenant_id) {
+  const conditions = ['id = ?'];
+  const params = [id];
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const result = await db.query(`SELECT * FROM drift_events WHERE ${conditions.join(' AND ')}`, params);
+  return result.rows?.[0] ?? null;
+}
+
+async function updateDriftEvent(id, { status, severity, resolved_at }, tenant_id) {
+  const sets = [];
+  const params = [];
+  if (status !== undefined) { sets.push('status = ?'); params.push(status); }
+  if (severity !== undefined) { sets.push('severity = ?'); params.push(severity); }
+  if (resolved_at !== undefined) { sets.push('resolved_at = ?'); params.push(resolved_at); }
+  if (sets.length === 0) return null;
+
+  const conditions = ['id = ?'];
+  params.push(id);
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+
+  const updResult = await db.query(
+    `UPDATE drift_events SET ${sets.join(', ')} WHERE ${conditions.join(' AND ')}`,
+    params
+  );
+  return updResult;
+}
+
+async function deleteDriftEvent(id, tenant_id) {
+  const conditions = ['id = ?'];
+  const params = [id];
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const result = await db.query(`DELETE FROM drift_events WHERE ${conditions.join(' AND ')}`, params);
+  return result;
+}
+
+module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction, listPredictions, createPrediction, getPrediction, updatePrediction, deletePrediction, listDriftEvents, createDriftEvent, getDriftEvent, updateDriftEvent, deleteDriftEvent };
