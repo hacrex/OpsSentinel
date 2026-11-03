@@ -9,7 +9,7 @@ import SkeletonRows from '../components/SkeletonRows';
 import { Toast, useToast } from '../components/Toast';
 import { useSocket } from '../hooks/useSocket';
 
-const ENGINES = ['tofu', 'terraform', 'ansible'];
+const ENGINES = ['tofu', 'terraform', 'ansible', 'pulumi', 'cloudformation', 'crossplane', 'aws-cdk', 'bicep', 'packer', 'vagrant'];
 const OPERATIONS = ['plan', 'apply', 'destroy', 'refresh'];
 
 const Infrastructure = () => {

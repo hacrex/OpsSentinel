@@ -18,15 +18,94 @@ function buildArgs(engine, operation, vars) {
     if (vars.inventory) args.push('-i', vars.inventory);
     if (vars.extraVars) args.push('-e', vars.extraVars);
     args.push(vars.playbook || 'site.yml');
-    return args;
+    return { cmd: 'ansible-playbook', args };
   }
-  const cmdEngine = engine === 'terraform' ? 'terraform' : 'tofu';
-  const args = [operation];
+
+  const cmdMap = {
+    tofu: 'tofu',
+    terraform: 'terraform',
+    pulumi: 'pulumi',
+    cloudformation: 'aws',
+    crossplane: 'kubectl',
+    'aws-cdk': 'cdk',
+    bicep: 'az',
+    packer: 'packer',
+    vagrant: 'vagrant',
+  };
+
+  const cmd = cmdMap[engine] || engine;
+  const args = [];
+
+  if (engine === 'pulumi') {
+    // pulumi preview/up/destroy/refresh
+    const opMap = { plan: 'preview', apply: 'up', destroy: 'destroy', refresh: 'refresh' };
+    args.push(opMap[operation] || operation);
+    if (vars.stack) args.push('--stack', vars.stack);
+    if (operation === 'apply') args.push('--yes');
+    return { cmd, args };
+  }
+
+  if (engine === 'cloudformation') {
+    // aws cloudformation deploy/delete/describe-stacks
+    const opMap = { plan: 'describe-stacks', apply: 'deploy', destroy: 'delete-stack', refresh: 'describe-stacks' };
+    args.push('cloudformation', opMap[operation] || operation);
+    if (vars.stack_name) args.push('--stack-name', vars.stack_name);
+    if (vars.template_body) args.push('--template-body', vars.template_body);
+    if (operation === 'apply') args.push('--capabilities', 'CAPABILITY_NAMED_IAM');
+    return { cmd, args };
+  }
+
+  if (engine === 'crossplane') {
+    // kubectl apply/delete/get
+    const opMap = { plan: 'get', apply: 'apply', destroy: 'delete', refresh: 'get' };
+    args.push(opMap[operation] || operation);
+    if (vars.resource) args.push(vars.resource);
+    return { cmd, args };
+  }
+
+  if (engine === 'aws-cdk') {
+    // cdk synth/deploy/destroy/diff
+    const opMap = { plan: 'diff', apply: 'deploy', destroy: 'destroy', refresh: 'diff' };
+    args.push(opMap[operation] || operation);
+    if (vars.stack) args.push(vars.stack);
+    if (operation === 'apply') args.push('--require-approval', 'never');
+    return { cmd, args };
+  }
+
+  if (engine === 'bicep') {
+    // az deployment group create/delete/what-if
+    const opMap = { plan: 'what-if', apply: 'create', destroy: 'delete', refresh: 'show' };
+    args.push('deployment', 'group', opMap[operation] || operation);
+    if (vars.resource_group) args.push('--resource-group', vars.resource_group);
+    if (vars.template_file) args.push('--template-file', vars.template_file);
+    return { cmd, args };
+  }
+
+  if (engine === 'packer') {
+    // packer build/validate
+    const opMap = { plan: 'validate', apply: 'build', destroy: '', refresh: '' };
+    args.push(opMap[operation] || operation);
+    if (vars.template) args.push(vars.template);
+    if (operation === 'apply' && vars.only) args.push('--only', vars.only);
+    return { cmd, args };
+  }
+
+  if (engine === 'vagrant') {
+    // vagrant up/halt/destroy/provision
+    const opMap = { plan: '', apply: 'up', destroy: 'destroy', refresh: 'reload' };
+    args.push(opMap[operation] || operation);
+    if (vars.vm_name) args.push(vars.vm_name);
+    if (operation === 'apply') args.push('--provider', vars.provider || 'virtualbox');
+    return { cmd, args };
+  }
+
+  // Default: tofu / terraform
+  const defaultArgs = [operation];
   if (operation === 'plan' || operation === 'apply') {
-    Object.entries(vars || {}).forEach(([k, v]) => { args.push('-var', `${k}=${v}`); });
+    Object.entries(vars || {}).forEach(([k, v]) => { defaultArgs.push('-var', `${k}=${v}`); });
   }
-  if (operation === 'apply') args.push('-auto-approve');
-  return { cmd: cmdEngine, args };
+  if (operation === 'apply') defaultArgs.push('-auto-approve');
+  return { cmd, args: defaultArgs };
 }
 
 async function runOperation({ tenant_id, repo_name, stack_name, engine, operation, workingDir, vars = {}, triggeredBy }) {
