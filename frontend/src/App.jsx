@@ -8,6 +8,7 @@ import AuditLogs from './pages/AuditLogs';
 import UserManagement from './pages/UserManagement';
 import Infrastructure from './pages/Infrastructure';
 import InfraDetail from './pages/InfraDetail';
+import Incidents from './pages/Incidents';
 import ErrorBoundary from './components/ErrorBoundary';
 import api from './api';
 import './index.css';
@@ -46,6 +47,7 @@ function App() {
           <Route path="/dashboard/users" element={<PrivateRoute><UserManagement /></PrivateRoute>} />
           <Route path="/dashboard/infrastructure" element={<PrivateRoute><Infrastructure /></PrivateRoute>} />
           <Route path="/dashboard/infra/:repo(*)/:stack" element={<PrivateRoute><InfraDetail /></PrivateRoute>} />
+          <Route path="/dashboard/incidents" element={<PrivateRoute><Incidents /></PrivateRoute>} />
 
           {/* Redirect root to login or dashboard */}
           <Route path="/" element={<Navigate to="/dashboard" />} />

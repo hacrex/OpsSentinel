@@ -265,7 +265,13 @@ async function createIncident({ tenant_id, title, description, severity, status,
     `INSERT INTO incidents (tenant_id, title, description, severity, status, repo_name, stack_name, workflow_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [tenant_id, title, description, severity, status, repo_name, stack_name, workflow_name]
   );
-  return result.rows?.[0] ?? { id: null };
+  const incident = result.rows?.[0] ?? { id: null };
+
+  if (_broadcast && incident.id) {
+    _broadcast({ type: 'new_incident', incident });
+  }
+
+  return incident;
 }
 
 async function getIncident(id, tenant_id) {
