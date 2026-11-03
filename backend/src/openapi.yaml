@@ -1,0 +1,1104 @@
+openapi: 3.0.3
+info:
+  title: OpsSentinel API
+  version: 1.0.0
+  description: |
+    OpsSentinel is a self-hosted operational control plane for CI/CD observability
+    and infrastructure provisioning. This API provides access to workflow events,
+    infrastructure runs, incidents, secrets, policies, failure fingerprints,
+    remediation actions, predictions, and drift events.
+servers:
+  - url: http://localhost:3001
+    description: Local development
+  - url: https://api.example.com
+    description: Production
+tags:
+  - name: auth
+    description: Authentication (GitHub OAuth, SSO)
+  - name: events
+    description: CI/CD workflow events
+  - name: infra
+    description: Infrastructure provisioning runs
+  - name: stacks
+    description: Stack configuration (repo -> working directory mapping)
+  - name: incidents
+    description: Incident management
+  - name: secrets
+    description: Secrets management
+  - name: config
+    description: Configuration management runs (Ansible, etc.)
+  - name: dora
+    description: DORA metrics
+  - name: policy
+    description: Policy engine
+  - name: fingerprints
+    description: Failure fingerprints
+  - name: remediation
+    description: Automated remediation actions
+  - name: predictions
+    description: Predictive analytics
+  - name: drift
+    description: Infrastructure drift detection
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        tenant_id:
+          type: integer
+          example: 1
+        repo_name:
+          type: string
+          example: "my-org/my-repo"
+        workflow_name:
+          type: string
+          example: "ci-pipeline"
+        status:
+          type: string
+          example: "completed"
+        conclusion:
+          type: string
+          example: "failure"
+        run_url:
+          type: string
+          example: "https://github.com/my-org/my-repo/actions/runs/123"
+        mttr_seconds:
+          type: integer
+          example: 300
+        created_at:
+          type: string
+          format: date-time
+    InfrastructureRun:
+      type: object
+      properties:
+        id:
+          type: integer
+        tenant_id:
+          type: integer
+        repo_name:
+          type: string
+        stack_name:
+          type: string
+        engine:
+          type: string
+          example: "tofu"
+        operation:
+          type: string
+          example: "apply"
+        status:
+          type: string
+        conclusion:
+          type: string
+        output_url:
+          type: string
+        mttr_seconds:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+    Stack:
+      type: object
+      properties:
+        id:
+          type: integer
+        tenant_id:
+          type: integer
+        repo_name:
+          type: string
+        stack_name:
+          type: string
+        engine:
+          type: string
+        working_dir:
+          type: string
+        default_vars:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+    Incident:
+      type: object
+      properties:
+        id:
+          type: integer
+        tenant_id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          example: "critical"
+        status:
+          type: string
+          example: "open"
+        repo_name:
+          type: string
+        stack_name:
+          type: string
+        workflow_name:
+          type: string
+        failure_fingerprint_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        resolved_at:
+          type: string
+          format: date-time
+    Secret:
+      type: object
+      properties:
+        id:
+          type: integer
+        tenant_id:
+          type: integer
+        name:
+          type: string
+        value:
+          type: string
+        provider:
+          type: string
+          example: "vault"
+        scope:
+          type: string
+          example: "global"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Policy:
+      type: object
+      properties:
+        id:
+          type: integer
+        tenant_id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        condition:
+          type: string
+        action:
+          type: string
+        requires_approval:
+          type: boolean
+        enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Fingerprint:
+      type: object
+      properties:
+        id:
+          type: integer
+        tenant_id:
+          type: integer
+        fingerprint_hash:
+          type: string
+        category:
+          type: string
+        category_label:
+          type: string
+        root_cause:
+          type: string
+        suggested_fix:
+          type: string
+        occurrence_count:
+          type: integer
+        first_seen:
+          type: string
+          format: date-time
+        last_seen:
+          type: string
+          format: date-time
+        repositories:
+          type: string
+        workflows:
+          type: string
+        confidence_score:
+          type: number
+    RemediationAction:
+      type: object
+      properties:
+        id:
+          type: integer
+        tenant_id:
+          type: integer
+        fingerprint_hash:
+          type: string
+        incident_id:
+          type: integer
+        action_type:
+          type: string
+        action_name:
+          type: string
+        status:
+          type: string
+        requires_approval:
+          type: boolean
+        approved_by:
+          type: integer
+        approved_at:
+          type: string
+          format: date-time
+        executed_at:
+          type: string
+          format: date-time
+        result:
+          type: string
+        error_message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Prediction:
+      type: object
+      properties:
+        id:
+          type: integer
+        tenant_id:
+          type: integer
+        repo_name:
+          type: string
+        workflow_name:
+          type: string
+        stack_name:
+          type: string
+        prediction_type:
+          type: string
+        target_entity:
+          type: string
+        probability:
+          type: number
+        risk_level:
+          type: string
+        reasons:
+          type: string
+        recommended_action:
+          type: string
+        predicted_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        resolved:
+          type: boolean
+        resolved_at:
+          type: string
+          format: date-time
+    DriftEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        tenant_id:
+          type: integer
+        repo_name:
+          type: string
+        stack_name:
+          type: string
+        engine:
+          type: string
+        drift_type:
+          type: string
+        resource_type:
+          type: string
+        resource_name:
+          type: string
+        expected_state:
+          type: string
+        actual_state:
+          type: string
+        status:
+          type: string
+        severity:
+          type: string
+        source_commit:
+          type: string
+        recommended_action:
+          type: string
+        detected_at:
+          type: string
+          format: date-time
+        resolved_at:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+paths:
+  /health:
+    get:
+      tags: [auth]
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  db:
+                    type: string
+  /events:
+    get:
+      tags: [events]
+      summary: List CI/CD workflow events
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 25 }
+        - in: query
+          name: repo
+          schema: { type: string }
+        - in: query
+          name: conclusion
+          schema: { type: string }
+        - in: query
+          name: workflow
+          schema: { type: string }
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Paginated events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Event'
+                  pagination:
+                    type: object
+  /infrastructure/runs:
+    get:
+      tags: [infra]
+      summary: List infrastructure runs
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 25 }
+        - in: query
+          name: repo
+          schema: { type: string }
+        - in: query
+          name: stack
+          schema: { type: string }
+        - in: query
+          name: engine
+          schema: { type: string }
+        - in: query
+          name: operation
+          schema: { type: string }
+        - in: query
+          name: conclusion
+          schema: { type: string }
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Paginated infra runs
+    post:
+      tags: [infra]
+      summary: Trigger an infrastructure run
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [repo_name, stack_name, engine, operation]
+              properties:
+                repo_name:
+                  type: string
+                stack_name:
+                  type: string
+                engine:
+                  type: string
+                operation:
+                  type: string
+                workingDir:
+                  type: string
+                vars:
+                  type: object
+      responses:
+        '200':
+          description: Run triggered
+  /infrastructure/stacks:
+    get:
+      tags: [stacks]
+      summary: List stack configurations
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of stacks
+    post:
+      tags: [stacks]
+      summary: Create a stack configuration
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Stack'
+      responses:
+        '200':
+          description: Stack created
+  /infrastructure/stacks/{id}:
+    delete:
+      tags: [stacks]
+      summary: Delete a stack configuration
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Deleted
+  /incidents:
+    get:
+      tags: [incidents]
+      summary: List incidents
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 25 }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: severity
+          schema: { type: string }
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Paginated incidents
+    post:
+      tags: [incidents]
+      summary: Create an incident
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, severity, status]
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                severity:
+                  type: string
+                status:
+                  type: string
+                repo_name:
+                  type: string
+                stack_name:
+                  type: string
+                workflow_name:
+                  type: string
+      responses:
+        '200':
+          description: Incident created
+  /incidents/{id}:
+    get:
+      tags: [incidents]
+      summary: Get an incident
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Incident details
+    patch:
+      tags: [incidents]
+      summary: Update an incident
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [incidents]
+      summary: Delete an incident
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Deleted
+  /secrets:
+    get:
+      tags: [secrets]
+      summary: List secrets (values masked)
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 25 }
+        - in: query
+          name: provider
+          schema: { type: string }
+        - in: query
+          name: scope
+          schema: { type: string }
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Paginated secrets
+    post:
+      tags: [secrets]
+      summary: Create a secret
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, value, provider, scope]
+              properties:
+                name:
+                  type: string
+                value:
+                  type: string
+                provider:
+                  type: string
+                scope:
+                  type: string
+      responses:
+        '200':
+          description: Secret created
+  /secrets/{id}:
+    get:
+      tags: [secrets]
+      summary: Get a secret (value included)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Secret details
+    patch:
+      tags: [secrets]
+      summary: Update a secret
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [secrets]
+      summary: Delete a secret
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Deleted
+  /configuration/runs:
+    get:
+      tags: [config]
+      summary: List configuration runs
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Paginated config runs
+    post:
+      tags: [config]
+      summary: Record a configuration run result
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [repo_name, tool, playbook]
+              properties:
+                repo_name:
+                  type: string
+                tool:
+                  type: string
+                playbook:
+                  type: string
+                inventory:
+                  type: string
+                status:
+                  type: string
+                conclusion:
+                  type: string
+                output_url:
+                  type: string
+      responses:
+        '200':
+          description: Recorded
+  /dora/metrics:
+    get:
+      tags: [dora]
+      summary: DORA metrics
+      parameters:
+        - in: query
+          name: repo
+          schema: { type: string }
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: DORA metrics
+  /policies:
+    get:
+      tags: [policy]
+      summary: List policies
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Paginated policies
+    post:
+      tags: [policy]
+      summary: Create a policy
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Policy'
+      responses:
+        '200':
+          description: Policy created
+  /policies/{id}:
+    get:
+      tags: [policy]
+      summary: Get a policy
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Policy details
+    patch:
+      tags: [policy]
+      summary: Update a policy
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [policy]
+      summary: Delete a policy
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Deleted
+  /fingerprints:
+    get:
+      tags: [fingerprints]
+      summary: List failure fingerprints
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 25 }
+        - in: query
+          name: category
+          schema: { type: string }
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Paginated fingerprints
+    post:
+      tags: [fingerprints]
+      summary: Create or update a failure fingerprint
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fingerprint_hash, category]
+              properties:
+                fingerprint_hash:
+                  type: string
+                category:
+                  type: string
+                category_label:
+                  type: string
+                root_cause:
+                  type: string
+                suggested_fix:
+                  type: string
+                occurrence_count:
+                  type: integer
+                first_seen:
+                  type: string
+                  format: date-time
+                last_seen:
+                  type: string
+                  format: date-time
+                repositories:
+                  type: string
+                workflows:
+                  type: string
+                confidence_score:
+                  type: number
+      responses:
+        '200':
+          description: Fingerprint upserted
+  /remediation/actions:
+    get:
+      tags: [remediation]
+      summary: List remediation actions
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Paginated remediation actions
+    post:
+      tags: [remediation]
+      summary: Create a remediation action
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fingerprint_hash, action_type, action_name]
+              properties:
+                fingerprint_hash:
+                  type: string
+                incident_id:
+                  type: integer
+                action_type:
+                  type: string
+                action_name:
+                  type: string
+                status:
+                  type: string
+                requires_approval:
+                  type: boolean
+      responses:
+        '200':
+          description: Action created
+  /remediation/actions/{id}:
+    get:
+      tags: [remediation]
+      summary: Get a remediation action
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Action details
+    patch:
+      tags: [remediation]
+      summary: Update a remediation action
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [remediation]
+      summary: Delete a remediation action
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Deleted
+  /predictions:
+    get:
+      tags: [predictions]
+      summary: List predictions
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Paginated predictions
+    post:
+      tags: [predictions]
+      summary: Create a prediction
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prediction_type, target_entity, probability, risk_level]
+              properties:
+                repo_name:
+                  type: string
+                workflow_name:
+                  type: string
+                stack_name:
+                  type: string
+                prediction_type:
+                  type: string
+                target_entity:
+                  type: string
+                probability:
+                  type: number
+                risk_level:
+                  type: string
+                reasons:
+                  type: string
+                recommended_action:
+                  type: string
+                expires_at:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Prediction created
+  /predictions/{id}:
+    get:
+      tags: [predictions]
+      summary: Get a prediction
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Prediction details
+    patch:
+      tags: [predictions]
+      summary: Update a prediction
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [predictions]
+      summary: Delete a prediction
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Deleted
+  /drift/events:
+    get:
+      tags: [drift]
+      summary: List drift events
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Paginated drift events
+    post:
+      tags: [drift]
+      summary: Create a drift event
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [repo_name, stack_name, engine, drift_type, resource_type, resource_name]
+              properties:
+                repo_name:
+                  type: string
+                stack_name:
+                  type: string
+                engine:
+                  type: string
+                drift_type:
+                  type: string
+                resource_type:
+                  type: string
+                resource_name:
+                  type: string
+                expected_state:
+                  type: string
+                actual_state:
+                  type: string
+                status:
+                  type: string
+                severity:
+                  type: string
+                source_commit:
+                  type: string
+                recommended_action:
+                  type: string
+      responses:
+        '200':
+          description: Drift event created
+  /drift/events/{id}:
+    get:
+      tags: [drift]
+      summary: Get a drift event
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Drift event details
+    patch:
+      tags: [drift]
+      summary: Update a drift event
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [drift]
+      summary: Delete a drift event
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Deleted

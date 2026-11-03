@@ -1306,6 +1306,12 @@ app.delete('/drift/events/:id', authMiddleware, requirePermission('infrastructur
   }
 });
 
+// ── OpenAPI Spec ──
+app.get('/openapi.yaml', (req, res) => {
+  res.set('Content-Type', 'application/yaml');
+  res.sendFile(path.join(__dirname, 'openapi.yaml'));
+});
+
 // Serve infra log files
 app.use('/infra-logs', express.static(LOG_DIR));
 
