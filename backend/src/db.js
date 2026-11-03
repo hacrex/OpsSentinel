@@ -139,17 +139,32 @@ const CREATE_TABLE_PG = `
     action VARCHAR(50),
     requires_approval BOOLEAN DEFAULT FALSE,
     enabled BOOLEAN DEFAULT TRUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-    requires_approval BOOLEAN DEFAULT FALSE,
-    enabled BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE INDEX IF NOT EXISTS idx_policies_tenant_id ON policies(tenant_id);
   CREATE INDEX IF NOT EXISTS idx_policies_enabled ON policies(enabled);
+
+  CREATE TABLE IF NOT EXISTS failure_fingerprints (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER,
+    fingerprint_hash VARCHAR(255) UNIQUE,
+    category VARCHAR(100),
+    category_label VARCHAR(255),
+    root_cause TEXT,
+    suggested_fix TEXT,
+    occurrence_count INTEGER DEFAULT 1,
+    first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    repositories TEXT,
+    workflows TEXT,
+    confidence_score DECIMAL(3,2) DEFAULT 0.00
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_fingerprints_tenant_id ON failure_fingerprints(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_fingerprints_hash ON failure_fingerprints(fingerprint_hash);
+  CREATE INDEX IF NOT EXISTS idx_fingerprints_category ON failure_fingerprints(category);
 `;
 
 const CREATE_TABLE_SQLITE = `
@@ -278,25 +293,40 @@ const CREATE_TABLE_SQLITE = `
   CREATE INDEX IF NOT EXISTS idx_config_runs_conclusion ON configuration_runs(conclusion);
 
   CREATE TABLE IF NOT EXISTS policies (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     tenant_id INTEGER,
-    name VARCHAR(255),
+    name TEXT,
     description TEXT,
     condition TEXT,
-    action VARCHAR(50),
+    action TEXT,
     requires_approval BOOLEAN DEFAULT FALSE,
     enabled BOOLEAN DEFAULT TRUE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
-    requires_approval BOOLEAN DEFAULT FALSE,
-    enabled BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );
 
   CREATE INDEX IF NOT EXISTS idx_policies_tenant_id ON policies(tenant_id);
   CREATE INDEX IF NOT EXISTS idx_policies_enabled ON policies(enabled);
+
+  CREATE TABLE IF NOT EXISTS failure_fingerprints (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id INTEGER,
+    fingerprint_hash TEXT UNIQUE,
+    category TEXT,
+    category_label TEXT,
+    root_cause TEXT,
+    suggested_fix TEXT,
+    occurrence_count INTEGER DEFAULT 1,
+    first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+    repositories TEXT,
+    workflows TEXT,
+    confidence_score REAL DEFAULT 0.0
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_fingerprints_tenant_id ON failure_fingerprints(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_fingerprints_hash ON failure_fingerprints(fingerprint_hash);
+  CREATE INDEX IF NOT EXISTS idx_fingerprints_category ON failure_fingerprints(category);
 `;
 
 // Convert SQLite ? placeholders to PostgreSQL $1, $2, ...

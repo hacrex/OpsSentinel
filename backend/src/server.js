@@ -15,7 +15,7 @@ const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
 const { triageFailure } = require('./triage');
 const { analyzeFailure, getLLMConfig } = require('./llm');
 const infra = require('./infrastructure');
-const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy } = infra;
+const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint } = infra;
 const setInfraBroadcast = infra.setBroadcast;
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
@@ -941,6 +941,53 @@ app.delete('/policies/:id', authMiddleware, requirePermission('infrastructure:ru
   } catch (err) {
     logger.error({ err }, 'Failed to delete policy');
     res.status(500).json({ error: 'Failed to delete policy' });
+  }
+});
+
+// ── Failure Fingerprinting ──
+app.get('/fingerprints', authMiddleware, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+  const { category } = req.query;
+
+  try {
+    const result = await listFingerprints({
+      tenant_id: req.tenant_id || null,
+      category, page, limit,
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch fingerprints');
+    res.status(500).json({ error: 'Failed to fetch fingerprints' });
+  }
+});
+
+app.post('/fingerprints', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { fingerprint_hash, category, category_label, root_cause, suggested_fix, occurrence_count, first_seen, last_seen, repositories, workflows, confidence_score } = req.body;
+  if (!fingerprint_hash || !category) {
+    return res.status(400).json({ error: 'fingerprint_hash and category required' });
+  }
+
+  try {
+    const fp = await upsertFingerprint({
+      tenant_id: req.tenant_id || null,
+      fingerprint_hash, category, category_label, root_cause, suggested_fix,
+      occurrence_count, first_seen, last_seen, repositories, workflows, confidence_score,
+    });
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'fingerprint_upsert',
+      resourceType: 'failure_fingerprint',
+      resourceId: String(fp.id),
+      details: { fingerprint_hash, category, occurrence_count },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true, fingerprint: fp });
+  } catch (err) {
+    logger.error({ err }, 'Failed to upsert fingerprint');
+    res.status(500).json({ error: 'Failed to upsert fingerprint' });
   }
 });
 

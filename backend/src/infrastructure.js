@@ -583,4 +583,50 @@ async function deletePolicy(id, tenant_id) {
   return result;
 }
 
-module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy };
+async function listFingerprints({ tenant_id, category, page, limit }) {
+  const conditions = [];
+  const params = [];
+  if (category) { conditions.push('category = ?'); params.push(category); }
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+
+  const offset = (page - 1) * limit;
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const countResult = await db.query(`SELECT COUNT(*) as cnt FROM failure_fingerprints ${where}`, params);
+  const total = parseInt(countResult.rows[0]?.cnt ?? 0, 10);
+
+  const dataResult = await db.query(
+    `SELECT * FROM failure_fingerprints ${where} ORDER BY occurrence_count DESC, last_seen DESC LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+  return { data: dataResult.rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
+}
+
+async function upsertFingerprint({ tenant_id, fingerprint_hash, category, category_label, root_cause, suggested_fix, occurrence_count, first_seen, last_seen, repositories, workflows, confidence_score }) {
+  // Try to find existing fingerprint
+  const existing = await db.query(
+    `SELECT * FROM failure_fingerprints WHERE fingerprint_hash = ?${process.env.SAAS_MODE === 'true' ? ' AND tenant_id = ?' : ''}`,
+    process.env.SAAS_MODE === 'true' ? [fingerprint_hash, tenant_id] : [fingerprint_hash]
+  );
+
+  if (existing.rows && existing.rows.length > 0) {
+    const fp = existing.rows[0];
+    const newOccurrence = (parseInt(fp.occurrence_count, 10) || 0) + (occurrence_count || 1);
+    const newRepos = fp.repositories ? [...new Set([...fp.repositories.split(','), ...(repositories || '').split(',')])] : (repositories || '').split(',').filter(Boolean);
+    const newWorkflows = fp.workflows ? [...new Set([...fp.workflows.split(','), ...(workflows || '').split(',')])] : (workflows || '').split(',').filter(Boolean);
+
+    const result = await db.query(
+      `UPDATE failure_fingerprints SET occurrence_count = ?, last_seen = ?, repositories = ?, workflows = ?, confidence_score = ? WHERE fingerprint_hash = ?`,
+      [newOccurrence, last_seen || new Date().toISOString(), newRepos.join(','), newWorkflows.join(','), confidence_score || 0, fingerprint_hash]
+    );
+    return { id: fp.id, ...fp, occurrence_count: newOccurrence };
+  }
+
+  const result = await db.query(
+    `INSERT INTO failure_fingerprints (tenant_id, fingerprint_hash, category, category_label, root_cause, suggested_fix, occurrence_count, first_seen, last_seen, repositories, workflows, confidence_score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [tenant_id, fingerprint_hash, category, category_label, root_cause, suggested_fix, occurrence_count || 1, first_seen || new Date().toISOString(), last_seen || new Date().toISOString(), repositories || '', workflows || '', confidence_score || 0]
+  );
+  return result.rows?.[0] ?? { id: null };
+}
+
+module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint };
