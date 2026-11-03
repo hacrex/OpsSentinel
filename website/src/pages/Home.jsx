@@ -198,9 +198,8 @@ export default function Home() {
             <span className="text-accent">+ Infrastructure Provisioning</span>
           </h1>
           <p className="hero-subtitle">
-            OpsSentinel is your self-hosted operational control plane. Watch GitHub Actions workflows in real time,
-            analyze failures with AI, and provision infrastructure with OpenTofu, Terraform, Ansible &mdash; all
-            from one dashboard.
+            A self-hosted operational control plane. Watch GitHub Actions workflows in real time,
+            analyze failures with AI, and provision infrastructure — from one dashboard.
           </p>
           <div className="hero-actions">
             <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-lg">
@@ -218,7 +217,6 @@ export default function Home() {
             <span className="trust-badge"><Server size={14} /> Self-Hosted</span>
             <span className="trust-badge"><Layers size={14} /> GitHub Actions</span>
             <span className="trust-badge"><Terminal size={14} /> IaC Provisioning</span>
-            <span className="trust-badge"><Brain size={14} /> AI-Powered</span>
           </div>
         </div>
       </section>
