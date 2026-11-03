@@ -536,7 +536,13 @@ async function createPolicy({ tenant_id, name, description, condition, action, r
     `INSERT INTO policies (tenant_id, name, description, condition, action, requires_approval, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [tenant_id, name, description, condition, action, requires_approval ? 1 : 0, enabled !== false ? 1 : 0]
   );
-  return result.rows?.[0] ?? { id: null };
+  const policy = result.rows?.[0] ?? { id: null };
+
+  if (_broadcast && policy.id) {
+    _broadcast({ type: 'new_policy', policy });
+  }
+
+  return policy;
 }
 
 async function getPolicy(id, tenant_id) {
