@@ -702,4 +702,66 @@ async function deleteRemediationAction(id, tenant_id) {
   return result;
 }
 
-module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction };
+async function listPredictions({ tenant_id, risk_level, resolved, page, limit }) {
+  const conditions = [];
+  const params = [];
+  if (risk_level) { conditions.push('risk_level = ?'); params.push(risk_level); }
+  if (resolved !== undefined) { conditions.push('resolved = ?'); params.push(resolved ? 1 : 0); }
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+
+  const offset = (page - 1) * limit;
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const countResult = await db.query(`SELECT COUNT(*) as cnt FROM predictions ${where}`, params);
+  const total = parseInt(countResult.rows[0]?.cnt ?? 0, 10);
+
+  const dataResult = await db.query(
+    `SELECT * FROM predictions ${where} ORDER BY predicted_at DESC LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+  return { data: dataResult.rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
+}
+
+async function createPrediction({ tenant_id, repo_name, workflow_name, stack_name, prediction_type, target_entity, probability, risk_level, reasons, recommended_action, expires_at }) {
+  const result = await db.query(
+    `INSERT INTO predictions (tenant_id, repo_name, workflow_name, stack_name, prediction_type, target_entity, probability, risk_level, reasons, recommended_action, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [tenant_id, repo_name, workflow_name, stack_name, prediction_type, target_entity, probability, risk_level, reasons, recommended_action, expires_at]
+  );
+  return result.rows?.[0] ?? { id: null };
+}
+
+async function getPrediction(id, tenant_id) {
+  const conditions = ['id = ?'];
+  const params = [id];
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const result = await db.query(`SELECT * FROM predictions WHERE ${conditions.join(' AND ')}`, params);
+  return result.rows?.[0] ?? null;
+}
+
+async function updatePrediction(id, { resolved, resolved_at }, tenant_id) {
+  const sets = [];
+  const params = [];
+  if (resolved !== undefined) { sets.push('resolved = ?'); params.push(resolved ? 1 : 0); }
+  if (resolved_at !== undefined) { sets.push('resolved_at = ?'); params.push(resolved_at); }
+  if (sets.length === 0) return null;
+
+  const conditions = ['id = ?'];
+  params.push(id);
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+
+  const updResult = await db.query(
+    `UPDATE predictions SET ${sets.join(', ')} WHERE ${conditions.join(' AND ')}`,
+    params
+  );
+  return updResult;
+}
+
+async function deletePrediction(id, tenant_id) {
+  const conditions = ['id = ?'];
+  const params = [id];
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const result = await db.query(`DELETE FROM predictions WHERE ${conditions.join(' AND ')}`, params);
+  return result;
+}
+
+module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction, listPredictions, createPrediction, getPrediction, updatePrediction, deletePrediction };

@@ -15,7 +15,7 @@ const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
 const { triageFailure } = require('./triage');
 const { analyzeFailure, getLLMConfig } = require('./llm');
 const infra = require('./infrastructure');
-const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction } = infra;
+const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction, listPredictions, createPrediction, getPrediction, updatePrediction, deletePrediction } = infra;
 const setInfraBroadcast = infra.setBroadcast;
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
@@ -1082,6 +1082,101 @@ app.delete('/remediation/actions/:id', authMiddleware, requirePermission('infras
   } catch (err) {
     logger.error({ err }, 'Failed to delete remediation action');
     res.status(500).json({ error: 'Failed to delete remediation action' });
+  }
+});
+
+// ── Predictive Analytics ──
+app.get('/predictions', authMiddleware, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+  const { risk_level, resolved } = req.query;
+
+  try {
+    const result = await listPredictions({
+      tenant_id: req.tenant_id || null,
+      risk_level,
+      resolved: resolved !== undefined ? resolved === 'true' : undefined,
+      page, limit,
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch predictions');
+    res.status(500).json({ error: 'Failed to fetch predictions' });
+  }
+});
+
+app.post('/predictions', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { repo_name, workflow_name, stack_name, prediction_type, target_entity, probability, risk_level, reasons, recommended_action, expires_at } = req.body;
+  if (!prediction_type || !target_entity || probability === undefined || !risk_level) {
+    return res.status(400).json({ error: 'prediction_type, target_entity, probability, risk_level required' });
+  }
+
+  try {
+    const prediction = await createPrediction({
+      tenant_id: req.tenant_id || null,
+      repo_name, workflow_name, stack_name, prediction_type, target_entity,
+      probability, risk_level, reasons, recommended_action, expires_at,
+    });
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'prediction_create',
+      resourceType: 'prediction',
+      resourceId: String(prediction.id),
+      details: { prediction_type, target_entity, probability, risk_level },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true, prediction });
+  } catch (err) {
+    logger.error({ err }, 'Failed to create prediction');
+    res.status(500).json({ error: 'Failed to create prediction' });
+  }
+});
+
+app.get('/predictions/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const prediction = await getPrediction(id, req.tenant_id || null);
+    if (!prediction) return res.status(404).json({ error: 'Prediction not found' });
+    res.json(prediction);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch prediction');
+    res.status(500).json({ error: 'Failed to fetch prediction' });
+  }
+});
+
+app.patch('/predictions/:id', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { id } = req.params;
+  const { resolved, resolved_at } = req.body;
+
+  try {
+    await updatePrediction(id, { resolved, resolved_at }, req.tenant_id || null);
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'prediction_update',
+      resourceType: 'prediction',
+      resourceId: id,
+      details: { resolved, resolved_at },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update prediction');
+    res.status(500).json({ error: 'Failed to update prediction' });
+  }
+});
+
+app.delete('/predictions/:id', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { id } = req.params;
+  try {
+    await deletePrediction(id, req.tenant_id || null);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to delete prediction');
+    res.status(500).json({ error: 'Failed to delete prediction' });
   }
 });
 

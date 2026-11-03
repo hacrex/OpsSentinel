@@ -188,6 +188,29 @@ const CREATE_TABLE_PG = `
   CREATE INDEX IF NOT EXISTS idx_remediation_fingerprint ON remediation_actions(fingerprint_hash);
   CREATE INDEX IF NOT EXISTS idx_remediation_incident ON remediation_actions(incident_id);
   CREATE INDEX IF NOT EXISTS idx_remediation_status ON remediation_actions(status);
+
+  CREATE TABLE IF NOT EXISTS predictions (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER,
+    repo_name VARCHAR(255),
+    workflow_name VARCHAR(255),
+    stack_name VARCHAR(255),
+    prediction_type VARCHAR(50),
+    target_entity VARCHAR(255),
+    probability REAL,
+    risk_level VARCHAR(50),
+    reasons TEXT,
+    recommended_action TEXT,
+    predicted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP,
+    resolved BOOLEAN DEFAULT FALSE,
+    resolved_at TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_predictions_tenant_id ON predictions(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_predictions_repo_name ON predictions(repo_name);
+  CREATE INDEX IF NOT EXISTS idx_predictions_target ON predictions(target_entity);
+  CREATE INDEX IF NOT EXISTS idx_predictions_risk ON predictions(risk_level);
 `;
 
 const CREATE_TABLE_SQLITE = `
@@ -373,6 +396,29 @@ const CREATE_TABLE_SQLITE = `
   CREATE INDEX IF NOT EXISTS idx_remediation_fingerprint ON remediation_actions(fingerprint_hash);
   CREATE INDEX IF NOT EXISTS idx_remediation_incident ON remediation_actions(incident_id);
   CREATE INDEX IF NOT EXISTS idx_remediation_status ON remediation_actions(status);
+
+  CREATE TABLE IF NOT EXISTS predictions (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER,
+    repo_name VARCHAR(255),
+    workflow_name VARCHAR(255),
+    stack_name VARCHAR(255),
+    prediction_type VARCHAR(50),
+    target_entity VARCHAR(255),
+    probability REAL,
+    risk_level VARCHAR(50),
+    reasons TEXT,
+    recommended_action TEXT,
+    predicted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP,
+    resolved BOOLEAN DEFAULT FALSE,
+    resolved_at TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_predictions_tenant_id ON predictions(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_predictions_repo_name ON predictions(repo_name);
+  CREATE INDEX IF NOT EXISTS idx_predictions_target ON predictions(target_entity);
+  CREATE INDEX IF NOT EXISTS idx_predictions_risk ON predictions(risk_level);
 `;
 
 // Convert SQLite ? placeholders to PostgreSQL $1, $2, ...
