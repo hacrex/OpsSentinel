@@ -1,0 +1,20 @@
+{
+  "name": "opsctl",
+  "version": "1.0.0",
+  "description": "OpsSentinel CLI - operational control plane CLI",
+  "main": "index.js",
+  "bin": {
+    "opsctl": "index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "chalk": "^4.1.2",
+    "cli-table3": "^0.6.5",
+    "inquirer": "^8.2.6",
+    "ora": "^5.4.1",
+    "table": "^6.8.1"
+  }
+}
