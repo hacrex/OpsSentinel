@@ -221,7 +221,6 @@ export default function Home() {
                 <div className="mockup-dot" />
                 <div className="mockup-dot" />
                 <div className="mockup-dot" />
-                <span className="mockup-url">localhost:3000/dashboard</span>
               </div>
               <div className="mockup-body">
                 <div className="mockup-sidebar">
