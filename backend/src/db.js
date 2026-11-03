@@ -406,7 +406,7 @@ const CREATE_TABLE_SQLITE = `
   CREATE INDEX IF NOT EXISTS idx_fingerprints_category ON failure_fingerprints(category);
 
   CREATE TABLE IF NOT EXISTS remediation_actions (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     tenant_id INTEGER,
     fingerprint_hash VARCHAR(255),
     incident_id INTEGER,
@@ -429,7 +429,7 @@ const CREATE_TABLE_SQLITE = `
   CREATE INDEX IF NOT EXISTS idx_remediation_status ON remediation_actions(status);
 
   CREATE TABLE IF NOT EXISTS predictions (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     tenant_id INTEGER,
     repo_name VARCHAR(255),
     workflow_name VARCHAR(255),
@@ -452,7 +452,7 @@ const CREATE_TABLE_SQLITE = `
   CREATE INDEX IF NOT EXISTS idx_predictions_risk ON predictions(risk_level);
 
   CREATE TABLE IF NOT EXISTS drift_events (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     tenant_id INTEGER,
     repo_name VARCHAR(255),
     stack_name VARCHAR(255),

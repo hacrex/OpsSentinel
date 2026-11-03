@@ -127,7 +127,6 @@ async function runOperation({ tenant_id, repo_name, stack_name, engine, operatio
       const output_url = `/infra-logs/${path.basename(logFile)}`;
 
       inc('infra_runs_total', { engine, operation, conclusion });
-      metrics.infra_runs_total++;
       metrics.infra_runs_by_engine[engine] = (metrics.infra_runs_by_engine[engine] || 0) + 1;
       metrics.infra_runs_by_operation[operation] = (metrics.infra_runs_by_operation[operation] || 0) + 1;
       metrics.infra_runs_by_conclusion[conclusion] = (metrics.infra_runs_by_conclusion[conclusion] || 0) + 1;

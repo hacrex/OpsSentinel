@@ -23,6 +23,7 @@ const { authMiddleware } = require('./auth');
 const { requirePermission, requireAnyPermission, getRoles, isValidRole } = require('./rbac');
 const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 
 dotenv.config();
 validateEnv();
@@ -131,7 +132,6 @@ app.use((req, res, next) => {
       status: res.statusCode,
     });
     observeLatency(duration);
-    metrics.http_requests_total++;
     metrics.http_requests_by_method[req.method] = (metrics.http_requests_by_method[req.method] || 0) + 1;
     metrics.http_requests_by_path[req.path] = (metrics.http_requests_by_path[req.path] || 0) + 1;
     metrics.http_requests_by_status[res.statusCode] = (metrics.http_requests_by_status[res.statusCode] || 0) + 1;

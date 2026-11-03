@@ -98,7 +98,6 @@ async function handleWebhook(req, res) {
   const event = req.headers['x-github-event'];
 
   inc('webhook_requests_total', { event: event || 'unknown' });
-  metrics.webhook_requests_total++;
 
   if (event === 'ping') return res.status(200).send('pong');
 
