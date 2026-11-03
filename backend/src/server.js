@@ -44,6 +44,14 @@ function getTokenCookieOptions() {
   };
 }
 
+function getApiBaseUrl() {
+  return process.env.API_BASE_URL || process.env.FRONTEND_URL || 'http://localhost:3001';
+}
+
+function getFrontendUrl() {
+  return process.env.FRONTEND_URL || 'http://localhost:5173';
+}
+
 // ── WebSocket Server ──────────────────────────────────────────────────────────
 const wss = new WebSocketServer({ server });
 
@@ -1337,6 +1345,187 @@ app.post('/auth/github', async (req, res) => {
   } catch (err) {
     logger.error({ err }, 'Auth failed');
     res.status(500).json({ error: 'Auth failed' });
+  }
+});
+
+// ── SSO / SAML / OIDC ──
+app.get('/auth/sso/config', authMiddleware, (req, res) => {
+  const ssoEnabled = process.env.SSO_ENABLED === 'true';
+  res.json({
+    enabled: ssoEnabled,
+    provider: ssoEnabled ? process.env.SSO_PROVIDER || 'okta' : null,
+    issuerUrl: ssoEnabled ? process.env.SSO_ISSUER_URL || null : null,
+    attributeEmail: ssoEnabled ? process.env.SSO_ATTRIBUTE_EMAIL || 'email' : 'email',
+    attributeName: ssoEnabled ? process.env.SSO_ATTRIBUTE_NAME || 'name' : 'name',
+    attributeGroups: ssoEnabled ? process.env.SSO_ATTRIBUTE_GROUPS || 'groups' : 'groups',
+  });
+});
+
+app.get('/auth/sso', async (req, res) => {
+  const ssoEnabled = process.env.SSO_ENABLED === 'true';
+  if (!ssoEnabled) {
+    return res.status(400).json({ error: 'SSO is not enabled. Set SSO_ENABLED=true.' });
+  }
+
+  const provider = process.env.SSO_PROVIDER || 'okta';
+  const issuerUrl = process.env.SSO_ISSUER_URL;
+  const clientId = process.env.SSO_CLIENT_ID;
+  const redirectUri = process.env.SSO_REDIRECT_URI || `${getApiBaseUrl()}/auth/sso/callback`;
+  const state = crypto.randomBytes(16).toString('hex');
+
+  // Store state in a simple in-memory store (in production, use Redis or signed cookie)
+  if (!global._ssoStates) global._ssoStates = new Map();
+  global._ssoStates.set(state, { redirectTo: req.query.redirectTo || '/' });
+
+  let authUrl;
+  if (provider === 'okta' || provider === 'generic-oidc') {
+    const discoveryUrl = process.env.SSO_DISCOVERY_URL || `${issuerUrl}/.well-known/openid-configuration`;
+    authUrl = `${discoveryUrl.includes('.well-known') ? discoveryUrl.split('/.well-known')[0] : issuerUrl}/authorize`;
+    const params = new URLSearchParams({
+      client_id: clientId,
+      response_type: 'code',
+      scope: 'openid profile email groups',
+      redirect_uri: redirectUri,
+      state,
+    });
+    authUrl = `${authUrl}?${params.toString()}`;
+  } else if (provider === 'azure-ad') {
+    const tenant = process.env.SSO_TENANT_ID || 'common';
+    authUrl = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize`;
+    const params = new URLSearchParams({
+      client_id: clientId,
+      response_type: 'code',
+      scope: 'openid profile email User.Read',
+      redirect_uri: redirectUri,
+      state,
+    });
+    authUrl = `${authUrl}?${params.toString()}`;
+  } else if (provider === 'google-workspace') {
+    authUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+    const params = new URLSearchParams({
+      client_id: clientId,
+      response_type: 'code',
+      scope: 'openid profile email',
+      redirect_uri: redirectUri,
+      state,
+      access_type: 'offline',
+    });
+    authUrl = `${authUrl}?${params.toString()}`;
+  } else {
+    return res.status(400).json({ error: `Unsupported SSO provider: ${provider}` });
+  }
+
+  res.redirect(authUrl);
+});
+
+app.get('/auth/sso/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+
+  if (error) {
+    return res.redirect(`${getFrontendUrl()}/login?error=sso_denied`);
+  }
+
+  if (!code || !state) {
+    return res.status(400).json({ error: 'Missing code or state parameter' });
+  }
+
+  // Verify state
+  if (!global._ssoStates || !global._ssoStates.has(state)) {
+    return res.status(400).json({ error: 'Invalid state parameter' });
+  }
+  const stateData = global._ssoStates.get(state);
+  global._ssoStates.delete(state);
+
+  const provider = process.env.SSO_PROVIDER || 'okta';
+  const clientId = process.env.SSO_CLIENT_ID;
+  const clientSecret = process.env.SSO_CLIENT_SECRET;
+  const redirectUri = process.env.SSO_REDIRECT_URI || `${getApiBaseUrl()}/auth/sso/callback`;
+
+  try {
+    let tokenResponse;
+    if (provider === 'okta' || provider === 'generic-oidc' || provider === 'azure-ad' || provider === 'google-workspace') {
+      tokenResponse = await axios.post(
+        provider === 'azure-ad'
+          ? `https://login.microsoftonline.com/${process.env.SSO_TENANT_ID || 'common'}/oauth2/v2.0/token`
+          : provider === 'google-workspace'
+            ? 'https://oauth2.googleapis.com/token'
+            : `${process.env.SSO_ISSUER_URL}/oauth2/default/token`,
+        new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: clientId,
+          client_secret: clientSecret,
+          code,
+          redirect_uri: redirectUri,
+        }),
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      );
+    } else {
+      return res.status(400).json({ error: `Unsupported SSO provider: ${provider}` });
+    }
+
+    const { access_token, id_token } = tokenResponse.data;
+
+    // Fetch user info from OIDC userinfo endpoint
+    let userInfo;
+    if (provider === 'azure-ad') {
+      const userRes = await axios.get('https://graph.microsoft.com/v1.0/me', {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+      userInfo = userRes.data;
+    } else if (provider === 'google-workspace') {
+      const userRes = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+      userInfo = userRes.data;
+    } else {
+      // Okta / generic OIDC
+      const userRes = await axios.get(`${process.env.SSO_ISSUER_URL}/oauth2/default/userinfo`, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+      userInfo = userRes.data;
+    }
+
+    const email = userInfo[process.env.SSO_ATTRIBUTE_EMAIL || 'email'] || userInfo.email || userInfo.userPrincipalName || userInfo.name;
+    const name = userInfo[process.env.SSO_ATTRIBUTE_NAME || 'name'] || userInfo.name || userInfo.displayName || email;
+    const groups = userInfo[process.env.SSO_ATTRIBUTE_GROUPS || 'groups'] || [];
+
+    const ssoId = String(userInfo.id || userInfo.sub || userInfo.oid || email);
+
+    // Check if user exists
+    let dbUser = await db.query('SELECT * FROM users WHERE sso_id = ?', [ssoId]);
+
+    if (!dbUser.rows || dbUser.rows.length === 0) {
+      let tenant_id = null;
+      if (isSaas) {
+        const webhook_secret = crypto.randomBytes(32).toString('hex');
+        const tenantName = `${name}'s Workspace`;
+        await db.query('INSERT INTO tenants (name, webhook_secret) VALUES (?, ?)', [tenantName, webhook_secret]);
+        const tResult = await db.query('SELECT id FROM tenants WHERE webhook_secret = ?', [webhook_secret]);
+        if (tResult.rows.length > 0) tenant_id = tResult.rows[0].id;
+      }
+      await db.query(
+        'INSERT INTO users (sso_id, username, email, avatar_url, tenant_id, sso_provider) VALUES (?, ?, ?, ?, ?, ?)',
+        [ssoId, name, email, userInfo.picture || userInfo.avatar_url || null, tenant_id, provider]
+      );
+    }
+
+    res.cookie('github_token', access_token, getTokenCookieOptions());
+
+    await logAuditEvent({
+      userId: null,
+      username: name,
+      action: 'sso_login',
+      resourceType: 'auth',
+      resourceId: ssoId,
+      details: { provider, email, name, groups },
+      ipAddress: req.ip,
+    });
+
+    const redirectTo = stateData.redirectTo || '/';
+    res.redirect(`${getFrontendUrl()}/${redirectTo}`);
+  } catch (err) {
+    logger.error({ err }, 'SSO auth failed');
+    res.redirect(`${getFrontendUrl()}/login?error=sso_failed`);
   }
 });
 

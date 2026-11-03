@@ -16,7 +16,10 @@ const CREATE_TABLE_PG = `
   CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     github_id VARCHAR(255) UNIQUE,
+    sso_id VARCHAR(255) UNIQUE,
+    sso_provider VARCHAR(50),
     username VARCHAR(255),
+    email VARCHAR(255),
     avatar_url TEXT,
     tenant_id INTEGER REFERENCES tenants(id),
     role VARCHAR(50) DEFAULT 'viewer',
@@ -249,7 +252,10 @@ const CREATE_TABLE_SQLITE = `
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     github_id TEXT UNIQUE,
+    sso_id TEXT UNIQUE,
+    sso_provider TEXT,
     username TEXT,
+    email TEXT,
     avatar_url TEXT,
     tenant_id INTEGER,
     role TEXT DEFAULT 'viewer',
@@ -542,6 +548,9 @@ if (isPostgres) {
       sqliteDb.exec(CREATE_TABLE_SQLITE, (err) => {
         if (!err) {
           sqliteDb.run("ALTER TABLE events ADD COLUMN tenant_id INTEGER", () => {});
+          sqliteDb.run("ALTER TABLE users ADD COLUMN sso_id TEXT", () => {});
+          sqliteDb.run("ALTER TABLE users ADD COLUMN sso_provider TEXT", () => {});
+          sqliteDb.run("ALTER TABLE users ADD COLUMN email TEXT", () => {});
           // Create indexes if they don't exist
           sqliteDb.run("CREATE INDEX IF NOT EXISTS idx_events_tenant_id ON events(tenant_id)", () => {});
           sqliteDb.run("CREATE INDEX IF NOT EXISTS idx_events_repo_name ON events(repo_name)", () => {});
