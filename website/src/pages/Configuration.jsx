@@ -5,9 +5,9 @@ import Layout from '../components/Layout';
 const tools = [
   {
     name: 'Ansible',
-    badge: 'Roadmap',
+    badge: 'Available',
     badgeColor: '#22c55e',
-    description: 'A planned integration for agentless configuration workflows and playbook execution.',
+    description: 'Run Ansible playbooks for agentless configuration management directly from the OpsSentinel dashboard.',
     features: ['Playbook Execution', 'Inventory Management', 'Role Management', 'Vault Integration', 'Ad-Hoc Commands', 'Host-Level Results'],
     icon: <Terminal size={24} />,
   },
@@ -126,8 +126,8 @@ export default function Configuration() {
             <span className="section-label">Configuration Management</span>
             <h1 className="section-title">Configure Servers. Enforce Compliance.</h1>
             <p className="section-subtitle">
-              The current release focuses on GitHub Actions observability. Ansible, Chef, Puppet, SaltStack,
-              InSpec, PowerShell DSC, StackStorm, and Rudder integrations are roadmap areas for a future configuration-management layer.
+              Run Ansible playbooks for configuration management directly from OpsSentinel. Chef, Puppet, SaltStack,
+              InSpec, PowerShell DSC, StackStorm, and Rudder integrations are roadmap areas for future releases.
             </p>
           </div>
         </div>

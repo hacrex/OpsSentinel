@@ -5,17 +5,17 @@ import Layout from '../components/Layout';
 const engines = [
   {
     name: 'OpenTofu',
-    badge: 'Roadmap',
+    badge: 'Available',
     badgeColor: '#22c55e',
-    description: 'A planned integration for teams that want an open-source IaC engine connected to the OpsSentinel control plane.',
+    description: 'Provision infrastructure with OpenTofu. Plan, apply, and destroy stacks directly from the OpsSentinel dashboard.',
     features: ['Plan & Apply', 'State Management', 'Drift Detection', 'Module Registry', 'Workspace Management', 'Plan Approval'],
     icon: <Shield size={24} />,
   },
   {
     name: 'Terraform',
-    badge: 'Roadmap',
+    badge: 'Available',
     badgeColor: '#7b61ff',
-    description: 'A planned integration for Terraform workflows, with future support shaped by community demand and implementation scope.',
+    description: 'Provision infrastructure with Terraform. Plan, apply, and destroy stacks directly from the OpsSentinel dashboard.',
     features: ['Plan & Apply', 'Remote State', 'Terraform Cloud', 'Module Registry', 'Cost Estimation', 'Migration to OpenTofu'],
     icon: <Layers size={24} />,
   },
@@ -134,8 +134,8 @@ export default function Infrastructure() {
             <span className="section-label">Infrastructure Automation</span>
             <h1 className="section-title">One Platform. Every IaC Engine.</h1>
             <p className="section-subtitle">
-              The current release focuses on GitHub Actions observability. OpenTofu, Terraform, Pulumi, CloudFormation,
-              Crossplane, AWS CDK, Bicep, Packer, and Vagrant connectors are roadmap areas for a future infrastructure control plane.
+              Provision infrastructure with OpenTofu and Terraform directly from the OpsSentinel dashboard. Pulumi, CloudFormation,
+              Crossplane, AWS CDK, Bicep, Packer, and Vagrant connectors are roadmap areas for future releases.
             </p>
           </div>
         </div>
