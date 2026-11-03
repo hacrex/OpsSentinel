@@ -15,7 +15,7 @@ const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
 const { triageFailure } = require('./triage');
 const { analyzeFailure, getLLMConfig } = require('./llm');
 const infra = require('./infrastructure');
-const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun } = infra;
+const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident } = infra;
 const setInfraBroadcast = infra.setBroadcast;
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
@@ -544,6 +544,99 @@ app.delete('/infrastructure/stacks/:id', authMiddleware, requirePermission('infr
   } catch (err) {
     logger.error({ err }, 'Failed to delete stack');
     res.status(500).json({ error: 'Failed to delete stack' });
+  }
+});
+
+// ── Incident Management ──
+app.get('/incidents', authMiddleware, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+  const { status, severity } = req.query;
+
+  try {
+    const result = await listIncidents({
+      tenant_id: req.tenant_id || null,
+      status, severity, page, limit,
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch incidents');
+    res.status(500).json({ error: 'Failed to fetch incidents' });
+  }
+});
+
+app.post('/incidents', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { title, description, severity, status, repo_name, stack_name, workflow_name } = req.body;
+  if (!title || !severity || !status) {
+    return res.status(400).json({ error: 'title, severity, status required' });
+  }
+
+  try {
+    const incident = await createIncident({
+      tenant_id: req.tenant_id || null,
+      title, description, severity, status,
+      repo_name, stack_name, workflow_name,
+    });
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'incident_create',
+      resourceType: 'incident',
+      resourceId: String(incident.id),
+      details: { title, severity, status, repo_name, stack_name },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true, incident });
+  } catch (err) {
+    logger.error({ err }, 'Failed to create incident');
+    res.status(500).json({ error: 'Failed to create incident' });
+  }
+});
+
+app.get('/incidents/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const incident = await getIncident(id, req.tenant_id || null);
+    if (!incident) return res.status(404).json({ error: 'Incident not found' });
+    res.json(incident);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch incident');
+    res.status(500).json({ error: 'Failed to fetch incident' });
+  }
+});
+
+app.patch('/incidents/:id', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { id } = req.params;
+  const { status, severity, description, resolved_at } = req.body;
+
+  try {
+    await updateIncident(id, { status, severity, description, resolved_at }, req.tenant_id || null);
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'incident_update',
+      resourceType: 'incident',
+      resourceId: id,
+      details: { status, severity, description, resolved_at },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update incident');
+    res.status(500).json({ error: 'Failed to update incident' });
+  }
+});
+
+app.delete('/incidents/:id', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { id } = req.params;
+  try {
+    await deleteIncident(id, req.tenant_id || null);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to delete incident');
+    res.status(500).json({ error: 'Failed to delete incident' });
   }
 });
 

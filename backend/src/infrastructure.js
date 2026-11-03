@@ -240,4 +240,68 @@ async function recordInfraRun({ tenant_id, repo_name, stack_name, engine, operat
   );
 }
 
-module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun };
+async function listIncidents({ tenant_id, status, severity, page, limit }) {
+  const conditions = [];
+  const params = [];
+  if (status) { conditions.push('status = ?'); params.push(status); }
+  if (severity) { conditions.push('severity = ?'); params.push(severity); }
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+
+  const offset = (page - 1) * limit;
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const countResult = await db.query(`SELECT COUNT(*) as cnt FROM incidents ${where}`, params);
+  const total = parseInt(countResult.rows[0]?.cnt ?? 0, 10);
+
+  const dataResult = await db.query(
+    `SELECT * FROM incidents ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+  return { data: dataResult.rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
+}
+
+async function createIncident({ tenant_id, title, description, severity, status, repo_name, stack_name, workflow_name }) {
+  const result = await db.query(
+    `INSERT INTO incidents (tenant_id, title, description, severity, status, repo_name, stack_name, workflow_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [tenant_id, title, description, severity, status, repo_name, stack_name, workflow_name]
+  );
+  return result.rows?.[0] ?? { id: null };
+}
+
+async function getIncident(id, tenant_id) {
+  const conditions = ['id = ?'];
+  const params = [id];
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const result = await db.query(`SELECT * FROM incidents WHERE ${conditions.join(' AND ')}`, params);
+  return result.rows?.[0] ?? null;
+}
+
+async function updateIncident(id, { status, severity, description, resolved_at }, tenant_id) {
+  const sets = [];
+  const params = [];
+  if (status !== undefined) { sets.push('status = ?'); params.push(status); }
+  if (severity !== undefined) { sets.push('severity = ?'); params.push(severity); }
+  if (description !== undefined) { sets.push('description = ?'); params.push(description); }
+  if (resolved_at !== undefined) { sets.push('resolved_at = ?'); params.push(resolved_at); }
+  if (sets.length === 0) return null;
+
+  const conditions = ['id = ?'];
+  params.push(id);
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+
+  const result = await db.query(
+    `UPDATE incidents SET ${sets.join(', ')} WHERE ${conditions.join(' AND ')}`,
+    params
+  );
+  return result;
+}
+
+async function deleteIncident(id, tenant_id) {
+  const conditions = ['id = ?'];
+  const params = [id];
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const result = await db.query(`DELETE FROM incidents WHERE ${conditions.join(' AND ')}`, params);
+  return result;
+}
+
+module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident };
