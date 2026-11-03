@@ -15,7 +15,7 @@ const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
 const { triageFailure } = require('./triage');
 const { analyzeFailure, getLLMConfig } = require('./llm');
 const infra = require('./infrastructure');
-const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret } = infra;
+const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun } = infra;
 const setInfraBroadcast = infra.setBroadcast;
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
@@ -729,6 +729,56 @@ app.delete('/secrets/:id', authMiddleware, requirePermission('infrastructure:run
   } catch (err) {
     logger.error({ err }, 'Failed to delete secret');
     res.status(500).json({ error: 'Failed to delete secret' });
+  }
+});
+
+// ── Configuration Management ──
+app.get('/configuration/runs', authMiddleware, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+  const { repo, tool, conclusion } = req.query;
+
+  try {
+    const result = await listConfigRuns({
+      tenant_id: req.tenant_id || null,
+      repo, tool, conclusion, page, limit,
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch config runs');
+    res.status(500).json({ error: 'Failed to fetch config runs' });
+  }
+});
+
+app.post('/configuration/runs', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { repo_name, tool, playbook, inventory, status, conclusion, output_url } = req.body;
+  if (!repo_name || !tool || !playbook) {
+    return res.status(400).json({ error: 'repo_name, tool, playbook required' });
+  }
+
+  try {
+    recordConfigRun({
+      tenant_id: req.tenant_id || null,
+      repo_name, tool, playbook, inventory: inventory || '',
+      status: status || 'completed',
+      conclusion: conclusion || 'success',
+      output_url: output_url || '',
+      triggeredBy: req.user?.login || 'ci',
+    });
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'ci',
+      action: 'configuration_run_recorded',
+      resourceType: 'configuration_run',
+      resourceId: 'ci',
+      details: { tool, playbook, inventory, status, conclusion, repo_name },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true, recorded: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to record config run');
+    res.status(500).json({ error: 'Failed to record config run' });
   }
 });
 

@@ -109,6 +109,26 @@ const CREATE_TABLE_PG = `
   CREATE INDEX IF NOT EXISTS idx_secrets_tenant_id ON secrets(tenant_id);
   CREATE INDEX IF NOT EXISTS idx_secrets_name ON secrets(name);
   CREATE INDEX IF NOT EXISTS idx_secrets_provider ON secrets(provider);
+
+  CREATE TABLE IF NOT EXISTS configuration_runs (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER,
+    repo_name VARCHAR(255),
+    tool VARCHAR(50),
+    playbook VARCHAR(255),
+    inventory VARCHAR(255),
+    status VARCHAR(50),
+    conclusion VARCHAR(50),
+    output_url TEXT,
+    mttr_seconds INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_config_runs_tenant_id ON configuration_runs(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_config_runs_repo_name ON configuration_runs(repo_name);
+  CREATE INDEX IF NOT EXISTS idx_config_runs_tool ON configuration_runs(tool);
+  CREATE INDEX IF NOT EXISTS idx_config_runs_created_at ON configuration_runs(created_at);
+  CREATE INDEX IF NOT EXISTS idx_config_runs_conclusion ON configuration_runs(conclusion);
 `;
 
 const CREATE_TABLE_SQLITE = `
@@ -215,6 +235,26 @@ const CREATE_TABLE_SQLITE = `
   CREATE INDEX IF NOT EXISTS idx_secrets_tenant_id ON secrets(tenant_id);
   CREATE INDEX IF NOT EXISTS idx_secrets_name ON secrets(name);
   CREATE INDEX IF NOT EXISTS idx_secrets_provider ON secrets(provider);
+
+  CREATE TABLE IF NOT EXISTS configuration_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id INTEGER,
+    repo_name TEXT,
+    tool TEXT,
+    playbook TEXT,
+    inventory TEXT,
+    status TEXT,
+    conclusion TEXT,
+    output_url TEXT,
+    mttr_seconds INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_config_runs_tenant_id ON configuration_runs(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_config_runs_repo_name ON configuration_runs(repo_name);
+  CREATE INDEX IF NOT EXISTS idx_config_runs_tool ON configuration_runs(tool);
+  CREATE INDEX IF NOT EXISTS idx_config_runs_created_at ON configuration_runs(created_at);
+  CREATE INDEX IF NOT EXISTS idx_config_runs_conclusion ON configuration_runs(conclusion);
 `;
 
 // Convert SQLite ? placeholders to PostgreSQL $1, $2, ...

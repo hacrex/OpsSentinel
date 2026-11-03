@@ -453,4 +453,63 @@ async function deleteSecret(id, tenant_id) {
   return result;
 }
 
-module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret };
+async function listConfigRuns({ tenant_id, repo, tool, conclusion, page, limit }) {
+  const conditions = [];
+  const params = [];
+  if (repo) { conditions.push('repo_name = ?'); params.push(repo); }
+  if (tool) { conditions.push('tool = ?'); params.push(tool); }
+  if (conclusion) { conditions.push('conclusion = ?'); params.push(conclusion); }
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+
+  const offset = (page - 1) * limit;
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const countResult = await db.query(`SELECT COUNT(*) as cnt FROM configuration_runs ${where}`, params);
+  const total = parseInt(countResult.rows[0]?.cnt ?? 0, 10);
+
+  const dataResult = await db.query(
+    `SELECT * FROM configuration_runs ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+  return { data: dataResult.rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
+}
+
+async function recordConfigRun({ tenant_id, repo_name, tool, playbook, inventory, status, conclusion, output_url, triggeredBy }) {
+  db.run(
+    `INSERT INTO configuration_runs (tenant_id, repo_name, tool, playbook, inventory, status, conclusion, output_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [tenant_id, repo_name, tool, playbook, inventory, status, conclusion, output_url],
+    function (err) {
+      if (err) {
+        logger.error({ err }, 'Failed to record config run');
+        return;
+      }
+
+      const run = {
+        id: this.lastID,
+        tenant_id, repo_name, tool, playbook, inventory, status, conclusion,
+        output_url, mttr_seconds: null, created_at: new Date().toISOString(),
+      };
+
+      if (_broadcast) _broadcast({ type: 'new_config_run', event: run });
+
+      if (conclusion === 'failure') {
+        notifyAll({
+          repo_name,
+          workflow_name: `[${tool}:config] ${playbook || inventory || 'config'}`,
+          status, conclusion, run_url: output_url,
+        });
+      }
+
+      logAuditEvent({
+        userId: null, username: triggeredBy || 'system',
+        action: 'configuration_run',
+        resourceType: 'configuration_run',
+        resourceId: String(this.lastID),
+        details: { tool, playbook, inventory, conclusion, repo_name },
+        ipAddress: null,
+      });
+    }
+  );
+}
+
+module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun };
