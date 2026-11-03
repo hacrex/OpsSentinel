@@ -229,4 +229,95 @@ async function handleGitLabWebhook(req, res) {
   res.status(200).send('Event ignored');
 }
 
-module.exports = { verifySignature, handleWebhook, setBroadcast, computeMTTR, handleGitLabWebhook };
+// ── Bitbucket Pipelines Webhook ──
+async function handleBitbucketWebhook(req, res) {
+  const event = req.headers['x-event-key'];
+
+  if (event === 'repo:push' || event === 'pipeline:completed') {
+    const { actor, repository, push, pipeline } = req.body;
+
+    if (!repository || !repository.full_name) {
+      logger.warn('Invalid Bitbucket webhook payload: missing repository');
+      return res.status(400).send('Invalid payload');
+    }
+
+    const repo_name = repository.full_name;
+
+    if (event === 'pipeline:completed' && pipeline) {
+      const pipelineStatus = pipeline.state?.name || 'unknown';
+      const conclusion = pipelineStatus === 'FAILED' ? 'failure' : pipelineStatus === 'STOPPED' ? 'cancelled' : 'success';
+      const run_url = pipeline.links?.html?.href || '';
+      const pipelineName = `Pipeline ${pipeline.build_number}`;
+
+      if (isInfraWorkflow(pipelineName)) {
+        const engine = detectEngine(pipelineName);
+        const operation = detectOperation(pipelineName);
+
+        recordInfraRun({
+          tenant_id: req.tenant_id || null,
+          repo_name,
+          stack_name: pipelineName,
+          engine,
+          operation,
+          status: pipelineStatus.toLowerCase(),
+          conclusion,
+          output_url: run_url,
+          triggeredBy: 'bitbucket-pipelines',
+        });
+
+        return res.status(200).send('Bitbucket infrastructure pipeline recorded');
+      }
+
+      db.run(
+        `INSERT INTO events (tenant_id, repo_name, workflow_name, status, conclusion, run_url, mttr_seconds) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [req.tenant_id, repo_name, pipelineName, pipelineStatus.toLowerCase(), conclusion, run_url, null],
+        function (err) {
+          if (err) {
+            logger.error({ err }, 'Failed to insert Bitbucket event');
+            return res.status(500).send('Database error');
+          }
+
+          const newEvent = { tenant_id: req.tenant_id, repo_name, workflow_name: pipelineName, status: pipelineStatus.toLowerCase(), conclusion, run_url };
+
+          if (_broadcast) _broadcast({ type: 'new_event', event: newEvent });
+
+          if (conclusion === 'failure') {
+            notifyAll(newEvent);
+          }
+
+          res.status(200).send('Bitbucket event processed');
+        }
+      );
+      return;
+    }
+
+    // repo:push event
+    if (push) {
+      const branch = push.changes?.[0]?.new?.name || 'unknown';
+      const commitMsg = push.changes?.[0]?.new?.target?.message || '';
+      const run_url = repository.links?.html?.href || '';
+
+      db.run(
+        `INSERT INTO events (tenant_id, repo_name, workflow_name, status, conclusion, run_url, mttr_seconds) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [req.tenant_id, repo_name, `Push ${branch}`, 'completed', 'success', run_url, null],
+        function (err) {
+          if (err) {
+            logger.error({ err }, 'Failed to insert Bitbucket push event');
+            return res.status(500).send('Database error');
+          }
+
+          const newEvent = { tenant_id: req.tenant_id, repo_name, workflow_name: `Push ${branch}`, status: 'completed', conclusion: 'success', run_url };
+
+          if (_broadcast) _broadcast({ type: 'new_event', event: newEvent });
+
+          res.status(200).send('Bitbucket push event processed');
+        }
+      );
+      return;
+    }
+  }
+
+  res.status(200).send('Event ignored');
+}
+
+module.exports = { verifySignature, handleWebhook, setBroadcast, computeMTTR, handleGitLabWebhook, handleBitbucketWebhook };
