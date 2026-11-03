@@ -2,9 +2,34 @@ const crypto = require('crypto');
 const db = require('./db');
 const { notifyAll } = require('./notifier');
 const logger = require('./logger');
+const { recordInfraRun } = require('./infrastructure');
 
 let _broadcast = null;
 function setBroadcast(fn) { _broadcast = fn; }
+
+const INFRA_KEYWORDS = ['tofu', 'opentofu', 'terraform', 'ansible', 'iac', 'infrastructure'];
+const OPERATION_KEYWORDS = ['plan', 'apply', 'destroy', 'refresh'];
+
+function isInfraWorkflow(workflowName) {
+  const name = workflowName.toLowerCase();
+  return INFRA_KEYWORDS.some((k) => name.includes(k));
+}
+
+function detectEngine(workflowName) {
+  const name = workflowName.toLowerCase();
+  if (name.includes('tofu') || name.includes('opentofu')) return 'tofu';
+  if (name.includes('terraform')) return 'terraform';
+  if (name.includes('ansible')) return 'ansible';
+  return 'unknown';
+}
+
+function detectOperation(workflowName) {
+  const name = workflowName.toLowerCase();
+  for (const op of OPERATION_KEYWORDS) {
+    if (name.includes(op)) return op;
+  }
+  return 'apply';
+}
 
 async function verifySignature(req, res, next) {
   const signature = req.headers['x-hub-signature-256'];
@@ -87,6 +112,26 @@ async function handleWebhook(req, res) {
       const status = workflow_run.status || 'unknown';
       const conclusion = workflow_run.conclusion || null;
       const run_url = workflow_run.html_url || '';
+
+      // Infrastructure CI/CD-first: detect infra-related workflows and record as infrastructure runs
+      if (isInfraWorkflow(workflow_name)) {
+        const engine = detectEngine(workflow_name);
+        const operation = detectOperation(workflow_name);
+
+        recordInfraRun({
+          tenant_id: req.tenant_id || null,
+          repo_name,
+          stack_name: workflow_name,
+          engine,
+          operation,
+          status,
+          conclusion,
+          output_url: run_url,
+          triggeredBy: 'ci',
+        });
+
+        return res.status(200).send('Infrastructure run recorded');
+      }
 
       // Compute MTTR only when a failure is recovered (conclusion = success)
       const mttr_seconds = conclusion === 'success' ? await computeMTTR(repo_name, workflow_name, req.tenant_id) : null;

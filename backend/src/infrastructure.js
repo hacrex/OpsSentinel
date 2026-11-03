@@ -202,4 +202,42 @@ function getStackWorkingDir(stacks, repo_name, stack_name) {
   return match ? match.working_dir : `./infra/${stack_name}`;
 }
 
-module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir };
+async function recordInfraRun({ tenant_id, repo_name, stack_name, engine, operation, status, conclusion, output_url, triggeredBy }) {
+  db.run(
+    `INSERT INTO infrastructure_runs (tenant_id, repo_name, stack_name, engine, operation, status, conclusion, output_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [tenant_id, repo_name, stack_name, engine, operation, status, conclusion, output_url],
+    function (err) {
+      if (err) {
+        logger.error({ err }, 'Failed to record infra run from CI');
+        return;
+      }
+
+      const run = {
+        id: this.lastID,
+        tenant_id, repo_name, stack_name, engine, operation, status, conclusion,
+        output_url, mttr_seconds: null, created_at: new Date().toISOString(),
+      };
+
+      if (_broadcast) _broadcast({ type: 'new_infra_run', event: run });
+
+      if (conclusion === 'failure') {
+        notifyAll({
+          repo_name,
+          workflow_name: `[${engine}:${operation}] ${stack_name}`,
+          status, conclusion, run_url: output_url,
+        });
+      }
+
+      logAuditEvent({
+        userId: null, username: triggeredBy || 'ci',
+        action: 'infrastructure_run',
+        resourceType: 'infrastructure_run',
+        resourceId: String(this.lastID),
+        details: { engine, operation, stack_name, conclusion, repo_name, source: 'ci' },
+        ipAddress: null,
+      });
+    }
+  );
+}
+
+module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun };
