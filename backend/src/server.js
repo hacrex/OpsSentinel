@@ -782,6 +782,70 @@ app.post('/configuration/runs', authMiddleware, requirePermission('infrastructur
   }
 });
 
+// ── DORA Metrics ──
+app.get('/dora/metrics', authMiddleware, async (req, res) => {
+  const { repo } = req.query;
+  const isSaas = process.env.SAAS_MODE === 'true';
+  const isPostgres = !!process.env.DATABASE_URL;
+  const nowSql = isPostgres ? "NOW() - INTERVAL '30 days'" : "datetime('now', '-30 days')";
+
+  const conditions = [];
+  const params = [];
+  if (isSaas) { conditions.push('tenant_id = ?'); params.push(req.tenant_id); }
+  if (repo) { conditions.push('repo_name = ?'); params.push(repo); }
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  try {
+    // Deployment frequency: successful infrastructure deploys per day (last 30 days)
+    const deploySql = isPostgres
+      ? `SELECT DATE(created_at) as day, COUNT(*) as deployments
+         FROM infrastructure_runs
+         ${where} AND conclusion = 'success' AND created_at >= ${nowSql}
+         GROUP BY DATE(created_at) ORDER BY day ASC`
+      : `SELECT DATE(created_at) as day, COUNT(*) as deployments
+         FROM infrastructure_runs
+         ${where} AND conclusion = 'success' AND created_at >= ${nowSql}
+         GROUP BY DATE(created_at) ORDER BY day ASC`;
+
+    const deployResult = await db.query(deploySql, params);
+
+    // Change failure rate: failed / total deployments
+    const totalDeploys = await db.query(
+      `SELECT COUNT(*) as cnt FROM infrastructure_runs ${where} AND created_at >= ${nowSql}`,
+      params
+    );
+    const failedDeploys = await db.query(
+      `SELECT COUNT(*) as cnt FROM infrastructure_runs ${where} AND conclusion = 'failure' AND created_at >= ${nowSql}`,
+      params
+    );
+
+    const total = parseInt(totalDeploys.rows[0]?.cnt ?? 0, 10);
+    const failed = parseInt(failedDeploys.rows[0]?.cnt ?? 0, 10);
+    const changeFailureRate = total > 0 ? ((failed / total) * 100).toFixed(1) : '0.0';
+
+    // MTTR from events
+    const mttrResult = await db.query(
+      `SELECT AVG(mttr_seconds) as avg_mttr FROM events ${where} AND mttr_seconds IS NOT NULL`,
+      params
+    );
+    const avgMttr = mttrResult.rows[0]?.avg_mttr ? Math.round(parseFloat(mttrResult.rows[0].avg_mttr)) : null;
+
+    res.json({
+      deployment_frequency: deployResult.rows.map((d) => ({ day: d.day, deployments: parseInt(d.deployments, 10) })),
+      change_failure_rate: changeFailureRate,
+      total_deployments: total,
+      failed_deployments: failed,
+      avg_mttr_seconds: avgMttr,
+      avg_mttr_formatted: avgMttr
+        ? (avgMttr < 60 ? `${avgMttr}s` : avgMttr < 3600 ? `${Math.round(avgMttr / 60)}m` : `${(avgMttr / 3600).toFixed(1)}h`)
+        : '—',
+    });
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch DORA metrics');
+    res.status(500).json({ error: 'Failed to fetch DORA metrics' });
+  }
+});
+
 // Serve infra log files
 app.use('/infra-logs', express.static(LOG_DIR));
 
