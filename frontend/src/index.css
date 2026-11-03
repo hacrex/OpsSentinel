@@ -481,3 +481,210 @@ body {
 .pricing-features li svg {
   color: var(--success-color);
 }
+
+/* ── Responsive Breakpoints ── */
+
+@media (max-width: 768px) {
+  .header {
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .header h1 {
+    font-size: 16px;
+    gap: 8px;
+  }
+
+  .header h1 svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .header > div {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .header > div > button {
+    flex: 1;
+    min-width: auto;
+    text-align: center;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .metric-card {
+    padding: 16px;
+    gap: 8px;
+  }
+
+  .metric-value {
+    font-size: 28px;
+  }
+
+  .metric-label {
+    font-size: 12px;
+    gap: 6px;
+  }
+
+  .data-table {
+    font-size: 11px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .data-table th {
+    font-size: 10px;
+  }
+
+  .status-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    gap: 4px;
+  }
+
+  .status-badge::before {
+    width: 4px;
+    height: 4px;
+  }
+
+  .glass-panel {
+    padding: 16px;
+    border-radius: 6px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  h3 {
+    font-size: 16px;
+  }
+
+  button.glowing-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    gap: 6px;
+  }
+
+  button.glowing-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .filter-bar,
+  .filter-bar > div {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-bar select,
+  .filter-bar input {
+    width: 100%;
+    max-width: none;
+  }
+
+  div[style*="position: fixed"][style*="z-index: 1000"] > div {
+    width: 90vw !important;
+    max-width: 90vw !important;
+    margin: 20px auto !important;
+  }
+
+  div[style*="position: fixed"][style*="z-index: 1000"] input,
+  div[style*="position: fixed"][style*="z-index: 1000"] select,
+  div[style*="position: fixed"][style*="z-index: 1000"] textarea {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  div[style*="position: fixed"][style*="z-index: 1000"] div {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  div[style*="position: fixed"][style*="z-index: 1000"] button {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 10px 12px;
+  }
+
+  .header h1 {
+    font-size: 14px;
+  }
+
+  .metrics-grid {
+    gap: 12px;
+  }
+
+  .metric-card {
+    padding: 14px;
+  }
+
+  .metric-value {
+    font-size: 24px;
+  }
+
+  .data-table {
+    font-size: 10px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 6px 8px;
+  }
+
+  .status-badge {
+    font-size: 8px;
+    padding: 1px 5px;
+  }
+
+  button.glowing-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}
+
+/* ── Print Styles ── */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .glass-panel {
+    background: white;
+    border: 1px solid #ddd;
+    box-shadow: none;
+  }
+
+  .header {
+    background: white;
+    border-bottom: 1px solid #ddd;
+  }
+
+  button,
+  .glowing-btn {
+    display: none;
+  }
+}
+
