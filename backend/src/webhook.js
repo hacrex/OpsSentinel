@@ -163,4 +163,70 @@ async function handleWebhook(req, res) {
   res.status(200).send('Event ignored');
 }
 
-module.exports = { verifySignature, handleWebhook, setBroadcast, computeMTTR };
+// ── GitLab CI Webhook ──
+async function handleGitLabWebhook(req, res) {
+  const event = req.headers['x-gitlab-event'];
+
+  if (event === 'Pipeline Hook') {
+    const { object_kind, status, ref, sha, web_url, project } = req.body;
+
+    if (!object_kind || !project || !project.path_with_namespace) {
+      logger.warn('Invalid GitLab webhook payload: missing project');
+      return res.status(400).send('Invalid payload');
+    }
+
+    if (object_kind === 'pipeline') {
+      const repo_name = project.path_with_namespace;
+      const pipelineStatus = status || 'unknown';
+      const conclusion = pipelineStatus === 'failed' ? 'failure' : pipelineStatus === 'canceled' ? 'cancelled' : 'success';
+      const run_url = web_url || '';
+      const pipelineName = `Pipeline ${ref}`;
+
+      // Detect infra-related pipelines
+      if (isInfraWorkflow(pipelineName)) {
+        const engine = detectEngine(pipelineName);
+        const operation = detectOperation(pipelineName);
+
+        recordInfraRun({
+          tenant_id: req.tenant_id || null,
+          repo_name,
+          stack_name: pipelineName,
+          engine,
+          operation,
+          status: pipelineStatus,
+          conclusion,
+          output_url: run_url,
+          triggeredBy: 'gitlab-ci',
+        });
+
+        return res.status(200).send('GitLab infrastructure pipeline recorded');
+      }
+
+      db.run(
+        `INSERT INTO events (tenant_id, repo_name, workflow_name, status, conclusion, run_url, mttr_seconds) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [req.tenant_id, repo_name, pipelineName, pipelineStatus, conclusion, run_url, null],
+        function (err) {
+          if (err) {
+            logger.error({ err }, 'Failed to insert GitLab event');
+            return res.status(500).send('Database error');
+          }
+
+          const newEvent = { tenant_id: req.tenant_id, repo_name, workflow_name: pipelineName, status: pipelineStatus, conclusion, run_url };
+
+          if (_broadcast) _broadcast({ type: 'new_event', event: newEvent });
+
+          if (conclusion === 'failure') {
+            notifyAll(newEvent);
+          }
+
+          res.status(200).send('GitLab event processed');
+        }
+      );
+      return;
+    }
+  }
+
+  res.status(200).send('Event ignored');
+}
+
+module.exports = { verifySignature, handleWebhook, setBroadcast, computeMTTR, handleGitLabWebhook };

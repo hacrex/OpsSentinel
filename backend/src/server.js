@@ -4,7 +4,7 @@ const { WebSocketServer } = require('ws');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const db = require('./db');
-const { verifySignature, handleWebhook, setBroadcast } = require('./webhook');
+const { verifySignature, handleWebhook, setBroadcast, handleGitLabWebhook } = require('./webhook');
 const axios = require('axios');
 const dotenv = require('dotenv');
 const logger = require('./logger');
@@ -108,6 +108,7 @@ app.use('/events', apiLimiter);
 app.use('/auth', apiLimiter);
 app.use('/audit-logs', apiLimiter);
 app.use('/webhook', webhookLimiter);
+app.use('/webhook/gitlab', webhookLimiter);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.get('/health', async (req, res) => {
@@ -120,6 +121,7 @@ app.get('/health', async (req, res) => {
 });
 
 app.post('/webhook{/:tenant_id}', verifySignature, handleWebhook);
+app.post('/webhook/gitlab{/:tenant_id}', verifySignature, handleGitLabWebhook);
 
 // Paginated events with optional filters
 app.get('/events', authMiddleware, async (req, res) => {
