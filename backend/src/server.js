@@ -15,7 +15,7 @@ const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
 const { triageFailure } = require('./triage');
 const { analyzeFailure, getLLMConfig } = require('./llm');
 const infra = require('./infrastructure');
-const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident } = infra;
+const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret } = infra;
 const setInfraBroadcast = infra.setBroadcast;
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
@@ -637,6 +637,98 @@ app.delete('/incidents/:id', authMiddleware, requirePermission('infrastructure:r
   } catch (err) {
     logger.error({ err }, 'Failed to delete incident');
     res.status(500).json({ error: 'Failed to delete incident' });
+  }
+});
+
+// ── Secrets Management ──
+app.get('/secrets', authMiddleware, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+  const { provider, scope } = req.query;
+
+  try {
+    const result = await listSecrets({
+      tenant_id: req.tenant_id || null,
+      provider, scope, page, limit,
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch secrets');
+    res.status(500).json({ error: 'Failed to fetch secrets' });
+  }
+});
+
+app.post('/secrets', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { name, value, provider, scope } = req.body;
+  if (!name || !value || !provider || !scope) {
+    return res.status(400).json({ error: 'name, value, provider, scope required' });
+  }
+
+  try {
+    const secret = await createSecret({
+      tenant_id: req.tenant_id || null,
+      name, value, provider, scope,
+    });
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'secret_create',
+      resourceType: 'secret',
+      resourceId: String(secret.id),
+      details: { name, provider, scope },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true, secret });
+  } catch (err) {
+    logger.error({ err }, 'Failed to create secret');
+    res.status(500).json({ error: 'Failed to create secret' });
+  }
+});
+
+app.get('/secrets/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const secret = await getSecret(id, req.tenant_id || null);
+    if (!secret) return res.status(404).json({ error: 'Secret not found' });
+    res.json(secret);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch secret');
+    res.status(500).json({ error: 'Failed to fetch secret' });
+  }
+});
+
+app.patch('/secrets/:id', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { id } = req.params;
+  const { name, value, provider, scope } = req.body;
+
+  try {
+    await updateSecret(id, { name, value, provider, scope }, req.tenant_id || null);
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'secret_update',
+      resourceType: 'secret',
+      resourceId: id,
+      details: { name, provider, scope },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update secret');
+    res.status(500).json({ error: 'Failed to update secret' });
+  }
+});
+
+app.delete('/secrets/:id', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { id } = req.params;
+  try {
+    await deleteSecret(id, req.tenant_id || null);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to delete secret');
+    res.status(500).json({ error: 'Failed to delete secret' });
   }
 });
 

@@ -94,6 +94,21 @@ const CREATE_TABLE_PG = `
   CREATE INDEX IF NOT EXISTS idx_incidents_status ON incidents(status);
   CREATE INDEX IF NOT EXISTS idx_incidents_severity ON incidents(severity);
   CREATE INDEX IF NOT EXISTS idx_incidents_created_at ON incidents(created_at);
+
+  CREATE TABLE IF NOT EXISTS secrets (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER,
+    name VARCHAR(255),
+    value TEXT,
+    provider VARCHAR(50),
+    scope VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_secrets_tenant_id ON secrets(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_secrets_name ON secrets(name);
+  CREATE INDEX IF NOT EXISTS idx_secrets_provider ON secrets(provider);
 `;
 
 const CREATE_TABLE_SQLITE = `
@@ -185,6 +200,21 @@ const CREATE_TABLE_SQLITE = `
   CREATE INDEX IF NOT EXISTS idx_incidents_status ON incidents(status);
   CREATE INDEX IF NOT EXISTS idx_incidents_severity ON incidents(severity);
   CREATE INDEX IF NOT EXISTS idx_incidents_created_at ON incidents(created_at);
+
+  CREATE TABLE IF NOT EXISTS secrets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id INTEGER,
+    name TEXT,
+    value TEXT,
+    provider TEXT,
+    scope TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_secrets_tenant_id ON secrets(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_secrets_name ON secrets(name);
+  CREATE INDEX IF NOT EXISTS idx_secrets_provider ON secrets(provider);
 `;
 
 // Convert SQLite ? placeholders to PostgreSQL $1, $2, ...

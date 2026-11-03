@@ -21,6 +21,8 @@ const ROLES = {
       'workflow:rerun',
       'notifications:test',
       'infrastructure:run',
+      'secrets:read',
+      'secrets:write',
     ],
   },
   admin: {
@@ -38,6 +40,8 @@ const ROLES = {
       'tenants:read',
       'tenants:write',
       'infrastructure:run',
+      'secrets:read',
+      'secrets:write',
     ],
   },
 };

@@ -310,4 +310,68 @@ async function deleteIncident(id, tenant_id) {
   return result;
 }
 
-module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident };
+async function listSecrets({ tenant_id, provider, scope, page, limit }) {
+  const conditions = [];
+  const params = [];
+  if (provider) { conditions.push('provider = ?'); params.push(provider); }
+  if (scope) { conditions.push('scope = ?'); params.push(scope); }
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+
+  const offset = (page - 1) * limit;
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const countResult = await db.query(`SELECT COUNT(*) as cnt FROM secrets ${where}`, params);
+  const total = parseInt(countResult.rows[0]?.cnt ?? 0, 10);
+
+  const dataResult = await db.query(
+    `SELECT id, tenant_id, name, provider, scope, created_at, updated_at FROM secrets ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+  return { data: dataResult.rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
+}
+
+async function createSecret({ tenant_id, name, value, provider, scope }) {
+  const result = await db.query(
+    `INSERT INTO secrets (tenant_id, name, value, provider, scope) VALUES (?, ?, ?, ?, ?)`,
+    [tenant_id, name, value, provider, scope]
+  );
+  return result.rows?.[0] ?? { id: null };
+}
+
+async function getSecret(id, tenant_id) {
+  const conditions = ['id = ?'];
+  const params = [id];
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const result = await db.query(`SELECT * FROM secrets WHERE ${conditions.join(' AND ')}`, params);
+  return result.rows?.[0] ?? null;
+}
+
+async function updateSecret(id, { name, value, provider, scope }, tenant_id) {
+  const sets = [];
+  const params = [];
+  if (name !== undefined) { sets.push('name = ?'); params.push(name); }
+  if (value !== undefined) { sets.push('value = ?'); params.push(value); }
+  if (provider !== undefined) { sets.push('provider = ?'); params.push(provider); }
+  if (scope !== undefined) { sets.push('scope = ?'); params.push(scope); }
+  if (sets.length === 0) return null;
+
+  const conditions = ['id = ?'];
+  params.push(id);
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+
+  const result = await db.query(
+    `UPDATE secrets SET ${sets.join(', ')} WHERE ${conditions.join(' AND ')}`,
+    params
+  );
+  return result;
+}
+
+async function deleteSecret(id, tenant_id) {
+  const conditions = ['id = ?'];
+  const params = [id];
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const result = await db.query(`DELETE FROM secrets WHERE ${conditions.join(' AND ')}`, params);
+  return result;
+}
+
+module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret };
