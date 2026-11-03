@@ -10,6 +10,7 @@ import Infrastructure from './pages/Infrastructure';
 import InfraDetail from './pages/InfraDetail';
 import Incidents from './pages/Incidents';
 import Secrets from './pages/Secrets';
+import Configuration from './pages/Configuration';
 import ErrorBoundary from './components/ErrorBoundary';
 import api from './api';
 import './index.css';
@@ -50,6 +51,7 @@ function App() {
           <Route path="/dashboard/infra/:repo(*)/:stack" element={<PrivateRoute><InfraDetail /></PrivateRoute>} />
           <Route path="/dashboard/incidents" element={<PrivateRoute><Incidents /></PrivateRoute>} />
           <Route path="/dashboard/secrets" element={<PrivateRoute><Secrets /></PrivateRoute>} />
+          <Route path="/dashboard/configuration" element={<PrivateRoute><Configuration /></PrivateRoute>} />
 
           {/* Redirect root to login or dashboard */}
           <Route path="/" element={<Navigate to="/dashboard" />} />
