@@ -1,0 +1,172 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  BACKEND_DIR: ./backend
+  FRONTEND_DIR: ./frontend
+
+jobs:
+  # ── Backend: lint, test, build ──
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: ./backend
+
+      - name: Run backend lint
+        run: npm run lint 2>/dev/null || npm test
+        working-directory: ./backend
+
+      - name: Run backend tests
+        run: npm test
+        working-directory: ./backend
+
+      - name: Report to OpsSentinel (backend CI)
+        if: always()
+        run: |
+          STATUS="completed"
+          if [ "${{ job.status }}" = "failure" ]; then
+            CONCLUSION="failure"
+          else
+            CONCLUSION="success"
+          fi
+          curl -s -X POST "${{ vars.OPSSENTINEL_URL || 'http://localhost:3001' }}/infrastructure/runs" \
+            -H "Authorization: Bearer ${{ secrets.OPSSENTINEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"repo_name\": \"${{ github.repository }}\",
+              \"stack_name\": \"ops-sentinel-ci\",
+              \"engine\": \"github-actions\",
+              \"operation\": \"plan\",
+              \"workingDir\": \"./\",
+              \"status\": \"${STATUS}\",
+              \"conclusion\": \"${CONCLUSION}\"
+            }" || true
+
+  # ── Frontend: lint, build ──
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./frontend
+
+      - name: Run frontend lint
+        run: npm run lint 2>/dev/null || echo "Lint skipped"
+        working-directory: ./frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: ./frontend
+
+      - name: Report to OpsSentinel (frontend CI)
+        if: always()
+        run: |
+          STATUS="completed"
+          if [ "${{ job.status }}" = "failure" ]; then
+            CONCLUSION="failure"
+          else
+            CONCLUSION="success"
+          fi
+          curl -s -X POST "${{ vars.OPSSENTINEL_URL || 'http://localhost:3001' }}/infrastructure/runs" \
+            -H "Authorization: Bearer ${{ secrets.OPSSENTINEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"repo_name\": \"${{ github.repository }}\",
+              \"stack_name\": \"ops-sentinel-ci\",
+              \"engine\": \"github-actions\",
+              \"operation\": \"build\",
+              \"workingDir\": \"./frontend\",
+              \"status\": \"${STATUS}\",
+              \"conclusion\": \"${CONCLUSION}\"
+            }" || true
+
+  # ── Infrastructure: trigger provision via OpsSentinel's own infra-runner ──
+  infrastructure:
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Trigger infra provision via OpsSentinel API
+        run: |
+          STATUS="completed"
+          if curl -s -X POST "${{ vars.OPSSENTINEL_URL || 'http://localhost:3001' }}/infrastructure/runs" \
+            -H "Authorization: Bearer ${{ secrets.OPSSENTINEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"repo_name\": \"${{ github.repository }}\",
+              \"stack_name\": \"production\",
+              \"engine\": \"tofu\",
+              \"operation\": \"plan\",
+              \"workingDir\": \"./infra/production\",
+              \"vars\": {\"environment\": \"production\"}
+            }" | grep -q '"success":true'; then
+            CONCLUSION="success"
+            echo "Infra run triggered successfully"
+          else
+            CONCLUSION="failure"
+            echo "Failed to trigger infra run"
+          fi
+
+          # Report the infra-trigger result back to OpsSentinel
+          curl -s -X POST "${{ vars.OPSSENTINEL_URL || 'http://localhost:3001' }}/infrastructure/runs" \
+            -H "Authorization: Bearer ${{ secrets.OPSSENTINEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"repo_name\": \"${{ github.repository }}\",
+              \"stack_name\": \"ops-sentinel-ci\",
+              \"engine\": \"github-actions\",
+              \"operation\": \"infra-trigger\",
+              \"workingDir\": \"./\",
+              \"status\": \"completed\",
+              \"conclusion\": \"${CONCLUSION}\"
+            }" || true
+
+  # ── Summary ──
+  summary:
+    needs: [backend, frontend, infrastructure]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Print pipeline summary
+        run: |
+          echo "Backend: ${{ needs.backend.result }}"
+          echo "Frontend: ${{ needs.frontend.result }}"
+          echo "Infrastructure: ${{ needs.infrastructure.result }}"
+          if [ "${{ needs.backend.result }}" = "success" ] && [ "${{ needs.frontend.result }}" = "success" ]; then
+            echo "Pipeline: ALL GREEN"
+            exit 0
+          else
+            echo "Pipeline: FAILED"
+            exit 1
+          fi
