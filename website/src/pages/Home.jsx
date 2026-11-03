@@ -194,12 +194,13 @@ export default function Home() {
             Open Source &middot; Self-Hosted
           </span>
           <h1 className="hero-title">
-            CI/CD Observability<br />
-            <span className="text-accent">+ Infrastructure Provisioning</span>
+            One Control Plane.<br />
+            <span className="text-accent">CI/CD + Infrastructure.</span>
           </h1>
           <p className="hero-subtitle">
-            A self-hosted operational control plane. Watch GitHub Actions workflows in real time,
-            analyze failures with AI, and provision infrastructure — from one dashboard.
+            Observe GitHub Actions workflows in real time, analyze failures with AI,
+            and provision infrastructure with OpenTofu, Terraform, and Ansible — all
+            self-hosted under your control.
           </p>
           <div className="hero-actions">
             <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-lg">
@@ -212,6 +213,64 @@ export default function Home() {
             </Link>
           </div>
           <TypingCode />
+
+          {/* Dashboard preview mockup */}
+          <section className="hero-mockup-section">
+            <div className="mockup-window">
+              <div className="mockup-chrome">
+                <div className="mockup-dot" />
+                <div className="mockup-dot" />
+                <div className="mockup-dot" />
+                <span className="mockup-url">localhost:3000/dashboard</span>
+              </div>
+              <div className="mockup-body">
+                <div className="mockup-sidebar">
+                  <div className="mockup-nav-item active" />
+                  <div className="mockup-nav-item" style={{ width: '80%' }} />
+                  <div className="mockup-nav-item" style={{ width: '65%' }} />
+                  <div className="mockup-nav-item" style={{ width: '75%' }} />
+                </div>
+                <div className="mockup-main">
+                  <div className="mockup-stats">
+                    <div className="mockup-stat">
+                      <span className="mockup-stat-value">94.2%</span>
+                      <span className="mockup-stat-label">Success Rate</span>
+                    </div>
+                    <div className="mockup-stat">
+                      <span className="mockup-stat-value">18m</span>
+                      <span className="mockup-stat-label">Avg MTTR</span>
+                    </div>
+                    <div className="mockup-stat">
+                      <span className="mockup-stat-value">42</span>
+                      <span className="mockup-stat-label">Healthy Infra</span>
+                    </div>
+                    <div className="mockup-stat">
+                      <span className="mockup-stat-value">3</span>
+                      <span className="mockup-stat-label">Active Incidents</span>
+                    </div>
+                  </div>
+                  <div className="mockup-chart">
+                    {[40, 65, 30, 85, 55, 70, 45].map((h, i) => (
+                      <div key={i} className="mockup-bar" style={{ height: `${h}%` }} />
+                    ))}
+                  </div>
+                  <div className="mockup-table">
+                    <div className="mockup-row">
+                      <span className="mockup-row-header">repo</span>
+                      <span className="mockup-repo">api-gateway</span>
+                      <span className="mockup-repo">deploy</span>
+                    </div>
+                    <div className="mockup-row">
+                      <span className="mockup-row-header">stack</span>
+                      <span className="mockup-repo">production</span>
+                      <span className="mockup-repo">apply</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <div className="trust-badges">
             <span className="trust-badge"><Shield size={14} /> MIT Licensed</span>
             <span className="trust-badge"><Server size={14} /> Self-Hosted</span>
