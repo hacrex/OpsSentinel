@@ -20,6 +20,7 @@ const ROLES = {
       'audit_logs:read',
       'workflow:rerun',
       'notifications:test',
+      'infrastructure:run',
     ],
   },
   admin: {
@@ -36,6 +37,7 @@ const ROLES = {
       'users:write',
       'tenants:read',
       'tenants:write',
+      'infrastructure:run',
     ],
   },
 };

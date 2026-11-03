@@ -14,6 +14,9 @@ const { notifyAll } = require('./notifier');
 const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
 const { triageFailure } = require('./triage');
 const { analyzeFailure, getLLMConfig } = require('./llm');
+const infra = require('./infrastructure');
+const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR } = infra;
+const setInfraBroadcast = infra.setBroadcast;
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
 const { requirePermission, requireAnyPermission, getRoles, isValidRole } = require('./rbac');
@@ -68,6 +71,8 @@ function broadcast(data) {
 }
 
 setBroadcast(broadcast);
+
+setInfraBroadcast(broadcast);
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(cors({
@@ -347,6 +352,124 @@ app.post('/rerun', authMiddleware, requirePermission('workflow:rerun'), async (r
     res.status(status).json({ error: message });
   }
 });
+
+// ── Infrastructure Provisioning (CI/CD-first) ──
+
+app.post('/infrastructure/runs', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { repo_name, stack_name, engine, operation, workingDir, vars } = req.body;
+  if (!repo_name || !stack_name || !engine || !operation) {
+    return res.status(400).json({ error: 'repo_name, stack_name, engine, operation required' });
+  }
+
+  try {
+    const run = await runOperation({
+      tenant_id: req.tenant_id || null,
+      repo_name, stack_name, engine, operation,
+      workingDir: workingDir || `./infra/${stack_name}`,
+      vars: vars || {},
+      triggeredBy: req.user?.login || 'unknown',
+    });
+    if (run.error) return res.status(500).json({ error: 'Failed to start infrastructure run' });
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'infrastructure_trigger',
+      resourceType: 'infrastructure_run',
+      resourceId: String(run.id),
+      details: { engine, operation, stack_name, repo_name },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true, run });
+  } catch (err) {
+    logger.error({ err }, 'Infrastructure run failed');
+    res.status(500).json({ error: 'Failed to start infrastructure run' });
+  }
+});
+
+app.get('/infrastructure/runs', authMiddleware, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+  const { repo, stack, engine, operation, conclusion } = req.query;
+
+  try {
+    const result = await listRuns({
+      tenant_id: req.tenant_id || null,
+      repo, stack, engine, operation, conclusion, page, limit,
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch infrastructure runs');
+    res.status(500).json({ error: 'Failed to fetch infrastructure runs' });
+  }
+});
+
+app.get('/infrastructure/stats/:repo(*)/:stack', authMiddleware, async (req, res) => {
+  const repo_name = decodeURIComponent(req.params.repo);
+  const stack_name = decodeURIComponent(req.params.stack);
+
+  try {
+    const stats = await getStackStats(repo_name, stack_name, req.tenant_id || null);
+    res.json(stats);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch infra stack stats');
+    res.status(500).json({ error: 'Failed to fetch infra stack stats' });
+  }
+});
+
+app.get('/infrastructure/trend/:repo(*)/:stack', authMiddleware, async (req, res) => {
+  const repo_name = decodeURIComponent(req.params.repo);
+  const stack_name = decodeURIComponent(req.params.stack);
+
+  try {
+    const trend = await getInfraTrend(repo_name, stack_name, req.tenant_id || null);
+    res.json(trend);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch infra trend');
+    res.status(500).json({ error: 'Failed to fetch infra trend' });
+  }
+});
+
+app.post('/infrastructure/rerun', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { run_id } = req.body;
+  if (!run_id) return res.status(400).json({ error: 'run_id required' });
+
+  try {
+    const runResult = await db.query('SELECT * FROM infrastructure_runs WHERE id = ?', [run_id]);
+    if (!runResult.rows || runResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Infrastructure run not found' });
+    }
+    const original = runResult.rows[0];
+
+    const run = await runOperation({
+      tenant_id: original.tenant_id,
+      repo_name: original.repo_name,
+      stack_name: original.stack_name,
+      engine: original.engine,
+      operation: original.operation,
+      workingDir: `./infra/${original.stack_name}`,
+      vars: {},
+      triggeredBy: req.user?.login || 'unknown',
+    });
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'infrastructure_rerun',
+      resourceType: 'infrastructure_run',
+      resourceId: String(run.id),
+      details: { original_run_id: run_id, engine: original.engine, operation: original.operation },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true, run });
+  } catch (err) {
+    logger.error({ err }, 'Infrastructure rerun failed');
+    res.status(500).json({ error: 'Failed to rerun infrastructure' });
+  }
+});
+
+// Serve infra log files
+app.use('/infra-logs', express.static(LOG_DIR));
 
 // GitHub OAuth
 app.post('/auth/github', async (req, res) => {

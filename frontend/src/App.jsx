@@ -6,6 +6,8 @@ import RepoDetail from './pages/RepoDetail';
 import Settings from './pages/Settings';
 import AuditLogs from './pages/AuditLogs';
 import UserManagement from './pages/UserManagement';
+import Infrastructure from './pages/Infrastructure';
+import InfraDetail from './pages/InfraDetail';
 import ErrorBoundary from './components/ErrorBoundary';
 import api from './api';
 import './index.css';
@@ -42,6 +44,8 @@ function App() {
           <Route path="/dashboard/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
           <Route path="/dashboard/audit" element={<PrivateRoute><AuditLogs /></PrivateRoute>} />
           <Route path="/dashboard/users" element={<PrivateRoute><UserManagement /></PrivateRoute>} />
+          <Route path="/dashboard/infrastructure" element={<PrivateRoute><Infrastructure /></PrivateRoute>} />
+          <Route path="/dashboard/infra/:repo(*)/:stack" element={<PrivateRoute><InfraDetail /></PrivateRoute>} />
 
           {/* Redirect root to login or dashboard */}
           <Route path="/" element={<Navigate to="/dashboard" />} />

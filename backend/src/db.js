@@ -39,6 +39,26 @@ const CREATE_TABLE_PG = `
   CREATE INDEX IF NOT EXISTS idx_events_repo_name ON events(repo_name);
   CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at);
   CREATE INDEX IF NOT EXISTS idx_events_conclusion ON events(conclusion);
+
+  CREATE TABLE IF NOT EXISTS infrastructure_runs (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER,
+    repo_name VARCHAR(255),
+    stack_name VARCHAR(255),
+    engine VARCHAR(50),
+    operation VARCHAR(50),
+    status VARCHAR(50),
+    conclusion VARCHAR(50),
+    output_url TEXT,
+    mttr_seconds INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_infra_runs_tenant_id ON infrastructure_runs(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_infra_runs_repo_name ON infrastructure_runs(repo_name);
+  CREATE INDEX IF NOT EXISTS idx_infra_runs_stack_name ON infrastructure_runs(stack_name);
+  CREATE INDEX IF NOT EXISTS idx_infra_runs_created_at ON infrastructure_runs(created_at);
+  CREATE INDEX IF NOT EXISTS idx_infra_runs_conclusion ON infrastructure_runs(conclusion);
 `;
 
 const CREATE_TABLE_SQLITE = `
@@ -75,6 +95,26 @@ const CREATE_TABLE_SQLITE = `
   CREATE INDEX IF NOT EXISTS idx_events_repo_name ON events(repo_name);
   CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at);
   CREATE INDEX IF NOT EXISTS idx_events_conclusion ON events(conclusion);
+
+  CREATE TABLE IF NOT EXISTS infrastructure_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id INTEGER,
+    repo_name TEXT,
+    stack_name TEXT,
+    engine TEXT,
+    operation TEXT,
+    status TEXT,
+    conclusion TEXT,
+    output_url TEXT,
+    mttr_seconds INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_infra_runs_tenant_id ON infrastructure_runs(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_infra_runs_repo_name ON infrastructure_runs(repo_name);
+  CREATE INDEX IF NOT EXISTS idx_infra_runs_stack_name ON infrastructure_runs(stack_name);
+  CREATE INDEX IF NOT EXISTS idx_infra_runs_created_at ON infrastructure_runs(created_at);
+  CREATE INDEX IF NOT EXISTS idx_infra_runs_conclusion ON infrastructure_runs(conclusion);
 `;
 
 // Convert SQLite ? placeholders to PostgreSQL $1, $2, ...

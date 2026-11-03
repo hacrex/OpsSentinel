@@ -4,7 +4,7 @@ import {
   Shield, AlertTriangle, BarChart3,
   Lock, Layers, Server, Settings, Github,
   CheckCircle, XCircle, ArrowRight, Eye,
-  Workflow, Brain, Target, Clipboard, Check
+  Workflow, Brain, Target, Clipboard, Check, Terminal
 } from 'lucide-react';
 import Layout from '../components/Layout';
 
@@ -195,10 +195,12 @@ export default function Home() {
           </span>
           <h1 className="hero-title">
             CI/CD Observability<br />
-            <span className="text-accent">That Actually Helps</span>
+            <span className="text-accent">+ Infrastructure Provisioning</span>
           </h1>
           <p className="hero-subtitle">
-            Stop guessing why builds fail. OpsSentinel gives your team live GitHub Actions visibility, AI-powered root cause analysis, and measurable MTTR &mdash; all self-hosted.
+            OpsSentinel is your self-hosted operational control plane. Watch GitHub Actions workflows in real time,
+            analyze failures with AI, and provision infrastructure with OpenTofu, Terraform, Ansible &mdash; all
+            from one dashboard.
           </p>
           <div className="hero-actions">
             <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-lg">
@@ -215,6 +217,7 @@ export default function Home() {
             <span className="trust-badge"><Shield size={14} /> MIT Licensed</span>
             <span className="trust-badge"><Server size={14} /> Self-Hosted</span>
             <span className="trust-badge"><Layers size={14} /> GitHub Actions</span>
+            <span className="trust-badge"><Terminal size={14} /> IaC Provisioning</span>
             <span className="trust-badge"><Brain size={14} /> AI-Powered</span>
           </div>
         </div>
@@ -404,8 +407,8 @@ export default function Home() {
       <section className="section cta">
         <div className="container">
           <div className="cta-content">
-            <h2>Start With a Clearer View of CI/CD</h2>
-            <p>Open source. Self-hosted. Connect GitHub and investigate failures from one place.</p>
+            <h2>Start With a Clearer View of CI/CD & Infrastructure</h2>
+            <p>Open source. Self-hosted. Connect GitHub, provision infrastructure, and investigate failures from one place.</p>
             <div className="hero-actions">
               <a href="https://github.com/hacrex/OpsSentinel" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                 Get Started Free

@@ -15,7 +15,7 @@ const Dashboard = () => {
   const [repos, setRepos] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, pages: 1 });
   const [globalStats, setGlobalStats] = useState({ total: 0, failures: 0, lastUpdated: null });
-  const [filters, setFilters] = useState({ repo: '', conclusion: '', workflow: '' });
+  const [filters, setFilters] = useState({ repo: '', conclusion: '', search: '' });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [rerunStatus, setRerunStatus] = useState({});
@@ -32,7 +32,7 @@ const Dashboard = () => {
       const params = { page, limit: 25 };
       if (activeFilters.repo) params.repo = activeFilters.repo;
       if (activeFilters.conclusion) params.conclusion = activeFilters.conclusion;
-      if (activeFilters.workflow) params.workflow = activeFilters.workflow;
+      if (activeFilters.search) params.workflow = activeFilters.search;
       const res = await api.get('/events', { params });
       setEvents(res.data.data);
       setPagination(res.data.pagination);
