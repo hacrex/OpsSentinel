@@ -165,6 +165,29 @@ const CREATE_TABLE_PG = `
   CREATE INDEX IF NOT EXISTS idx_fingerprints_tenant_id ON failure_fingerprints(tenant_id);
   CREATE INDEX IF NOT EXISTS idx_fingerprints_hash ON failure_fingerprints(fingerprint_hash);
   CREATE INDEX IF NOT EXISTS idx_fingerprints_category ON failure_fingerprints(category);
+
+  CREATE TABLE IF NOT EXISTS remediation_actions (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER,
+    fingerprint_hash VARCHAR(255),
+    incident_id INTEGER,
+    action_type VARCHAR(50),
+    action_name VARCHAR(255),
+    status VARCHAR(50),
+    requires_approval BOOLEAN DEFAULT FALSE,
+    approved_by INTEGER,
+    approved_at TIMESTAMP,
+    executed_at TIMESTAMP,
+    result TEXT,
+    error_message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_remediation_tenant_id ON remediation_actions(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_remediation_fingerprint ON remediation_actions(fingerprint_hash);
+  CREATE INDEX IF NOT EXISTS idx_remediation_incident ON remediation_actions(incident_id);
+  CREATE INDEX IF NOT EXISTS idx_remediation_status ON remediation_actions(status);
 `;
 
 const CREATE_TABLE_SQLITE = `
@@ -327,6 +350,29 @@ const CREATE_TABLE_SQLITE = `
   CREATE INDEX IF NOT EXISTS idx_fingerprints_tenant_id ON failure_fingerprints(tenant_id);
   CREATE INDEX IF NOT EXISTS idx_fingerprints_hash ON failure_fingerprints(fingerprint_hash);
   CREATE INDEX IF NOT EXISTS idx_fingerprints_category ON failure_fingerprints(category);
+
+  CREATE TABLE IF NOT EXISTS remediation_actions (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER,
+    fingerprint_hash VARCHAR(255),
+    incident_id INTEGER,
+    action_type VARCHAR(50),
+    action_name VARCHAR(255),
+    status VARCHAR(50),
+    requires_approval BOOLEAN DEFAULT FALSE,
+    approved_by INTEGER,
+    approved_at TIMESTAMP,
+    executed_at TIMESTAMP,
+    result TEXT,
+    error_message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_remediation_tenant_id ON remediation_actions(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_remediation_fingerprint ON remediation_actions(fingerprint_hash);
+  CREATE INDEX IF NOT EXISTS idx_remediation_incident ON remediation_actions(incident_id);
+  CREATE INDEX IF NOT EXISTS idx_remediation_status ON remediation_actions(status);
 `;
 
 // Convert SQLite ? placeholders to PostgreSQL $1, $2, ...

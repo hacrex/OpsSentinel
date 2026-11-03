@@ -629,4 +629,71 @@ async function upsertFingerprint({ tenant_id, fingerprint_hash, category, catego
   return result.rows?.[0] ?? { id: null };
 }
 
-module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint };
+async function listRemediationActions({ tenant_id, status, fingerprint_hash, incident_id, page, limit }) {
+  const conditions = [];
+  const params = [];
+  if (status) { conditions.push('status = ?'); params.push(status); }
+  if (fingerprint_hash) { conditions.push('fingerprint_hash = ?'); params.push(fingerprint_hash); }
+  if (incident_id) { conditions.push('incident_id = ?'); params.push(incident_id); }
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+
+  const offset = (page - 1) * limit;
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const countResult = await db.query(`SELECT COUNT(*) as cnt FROM remediation_actions ${where}`, params);
+  const total = parseInt(countResult.rows[0]?.cnt ?? 0, 10);
+
+  const dataResult = await db.query(
+    `SELECT * FROM remediation_actions ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+  return { data: dataResult.rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
+}
+
+async function createRemediationAction({ tenant_id, fingerprint_hash, incident_id, action_type, action_name, status, requires_approval }) {
+  const result = await db.query(
+    `INSERT INTO remediation_actions (tenant_id, fingerprint_hash, incident_id, action_type, action_name, status, requires_approval) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [tenant_id, fingerprint_hash, incident_id, action_type, action_name, status || 'pending', requires_approval ? 1 : 0]
+  );
+  return result.rows?.[0] ?? { id: null };
+}
+
+async function getRemediationAction(id, tenant_id) {
+  const conditions = ['id = ?'];
+  const params = [id];
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const result = await db.query(`SELECT * FROM remediation_actions WHERE ${conditions.join(' AND ')}`, params);
+  return result.rows?.[0] ?? null;
+}
+
+async function updateRemediationAction(id, { status, result, error_message, executed_at, approved_by, approved_at }, tenant_id) {
+  const sets = [];
+  const params = [];
+  if (status !== undefined) { sets.push('status = ?'); params.push(status); }
+  if (result !== undefined) { sets.push('result = ?'); params.push(result); }
+  if (error_message !== undefined) { sets.push('error_message = ?'); params.push(error_message); }
+  if (executed_at !== undefined) { sets.push('executed_at = ?'); params.push(executed_at); }
+  if (approved_by !== undefined) { sets.push('approved_by = ?'); params.push(approved_by); }
+  if (approved_at !== undefined) { sets.push('approved_at = ?'); params.push(approved_at); }
+  if (sets.length === 0) return null;
+
+  const conditions = ['id = ?'];
+  params.push(id);
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+
+  const updResult = await db.query(
+    `UPDATE remediation_actions SET ${sets.join(', ')} WHERE ${conditions.join(' AND ')}`,
+    params
+  );
+  return updResult;
+}
+
+async function deleteRemediationAction(id, tenant_id) {
+  const conditions = ['id = ?'];
+  const params = [id];
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const result = await db.query(`DELETE FROM remediation_actions WHERE ${conditions.join(' AND ')}`, params);
+  return result;
+}
+
+module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction };

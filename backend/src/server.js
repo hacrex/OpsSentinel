@@ -15,7 +15,7 @@ const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
 const { triageFailure } = require('./triage');
 const { analyzeFailure, getLLMConfig } = require('./llm');
 const infra = require('./infrastructure');
-const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint } = infra;
+const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction } = infra;
 const setInfraBroadcast = infra.setBroadcast;
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
@@ -988,6 +988,100 @@ app.post('/fingerprints', authMiddleware, requirePermission('infrastructure:run'
   } catch (err) {
     logger.error({ err }, 'Failed to upsert fingerprint');
     res.status(500).json({ error: 'Failed to upsert fingerprint' });
+  }
+});
+
+// ── Automated Remediation ──
+app.get('/remediation/actions', authMiddleware, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+  const { status, fingerprint_hash, incident_id } = req.query;
+
+  try {
+    const result = await listRemediationActions({
+      tenant_id: req.tenant_id || null,
+      status, fingerprint_hash, incident_id, page, limit,
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch remediation actions');
+    res.status(500).json({ error: 'Failed to fetch remediation actions' });
+  }
+});
+
+app.post('/remediation/actions', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { fingerprint_hash, incident_id, action_type, action_name, status, requires_approval } = req.body;
+  if (!fingerprint_hash || !action_type || !action_name) {
+    return res.status(400).json({ error: 'fingerprint_hash, action_type, action_name required' });
+  }
+
+  try {
+    const action = await createRemediationAction({
+      tenant_id: req.tenant_id || null,
+      fingerprint_hash, incident_id, action_type, action_name,
+      status: status || 'pending',
+      requires_approval: requires_approval === true,
+    });
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'remediation_action_create',
+      resourceType: 'remediation_action',
+      resourceId: String(action.id),
+      details: { fingerprint_hash, incident_id, action_type, action_name, status },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true, action });
+  } catch (err) {
+    logger.error({ err }, 'Failed to create remediation action');
+    res.status(500).json({ error: 'Failed to create remediation action' });
+  }
+});
+
+app.get('/remediation/actions/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const action = await getRemediationAction(id, req.tenant_id || null);
+    if (!action) return res.status(404).json({ error: 'Remediation action not found' });
+    res.json(action);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch remediation action');
+    res.status(500).json({ error: 'Failed to fetch remediation action' });
+  }
+});
+
+app.patch('/remediation/actions/:id', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { id } = req.params;
+  const { status, result, error_message, executed_at, approved_by, approved_at } = req.body;
+
+  try {
+    await updateRemediationAction(id, { status, result, error_message, executed_at, approved_by, approved_at }, req.tenant_id || null);
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'remediation_action_update',
+      resourceType: 'remediation_action',
+      resourceId: id,
+      details: { status, result, error_message, executed_at, approved_by, approved_at },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update remediation action');
+    res.status(500).json({ error: 'Failed to update remediation action' });
+  }
+});
+
+app.delete('/remediation/actions/:id', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { id } = req.params;
+  try {
+    await deleteRemediationAction(id, req.tenant_id || null);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to delete remediation action');
+    res.status(500).json({ error: 'Failed to delete remediation action' });
   }
 });
 
