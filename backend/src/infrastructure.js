@@ -5,6 +5,7 @@ const db = require('./db');
 const { notifyAll } = require('./notifier');
 const logger = require('./logger');
 const { logAuditEvent } = require('./audit');
+const { inc } = require('./metrics');
 
 let _broadcast = null;
 function setBroadcast(fn) { _broadcast = fn; }
@@ -124,6 +125,12 @@ async function runOperation({ tenant_id, repo_name, stack_name, engine, operatio
       const conclusion = code === 0 ? 'success' : 'failure';
       const status = 'completed';
       const output_url = `/infra-logs/${path.basename(logFile)}`;
+
+      inc('infra_runs_total', { engine, operation, conclusion });
+      metrics.infra_runs_total++;
+      metrics.infra_runs_by_engine[engine] = (metrics.infra_runs_by_engine[engine] || 0) + 1;
+      metrics.infra_runs_by_operation[operation] = (metrics.infra_runs_by_operation[operation] || 0) + 1;
+      metrics.infra_runs_by_conclusion[conclusion] = (metrics.infra_runs_by_conclusion[conclusion] || 0) + 1;
 
       db.run(
         `INSERT INTO infrastructure_runs (tenant_id, repo_name, stack_name, engine, operation, status, conclusion, output_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,

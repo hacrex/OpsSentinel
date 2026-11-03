@@ -16,6 +16,7 @@ const { triageFailure } = require('./triage');
 const { analyzeFailure, getLLMConfig } = require('./llm');
 const infra = require('./infrastructure');
 const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction, listPredictions, createPrediction, getPrediction, updatePrediction, deletePrediction, listDriftEvents, createDriftEvent, getDriftEvent, updateDriftEvent, deleteDriftEvent } = infra;
+const { metrics, inc, observeLatency, set } = require('./metrics');
 const setInfraBroadcast = infra.setBroadcast;
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
@@ -119,6 +120,25 @@ app.use('/webhook', webhookLimiter);
 app.use('/webhook/gitlab', webhookLimiter);
 app.use('/webhook/bitbucket', webhookLimiter);
 
+// ── Metrics middleware ────────────────────────────────────────────────────────
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = (Date.now() - start) / 1000;
+    inc('http_requests_total', {
+      method: req.method,
+      path: req.path,
+      status: res.statusCode,
+    });
+    observeLatency(duration);
+    metrics.http_requests_total++;
+    metrics.http_requests_by_method[req.method] = (metrics.http_requests_by_method[req.method] || 0) + 1;
+    metrics.http_requests_by_path[req.path] = (metrics.http_requests_by_path[req.path] || 0) + 1;
+    metrics.http_requests_by_status[res.statusCode] = (metrics.http_requests_by_status[res.statusCode] || 0) + 1;
+  });
+  next();
+});
+
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.get('/health', async (req, res) => {
   try {
@@ -127,6 +147,11 @@ app.get('/health', async (req, res) => {
   } catch {
     res.status(503).json({ status: 'error', db: 'disconnected' });
   }
+});
+
+app.get('/metrics', (req, res) => {
+  res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+  res.send(metrics.getMetrics());
 });
 
 app.post('/webhook{/:tenant_id}', verifySignature, handleWebhook);

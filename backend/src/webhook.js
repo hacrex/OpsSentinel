@@ -3,6 +3,7 @@ const db = require('./db');
 const { notifyAll } = require('./notifier');
 const logger = require('./logger');
 const { recordInfraRun } = require('./infrastructure');
+const { inc, metrics } = require('./metrics');
 
 let _broadcast = null;
 function setBroadcast(fn) { _broadcast = fn; }
@@ -95,6 +96,9 @@ async function computeMTTR(repo_name, workflow_name, tenant_id) {
 
 async function handleWebhook(req, res) {
   const event = req.headers['x-github-event'];
+
+  inc('webhook_requests_total', { event: event || 'unknown' });
+  metrics.webhook_requests_total++;
 
   if (event === 'ping') return res.status(200).send('pong');
 
