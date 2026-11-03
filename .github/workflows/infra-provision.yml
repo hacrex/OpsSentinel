@@ -1,0 +1,108 @@
+name: Infrastructure Provision
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/**'
+  workflow_dispatch:
+    inputs:
+      stack:
+        description: 'Stack name'
+        required: true
+        default: 'production'
+      operation:
+        description: 'Operation (plan, apply, destroy, refresh)'
+        required: true
+        default: 'plan'
+      engine:
+        description: 'IaC engine (tofu, terraform, ansible)'
+        required: true
+        default: 'tofu'
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    env:
+      OPSSENTINEL_URL: ${{ vars.OPSSENTINEL_URL || 'http://localhost:3001' }}
+      OPSSENTINEL_TOKEN: ${{ secrets.OPSSENTINEL_TOKEN }}
+      STACK_NAME: ${{ github.event.inputs.stack || 'production' }}
+      OPERATION: ${{ github.event.inputs.operation || 'plan' }}
+      ENGINE: ${{ github.event.inputs.engine || 'tofu' }}
+      WORKING_DIR: ./infra/${{ github.event.inputs.stack || 'production' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        if: env.ENGINE == 'tofu' || env.ENGINE == 'terraform'
+        with:
+          tofu_version: latest
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        if: env.ENGINE == 'terraform'
+        with:
+          terraform_version: latest
+
+      - name: Set up Ansible
+        if: env.ENGINE == 'ansible'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+      - name: Run infrastructure operation
+        id: infra
+        run: |
+          cd "$WORKING_DIR"
+
+          if [ "$ENGINE" = "tofu" ] || [ "$ENGINE" = "terraform" ]; then
+            case "$OPERATION" in
+              plan)
+                $ENGINE init && $ENGINE plan -out=tfplan
+                ;;
+              apply)
+                $ENGINE init && $ENGINE apply -auto-approve tfplan 2>/dev/null || $ENGINE apply -auto-approve
+                ;;
+              destroy)
+                $ENGINE init && $ENGINE destroy -auto-approve
+                ;;
+              refresh)
+                $ENGINE init && $ENGINE refresh
+                ;;
+            esac
+          elif [ "$ENGINE" = "ansible" ]; then
+            case "$OPERATION" in
+              plan)
+                ansible-playbook -i inventory site.yml --check
+                ;;
+              apply)
+                ansible-playbook -i inventory site.yml
+                ;;
+            esac
+          fi
+
+      - name: Report to OpsSentinel
+        if: always()
+        run: |
+          STATUS="completed"
+          if [ "${{ job.status }}" = "failure" ]; then
+            CONCLUSION="failure"
+          else
+            CONCLUSION="success"
+          fi
+
+          curl -s -X POST "${OPSSENTINEL_URL}/infrastructure/runs" \
+            -H "Authorization: Bearer ${OPSSENTINEL_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"repo_name\": \"${{ github.repository }}\",
+              \"stack_name\": \"${STACK_NAME}\",
+              \"engine\": \"${ENGINE}\",
+              \"operation\": \"${OPERATION}\",
+              \"workingDir\": \"${WORKING_DIR}\",
+              \"status\": \"${STATUS}\",
+              \"conclusion\": \"${CONCLUSION}\"
+            }" || true

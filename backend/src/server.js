@@ -15,7 +15,7 @@ const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
 const { triageFailure } = require('./triage');
 const { analyzeFailure, getLLMConfig } = require('./llm');
 const infra = require('./infrastructure');
-const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR } = infra;
+const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun } = infra;
 const setInfraBroadcast = infra.setBroadcast;
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
@@ -356,12 +356,35 @@ app.post('/rerun', authMiddleware, requirePermission('workflow:rerun'), async (r
 // ── Infrastructure Provisioning (CI/CD-first) ──
 
 app.post('/infrastructure/runs', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
-  const { repo_name, stack_name, engine, operation, workingDir, vars } = req.body;
+  const { repo_name, stack_name, engine, operation, workingDir, vars, status, conclusion, source } = req.body;
   if (!repo_name || !stack_name || !engine || !operation) {
     return res.status(400).json({ error: 'repo_name, stack_name, engine, operation required' });
   }
 
   try {
+    // CI-reported result: record without spawning a process
+    if (source === 'ci' && status && conclusion) {
+      recordInfraRun({
+        tenant_id: req.tenant_id || null,
+        repo_name, stack_name, engine, operation,
+        status, conclusion,
+        output_url: req.body.output_url || '',
+        triggeredBy: req.user?.login || 'ci',
+      });
+
+      await logAuditEvent({
+        userId: req.user?.id || null, username: req.user?.login || 'ci',
+        action: 'infrastructure_ci_recorded',
+        resourceType: 'infrastructure_run',
+        resourceId: 'ci',
+        details: { engine, operation, stack_name, repo_name, status, conclusion },
+        ipAddress: req.ip,
+      });
+
+      return res.json({ success: true, recorded: true });
+    }
+
+    // UI-triggered: spawn the process
     const run = await runOperation({
       tenant_id: req.tenant_id || null,
       repo_name, stack_name, engine, operation,
