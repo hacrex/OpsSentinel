@@ -13,6 +13,7 @@ import Secrets from './pages/Secrets';
 import Configuration from './pages/Configuration';
 import DoraMetrics from './pages/DoraMetrics';
 import Policies from './pages/Policies';
+import Fingerprints from './pages/Fingerprints';
 import ErrorBoundary from './components/ErrorBoundary';
 import api from './api';
 import './index.css';
@@ -56,6 +57,7 @@ function App() {
           <Route path="/dashboard/configuration" element={<PrivateRoute><Configuration /></PrivateRoute>} />
           <Route path="/dashboard/dora" element={<PrivateRoute><DoraMetrics /></PrivateRoute>} />
           <Route path="/dashboard/policies" element={<PrivateRoute><Policies /></PrivateRoute>} />
+          <Route path="/dashboard/fingerprints" element={<PrivateRoute><Fingerprints /></PrivateRoute>} />
 
           {/* Redirect root to login or dashboard */}
           <Route path="/" element={<Navigate to="/dashboard" />} />
