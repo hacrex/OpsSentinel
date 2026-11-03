@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backend-secret
+  namespace: ops-sentinel
+type: Opaque
+stringData:
+  GITHUB_WEBHOOK_SECRET: ""
+  GITHUB_CLIENT_ID: ""
+  GITHUB_CLIENT_SECRET: ""
+  SLACK_WEBHOOK_URL: ""
+  TEAMS_WEBHOOK_URL: ""
+  ALERT_EMAIL_TO: ""
+  SMTP_HOST: ""
+  SMTP_USER: ""
+  SMTP_PASS: ""
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: ops-sentinel
+data:
+  PORT: "3001"
+  FRONTEND_URL: "http://localhost"
+  DATABASE_URL: "postgresql://ops_user:ops_password@postgres:5432/ops_sentinel"
+  RETENTION_DAYS: "30"
+  SAAS_MODE: "false"
+  BYPASS_AUTH: "false"
+  INFRA_LOG_DIR: "./infra-logs"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: ops-sentinel
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: ops-sentinel/backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: backend-secret
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: infra-logs
+              mountPath: /app/infra-logs
+      volumes:
+        - name: infra-logs
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: ops-sentinel
+  labels:
+    app: backend
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 3001
+      targetPort: 3001
+  type: ClusterIP
