@@ -172,7 +172,7 @@ async function runOperation({ tenant_id, repo_name, stack_name, engine, operatio
   });
 }
 
-async function listRuns({ tenant_id, repo, stack, engine, operation, conclusion, page, limit }) {
+async function listRuns({ tenant_id, repo, stack, engine, operation, conclusion, search, page, limit }) {
   const conditions = [];
   const params = [];
   if (repo) { conditions.push('repo_name = ?'); params.push(repo); }
@@ -180,6 +180,7 @@ async function listRuns({ tenant_id, repo, stack, engine, operation, conclusion,
   if (engine) { conditions.push('engine = ?'); params.push(engine); }
   if (operation) { conditions.push('operation = ?'); params.push(operation); }
   if (conclusion) { conditions.push('conclusion = ?'); params.push(conclusion); }
+  if (search) { conditions.push('(repo_name LIKE ? OR stack_name LIKE ?)'); params.push(`%${search}%`, `%${search}%`); }
   if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
 
   const offset = (page - 1) * limit;
@@ -409,7 +410,7 @@ async function listSecrets({ tenant_id, provider, scope, page, limit }) {
   const total = parseInt(countResult.rows[0]?.cnt ?? 0, 10);
 
   const dataResult = await db.query(
-    `SELECT id, tenant_id, name, provider, scope, created_at, updated_at FROM secrets ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    `SELECT id, tenant_id, name, value, provider, scope, created_at, updated_at FROM secrets ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
     [...params, limit, offset]
   );
   return { data: dataResult.rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };

@@ -150,12 +150,15 @@ const Secrets = () => {
     e.preventDefault();
     setUpdateLoading((s) => ({ ...s, [editingSecret.id]: true }));
     try {
-      await api.patch(`/secrets/${editingSecret.id}`, {
+      const updateData = {
         name: editForm.name,
-        value: editForm.value,
         provider: editForm.provider,
         scope: editForm.scope,
-      });
+      };
+      if (editForm.value.trim()) {
+        updateData.value = editForm.value;
+      }
+      await api.patch(`/secrets/${editingSecret.id}`, updateData);
       addToast('Secret updated', 'success');
       setEditOpen(false);
       setUpdateLoading((s) => ({ ...s, [editingSecret.id]: false }));
