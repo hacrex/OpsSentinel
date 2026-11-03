@@ -655,7 +655,13 @@ async function createRemediationAction({ tenant_id, fingerprint_hash, incident_i
     `INSERT INTO remediation_actions (tenant_id, fingerprint_hash, incident_id, action_type, action_name, status, requires_approval) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [tenant_id, fingerprint_hash, incident_id, action_type, action_name, status || 'pending', requires_approval ? 1 : 0]
   );
-  return result.rows?.[0] ?? { id: null };
+  const action = result.rows?.[0] ?? { id: null };
+
+  if (_broadcast && action.id) {
+    _broadcast({ type: 'new_remediation_action', action });
+  }
+
+  return action;
 }
 
 async function getRemediationAction(id, tenant_id) {
