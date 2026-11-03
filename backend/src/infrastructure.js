@@ -170,4 +170,36 @@ async function getInfraTrend(repo_name, stack_name, tenant_id) {
   return result.rows;
 }
 
-module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR };
+async function listStacks({ tenant_id, repo }) {
+  const conditions = [];
+  const params = [];
+  if (repo) { conditions.push('repo_name = ?'); params.push(repo); }
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const result = await db.query(`SELECT * FROM stacks ${where} ORDER BY created_at DESC`, params);
+  return result.rows;
+}
+
+async function createStack({ tenant_id, repo_name, stack_name, engine, working_dir, default_vars }) {
+  const defaultVarsJson = default_vars ? JSON.stringify(default_vars) : null;
+  const result = await db.query(
+    `INSERT INTO stacks (tenant_id, repo_name, stack_name, engine, working_dir, default_vars) VALUES (?, ?, ?, ?, ?, ?)`,
+    [tenant_id, repo_name, stack_name, engine, working_dir, defaultVarsJson]
+  );
+  return result.rows?.[0] ?? { id: null };
+}
+
+async function deleteStack(id, tenant_id) {
+  const conditions = ['id = ?'];
+  const params = [id];
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const result = await db.query(`DELETE FROM stacks WHERE ${conditions.join(' AND ')}`, params);
+  return result;
+}
+
+function getStackWorkingDir(stacks, repo_name, stack_name) {
+  const match = stacks.find((s) => s.repo_name === repo_name && s.stack_name === stack_name);
+  return match ? match.working_dir : `./infra/${stack_name}`;
+}
+
+module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir };

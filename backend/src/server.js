@@ -468,6 +468,62 @@ app.post('/infrastructure/rerun', authMiddleware, requirePermission('infrastruct
   }
 });
 
+// Stack configuration (repo -> working directory mapping)
+app.get('/infrastructure/stacks', authMiddleware, async (req, res) => {
+  const { repo } = req.query;
+  try {
+    const stacks = await listStacks({ tenant_id: req.tenant_id || null, repo });
+    res.json(stacks);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch stacks');
+    res.status(500).json({ error: 'Failed to fetch stacks' });
+  }
+});
+
+app.post('/infrastructure/stacks', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { repo_name, stack_name, engine, working_dir, default_vars } = req.body;
+  if (!repo_name || !stack_name || !engine || !working_dir) {
+    return res.status(400).json({ error: 'repo_name, stack_name, engine, working_dir required' });
+  }
+  try {
+    const stack = await createStack({
+      tenant_id: req.tenant_id || null,
+      repo_name, stack_name, engine, working_dir, default_vars,
+    });
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'stack_create',
+      resourceType: 'stack',
+      resourceId: String(stack.id),
+      details: { repo_name, stack_name, engine, working_dir },
+      ipAddress: req.ip,
+    });
+    res.json({ success: true, stack });
+  } catch (err) {
+    logger.error({ err }, 'Failed to create stack');
+    res.status(500).json({ error: 'Failed to create stack' });
+  }
+});
+
+app.delete('/infrastructure/stacks/:id', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { id } = req.params;
+  try {
+    await deleteStack(id, req.tenant_id || null);
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'stack_delete',
+      resourceType: 'stack',
+      resourceId: id,
+      details: { stack_id: id },
+      ipAddress: req.ip,
+    });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to delete stack');
+    res.status(500).json({ error: 'Failed to delete stack' });
+  }
+});
+
 // Serve infra log files
 app.use('/infra-logs', express.static(LOG_DIR));
 

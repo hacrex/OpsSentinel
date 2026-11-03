@@ -59,6 +59,21 @@ const CREATE_TABLE_PG = `
   CREATE INDEX IF NOT EXISTS idx_infra_runs_stack_name ON infrastructure_runs(stack_name);
   CREATE INDEX IF NOT EXISTS idx_infra_runs_created_at ON infrastructure_runs(created_at);
   CREATE INDEX IF NOT EXISTS idx_infra_runs_conclusion ON infrastructure_runs(conclusion);
+
+  CREATE TABLE IF NOT EXISTS stacks (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER,
+    repo_name VARCHAR(255),
+    stack_name VARCHAR(255),
+    engine VARCHAR(50),
+    working_dir TEXT,
+    default_vars JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_stacks_tenant_id ON stacks(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_stacks_repo_name ON stacks(repo_name);
+  CREATE INDEX IF NOT EXISTS idx_stacks_stack_name ON stacks(stack_name);
 `;
 
 const CREATE_TABLE_SQLITE = `
@@ -115,6 +130,21 @@ const CREATE_TABLE_SQLITE = `
   CREATE INDEX IF NOT EXISTS idx_infra_runs_stack_name ON infrastructure_runs(stack_name);
   CREATE INDEX IF NOT EXISTS idx_infra_runs_created_at ON infrastructure_runs(created_at);
   CREATE INDEX IF NOT EXISTS idx_infra_runs_conclusion ON infrastructure_runs(conclusion);
+
+  CREATE TABLE IF NOT EXISTS stacks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id INTEGER,
+    repo_name TEXT,
+    stack_name TEXT,
+    engine TEXT,
+    working_dir TEXT,
+    default_vars TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_stacks_tenant_id ON stacks(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_stacks_repo_name ON stacks(repo_name);
+  CREATE INDEX IF NOT EXISTS idx_stacks_stack_name ON stacks(stack_name);
 `;
 
 // Convert SQLite ? placeholders to PostgreSQL $1, $2, ...

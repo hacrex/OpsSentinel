@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, ShieldAlert, BarChart3, CloudRain, LogOut, RotateCcw, Settings, RefreshCw, Search, Clock, Terminal } from 'lucide-react';
+import { Activity, ShieldAlert, BarChart3, LogOut, RotateCcw, Settings, RefreshCw, Search, Clock, Terminal, Plus, Trash2, Save, Play, Terminal as TerminalIcon } from 'lucide-react';
 import api from '../api';
 import { format } from 'date-fns';
 import FilterBar from '../components/FilterBar';
@@ -9,15 +9,23 @@ import SkeletonRows from '../components/SkeletonRows';
 import { Toast, useToast } from '../components/Toast';
 import { useSocket } from '../hooks/useSocket';
 
+const ENGINES = ['tofu', 'terraform', 'ansible'];
+const OPERATIONS = ['plan', 'apply', 'destroy', 'refresh'];
+
 const Infrastructure = () => {
   const navigate = useNavigate();
   const [runs, setRuns] = useState([]);
+  const [stacks, setStacks] = useState([]);
   const [repos, setRepos] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, pages: 1 });
   const [filters, setFilters] = useState({ repo: '', stack: '', engine: '', operation: '', conclusion: '', search: '' });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [rerunStatus, setRerunStatus] = useState({});
+  const [triggerOpen, setTriggerOpen] = useState(false);
+  const [triggerLoading, setTriggerLoading] = useState(false);
+  const [stackFormOpen, setStackFormOpen] = useState(false);
+  const [newStack, setNewStack] = useState({ repo_name: '', stack_name: '', engine: 'tofu', working_dir: '', default_vars: '' });
   const { toasts, addToast, removeToast } = useToast();
 
   const filtersRef = useRef(filters);
@@ -45,6 +53,15 @@ const Infrastructure = () => {
     }
   }, []);
 
+  const fetchStacks = useCallback(async () => {
+    try {
+      const res = await api.get('/infrastructure/stacks');
+      setStacks(res.data || []);
+      const uniqueRepos = [...new Set((res.data || []).map((s) => s.repo_name))];
+      setRepos(uniqueRepos);
+    } catch { /* non-critical */ }
+  }, []);
+
   const fetchRepos = useCallback(async () => {
     try {
       const res = await api.get('/infrastructure/runs', { params: { page: 1, limit: 1 } });
@@ -54,7 +71,8 @@ const Infrastructure = () => {
 
   useEffect(() => {
     fetchRuns(1, { repo: '', stack: '', engine: '', operation: '', conclusion: '', search: '' });
-  }, [fetchRuns]);
+    fetchStacks();
+  }, [fetchRuns, fetchStacks]);
 
   useSocket((msg) => {
     if (msg.type === 'new_infra_run') {
@@ -65,6 +83,7 @@ const Infrastructure = () => {
         addToast(`Infra ${evt.conclusion}: ${evt.stack_name}`, 'success');
       }
       fetchRuns(1, filtersRef.current);
+      fetchStacks();
     }
   });
 
@@ -103,6 +122,78 @@ const Infrastructure = () => {
     }
   };
 
+  const handleDeleteStack = async (id) => {
+    if (!window.confirm('Delete this stack configuration?')) return;
+    try {
+      await api.delete(`/infrastructure/stacks/${id}`);
+      addToast('Stack deleted', 'success');
+      fetchStacks();
+    } catch (err) {
+      addToast(err.response?.data?.error || 'Failed to delete stack', 'error');
+    }
+  };
+
+  const handleTriggerOpen = () => {
+    setNewStack({ repo_name: '', stack_name: '', engine: 'tofu', working_dir: '', default_vars: '' });
+    setTriggerOpen(true);
+  };
+
+  const handleTriggerClose = () => setTriggerOpen(false);
+
+  const handleTriggerSubmit = async (e) => {
+    e.preventDefault();
+    setTriggerLoading(true);
+    try {
+      const defaultVars = newStack.default_vars ? JSON.parse(newStack.default_vars) : {};
+      await api.post('/infrastructure/runs', {
+        repo_name: newStack.repo_name,
+        stack_name: newStack.stack_name,
+        engine: newStack.engine,
+        operation: 'apply',
+        workingDir: newStack.working_dir,
+        vars: defaultVars,
+      });
+      addToast('Infrastructure run triggered', 'success');
+      setTriggerOpen(false);
+      setTriggerLoading(false);
+      fetchRuns(pagination.page, filtersRef.current);
+      fetchStacks();
+    } catch (err) {
+      setTriggerLoading(false);
+      addToast(err.response?.data?.error || 'Failed to trigger run', 'error');
+    }
+  };
+
+  const handleStackOpen = () => {
+    setNewStack({ repo_name: '', stack_name: '', engine: 'tofu', working_dir: '', default_vars: '' });
+    setStackFormOpen(true);
+  };
+
+  const handleStackClose = () => setStackFormOpen(false);
+
+  const handleStackChange = (key, value) => {
+    setNewStack({ ...newStack, [key]: value });
+  };
+
+  const handleStackSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const defaultVars = newStack.default_vars ? JSON.parse(newStack.default_vars) : {};
+      await api.post('/infrastructure/stacks', {
+        repo_name: newStack.repo_name,
+        stack_name: newStack.stack_name,
+        engine: newStack.engine,
+        working_dir: newStack.working_dir,
+        default_vars: defaultVars,
+      });
+      addToast('Stack saved', 'success');
+      setStackFormOpen(false);
+      fetchStacks();
+    } catch (err) {
+      addToast(err.response?.data?.error || 'Failed to save stack', 'error');
+    }
+  };
+
   const handleLogout = async () => {
     try { await api.post('/auth/logout'); } catch { /* ignore */ }
     navigate('/login');
@@ -125,10 +216,12 @@ const Infrastructure = () => {
           OpsSentinel — Infrastructure
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>LIVE</span>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--success-color)' }} />
-          </div>
+          <button className="glowing-btn" onClick={handleTriggerOpen} style={{ padding: '6px 12px', fontSize: '11px' }}>
+            <Plus size={12} /> Trigger Run
+          </button>
+          <button className="glowing-btn" onClick={handleStackOpen} style={{ padding: '6px 12px', fontSize: '11px' }}>
+            <Save size={12} /> Stack Config
+          </button>
           <button className="glowing-btn" onClick={handleRefresh} disabled={refreshing} style={{ padding: '6px 10px', fontSize: '11px' }}>
             <RefreshCw size={12} className={refreshing ? 'spinning' : ''} />
           </button>
@@ -157,6 +250,51 @@ const Infrastructure = () => {
           </div>
         </div>
 
+        {/* Stack Config Panel */}
+        <div className="glass-panel" style={{ marginTop: '24px' }}>
+          <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(15, 23, 42, 0.4)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <h2 style={{ fontSize: '14px', fontWeight: '600' }}>Stack Configurations</h2>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{stacks.length} configured</span>
+            </div>
+          </div>
+          <div style={{ padding: '16px 20px' }}>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Repo</th>
+                    <th>Stack</th>
+                    <th>Engine</th>
+                    <th>Working Dir</th>
+                    <th style={{ width: '120px' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stacks.length === 0 ? (
+                    <tr><td colSpan={5} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-secondary)' }}>No stacks configured. Add a stack to trigger runs by name.</td></tr>
+                  ) : (
+                    stacks.map((s) => (
+                      <tr key={s.id}>
+                        <td style={{ fontSize: '13px' }}>{s.repo_name}</td>
+                        <td style={{ fontSize: '13px', fontWeight: '500' }}>{s.stack_name}</td>
+                        <td style={{ fontSize: '12px' }}>{s.engine}</td>
+                        <td style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>{s.working_dir}</td>
+                        <td onClick={(e) => e.stopPropagation()}>
+                          <button className="glowing-btn" style={{ padding: '4px 8px', fontSize: '10px', color: 'var(--error-color)' }} onClick={() => handleDeleteStack(s.id)} title="Delete stack">
+                            <Trash2 size={10} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Runs List */}
         <div className="glass-panel" style={{ marginTop: '24px' }}>
           <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', background: 'rgba(15, 23, 42, 0.4)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -220,7 +358,7 @@ const Infrastructure = () => {
             </table>
             {!loading && runs.length === 0 && (
               <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
-                No infrastructure runs found. Trigger a plan/apply from the CI/CD pipeline or UI.
+                No infrastructure runs found. Configure a stack and trigger a plan/apply.
               </div>
             )}
           </div>
@@ -228,6 +366,82 @@ const Infrastructure = () => {
           <Pagination pagination={pagination} onChange={handlePageChange} />
         </div>
       </main>
+
+      {/* Trigger Run Modal */}
+      {triggerOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', minWidth: '420px', maxWidth: '90vw', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>Trigger Infrastructure Run</h2>
+            <form onSubmit={handleTriggerSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Repository</label>
+                <input required style={{ width: '100%', padding: '8px 10px', background: 'rgba(15,23,42,0.5)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', fontSize: '13px' }} value={newStack.repo_name} onChange={(e) => handleStackChange('repo_name', e.target.value)} placeholder="owner/repo" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Stack Name</label>
+                <input required style={{ width: '100%', padding: '8px 10px', background: 'rgba(15,23,42,0.5)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', fontSize: '13px' }} value={newStack.stack_name} onChange={(e) => handleStackChange('stack_name', e.target.value)} placeholder="production" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Engine</label>
+                <select required style={{ width: '100%', padding: '8px 10px', background: 'rgba(15,23,42,0.5)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', fontSize: '13px' }} value={newStack.engine} onChange={(e) => handleStackChange('engine', e.target.value)}>
+                  {ENGINES.map((eng) => <option key={eng} value={eng}>{eng}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Working Directory</label>
+                <input required style={{ width: '100%', padding: '8px 10px', background: 'rgba(15,23,42,0.5)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', fontSize: '13px' }} value={newStack.working_dir} onChange={(e) => handleStackChange('working_dir', e.target.value)} placeholder="./infra/my-stack" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Default Variables (JSON)</label>
+                <textarea style={{ width: '100%', padding: '8px 10px', background: 'rgba(15,23,42,0.5)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', fontSize: '13px', fontFamily: 'monospace' }} value={newStack.default_vars} onChange={(e) => handleStackChange('default_vars', e.target.value)} placeholder='{"region": "us-east-1"}' />
+              </div>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '8px' }}>
+                <button type="button" className="glowing-btn" style={{ padding: '8px 16px', fontSize: '12px' }} onClick={handleTriggerClose}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }} disabled={triggerLoading}>
+                  {triggerLoading ? 'Triggering...' : <><Play size={12} /> Trigger Run</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Stack Config Modal */}
+      {stackFormOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', minWidth: '420px', maxWidth: '90vw', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>Save Stack Configuration</h2>
+            <form onSubmit={handleStackSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Repository</label>
+                <input required style={{ width: '100%', padding: '8px 10px', background: 'rgba(15,23,42,0.5)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', fontSize: '13px' }} value={newStack.repo_name} onChange={(e) => handleStackChange('repo_name', e.target.value)} placeholder="owner/repo" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Stack Name</label>
+                <input required style={{ width: '100%', padding: '8px 10px', background: 'rgba(15,23,42,0.5)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', fontSize: '13px' }} value={newStack.stack_name} onChange={(e) => handleStackChange('stack_name', e.target.value)} placeholder="production" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Engine</label>
+                <select required style={{ width: '100%', padding: '8px 10px', background: 'rgba(15,23,42,0.5)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', fontSize: '13px' }} value={newStack.engine} onChange={(e) => handleStackChange('engine', e.target.value)}>
+                  {ENGINES.map((eng) => <option key={eng} value={eng}>{eng}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Working Directory</label>
+                <input required style={{ width: '100%', padding: '8px 10px', background: 'rgba(15,23,42,0.5)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', fontSize: '13px' }} value={newStack.working_dir} onChange={(e) => handleStackChange('working_dir', e.target.value)} placeholder="./infra/my-stack" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Default Variables (JSON)</label>
+                <textarea style={{ width: '100%', padding: '8px 10px', background: 'rgba(15,23,42,0.5)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', fontSize: '13px', fontFamily: 'monospace' }} value={newStack.default_vars} onChange={(e) => handleStackChange('default_vars', e.target.value)} placeholder='{"region": "us-east-1"}' />
+              </div>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '8px' }}>
+                <button type="button" className="glowing-btn" style={{ padding: '8px 16px', fontSize: '12px' }} onClick={handleStackClose}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}>Save Stack</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <Toast toasts={toasts} removeToast={removeToast} />
       <style>{`
