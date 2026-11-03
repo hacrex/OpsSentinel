@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/banner.png" alt="OpsSentinel Banner" width="100%">
+  
 </p>
 
 <h1 align="center">OpsSentinel</h1>
