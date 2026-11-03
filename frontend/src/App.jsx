@@ -15,6 +15,7 @@ import DoraMetrics from './pages/DoraMetrics';
 import Policies from './pages/Policies';
 import Fingerprints from './pages/Fingerprints';
 import Remediation from './pages/Remediation';
+import Predictions from './pages/Predictions';
 import ErrorBoundary from './components/ErrorBoundary';
 import api from './api';
 import './index.css';
@@ -60,6 +61,7 @@ function App() {
           <Route path="/dashboard/policies" element={<PrivateRoute><Policies /></PrivateRoute>} />
           <Route path="/dashboard/fingerprints" element={<PrivateRoute><Fingerprints /></PrivateRoute>} />
           <Route path="/dashboard/remediation" element={<PrivateRoute><Remediation /></PrivateRoute>} />
+          <Route path="/dashboard/predictions" element={<PrivateRoute><Predictions /></PrivateRoute>} />
 
           {/* Redirect root to login or dashboard */}
           <Route path="/" element={<Navigate to="/dashboard" />} />
