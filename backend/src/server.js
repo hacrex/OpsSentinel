@@ -15,7 +15,7 @@ const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
 const { triageFailure } = require('./triage');
 const { analyzeFailure, getLLMConfig } = require('./llm');
 const infra = require('./infrastructure');
-const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun } = infra;
+const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy } = infra;
 const setInfraBroadcast = infra.setBroadcast;
 const helmet = require('helmet');
 const { authMiddleware } = require('./auth');
@@ -845,6 +845,100 @@ app.get('/dora/metrics', authMiddleware, async (req, res) => {
   } catch (err) {
     logger.error({ err }, 'Failed to fetch DORA metrics');
     res.status(500).json({ error: 'Failed to fetch DORA metrics' });
+  }
+});
+
+// ── Policy Engine ──
+app.get('/policies', authMiddleware, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+  const { enabled } = req.query;
+
+  try {
+    const result = await listPolicies({
+      tenant_id: req.tenant_id || null,
+      enabled, page, limit,
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch policies');
+    res.status(500).json({ error: 'Failed to fetch policies' });
+  }
+});
+
+app.post('/policies', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { name, description, condition, action, requires_approval, enabled } = req.body;
+  if (!name || !condition || !action) {
+    return res.status(400).json({ error: 'name, condition, action required' });
+  }
+
+  try {
+    const policy = await createPolicy({
+      tenant_id: req.tenant_id || null,
+      name, description, condition, action,
+      requires_approval: requires_approval === true,
+      enabled: enabled !== false,
+    });
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'policy_create',
+      resourceType: 'policy',
+      resourceId: String(policy.id),
+      details: { name, condition, action, requires_approval, enabled },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true, policy });
+  } catch (err) {
+    logger.error({ err }, 'Failed to create policy');
+    res.status(500).json({ error: 'Failed to create policy' });
+  }
+});
+
+app.get('/policies/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const policy = await getPolicy(id, req.tenant_id || null);
+    if (!policy) return res.status(404).json({ error: 'Policy not found' });
+    res.json(policy);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch policy');
+    res.status(500).json({ error: 'Failed to fetch policy' });
+  }
+});
+
+app.patch('/policies/:id', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { id } = req.params;
+  const { name, description, condition, action, requires_approval, enabled } = req.body;
+
+  try {
+    await updatePolicy(id, { name, description, condition, action, requires_approval, enabled }, req.tenant_id || null);
+
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'policy_update',
+      resourceType: 'policy',
+      resourceId: id,
+      details: { name, description, condition, action, requires_approval, enabled },
+      ipAddress: req.ip,
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update policy');
+    res.status(500).json({ error: 'Failed to update policy' });
+  }
+});
+
+app.delete('/policies/:id', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { id } = req.params;
+  try {
+    await deletePolicy(id, req.tenant_id || null);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to delete policy');
+    res.status(500).json({ error: 'Failed to delete policy' });
   }
 });
 

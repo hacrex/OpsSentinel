@@ -129,6 +129,27 @@ const CREATE_TABLE_PG = `
   CREATE INDEX IF NOT EXISTS idx_config_runs_tool ON configuration_runs(tool);
   CREATE INDEX IF NOT EXISTS idx_config_runs_created_at ON configuration_runs(created_at);
   CREATE INDEX IF NOT EXISTS idx_config_runs_conclusion ON configuration_runs(conclusion);
+
+  CREATE TABLE IF NOT EXISTS policies (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER,
+    name VARCHAR(255),
+    description TEXT,
+    condition TEXT,
+    action VARCHAR(50),
+    requires_approval BOOLEAN DEFAULT FALSE,
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+    requires_approval BOOLEAN DEFAULT FALSE,
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_policies_tenant_id ON policies(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_policies_enabled ON policies(enabled);
 `;
 
 const CREATE_TABLE_SQLITE = `
@@ -255,6 +276,27 @@ const CREATE_TABLE_SQLITE = `
   CREATE INDEX IF NOT EXISTS idx_config_runs_tool ON configuration_runs(tool);
   CREATE INDEX IF NOT EXISTS idx_config_runs_created_at ON configuration_runs(created_at);
   CREATE INDEX IF NOT EXISTS idx_config_runs_conclusion ON configuration_runs(conclusion);
+
+  CREATE TABLE IF NOT EXISTS policies (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER,
+    name VARCHAR(255),
+    description TEXT,
+    condition TEXT,
+    action VARCHAR(50),
+    requires_approval BOOLEAN DEFAULT FALSE,
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+    requires_approval BOOLEAN DEFAULT FALSE,
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_policies_tenant_id ON policies(tenant_id);
+  CREATE INDEX IF NOT EXISTS idx_policies_enabled ON policies(enabled);
 `;
 
 // Convert SQLite ? placeholders to PostgreSQL $1, $2, ...

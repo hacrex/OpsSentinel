@@ -512,4 +512,69 @@ async function recordConfigRun({ tenant_id, repo_name, tool, playbook, inventory
   );
 }
 
-module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun };
+async function listPolicies({ tenant_id, enabled, page, limit }) {
+  const conditions = [];
+  const params = [];
+  if (enabled !== undefined) { conditions.push('enabled = ?'); params.push(enabled === 'true' ? 1 : 0); }
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+
+  const offset = (page - 1) * limit;
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const countResult = await db.query(`SELECT COUNT(*) as cnt FROM policies ${where}`, params);
+  const total = parseInt(countResult.rows[0]?.cnt ?? 0, 10);
+
+  const dataResult = await db.query(
+    `SELECT * FROM policies ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+  return { data: dataResult.rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
+}
+
+async function createPolicy({ tenant_id, name, description, condition, action, requires_approval, enabled }) {
+  const result = await db.query(
+    `INSERT INTO policies (tenant_id, name, description, condition, action, requires_approval, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [tenant_id, name, description, condition, action, requires_approval ? 1 : 0, enabled !== false ? 1 : 0]
+  );
+  return result.rows?.[0] ?? { id: null };
+}
+
+async function getPolicy(id, tenant_id) {
+  const conditions = ['id = ?'];
+  const params = [id];
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const result = await db.query(`SELECT * FROM policies WHERE ${conditions.join(' AND ')}`, params);
+  return result.rows?.[0] ?? null;
+}
+
+async function updatePolicy(id, { name, description, condition, action, requires_approval, enabled }, tenant_id) {
+  const sets = [];
+  const params = [];
+  if (name !== undefined) { sets.push('name = ?'); params.push(name); }
+  if (description !== undefined) { sets.push('description = ?'); params.push(description); }
+  if (condition !== undefined) { sets.push('condition = ?'); params.push(condition); }
+  if (action !== undefined) { sets.push('action = ?'); params.push(action); }
+  if (requires_approval !== undefined) { sets.push('requires_approval = ?'); params.push(requires_approval ? 1 : 0); }
+  if (enabled !== undefined) { sets.push('enabled = ?'); params.push(enabled ? 1 : 0); }
+  if (sets.length === 0) return null;
+
+  const conditions = ['id = ?'];
+  params.push(id);
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+
+  const result = await db.query(
+    `UPDATE policies SET ${sets.join(', ')} WHERE ${conditions.join(' AND ')}`,
+    params
+  );
+  return result;
+}
+
+async function deletePolicy(id, tenant_id) {
+  const conditions = ['id = ?'];
+  const params = [id];
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const result = await db.query(`DELETE FROM policies WHERE ${conditions.join(' AND ')}`, params);
+  return result;
+}
+
+module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy };
