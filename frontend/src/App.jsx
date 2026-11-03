@@ -17,6 +17,7 @@ import Fingerprints from './pages/Fingerprints';
 import Remediation from './pages/Remediation';
 import Predictions from './pages/Predictions';
 import Drift from './pages/Drift';
+import SSOLogin from './pages/SSOLogin';
 import ErrorBoundary from './components/ErrorBoundary';
 import api from './api';
 import './index.css';
@@ -48,6 +49,7 @@ function App() {
         <Routes>
           {/* App routes (require auth) */}
           <Route path="/login" element={<Login />} />
+          <Route path="/sso" element={<SSOLogin />} />
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/dashboard/repo/:repo(*)" element={<PrivateRoute><RepoDetail /></PrivateRoute>} />
           <Route path="/dashboard/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
