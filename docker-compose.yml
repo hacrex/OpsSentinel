@@ -20,14 +20,12 @@ services:
 
   backend:
     build: ./backend
-    ports:
-      - "3001:3001"
     environment:
       - PORT=3001
       - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
+      - FRONTEND_URL=${FRONTEND_URL:-https://localhost}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-ops_user}:${POSTGRES_PASSWORD:-ops_password}@postgres:5432/${POSTGRES_DB:-ops_sentinel}
       - RETENTION_DAYS=${RETENTION_DAYS:-30}
     depends_on:
@@ -39,13 +37,42 @@ services:
     build:
       context: ./frontend
       args:
-        - VITE_API_URL=${VITE_API_URL:-http://localhost:3001}
+        - VITE_API_URL=${VITE_API_URL:-https://localhost}
         - VITE_GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
     ports:
       - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME:-localhost}
+    volumes:
+      - certbot-www:/var/www/certbot:ro
+      - certbot-certs:/etc/letsencrypt:ro
     depends_on:
       - backend
     restart: unless-stopped
 
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - certbot-www:/var/www/certbot
+      - certbot-certs:/etc/letsencrypt
+    command: certonly --webroot -w /var/www/certbot --email ${CERTBOT_EMAIL} --agree-tos --no-eff-email -d ${DOMAIN_NAME}
+    profiles:
+      - tools
+    restart: "no"
+
+  certbot-renewal:
+    image: certbot/certbot:latest
+    volumes:
+      - certbot-www:/var/www/certbot
+      - certbot-certs:/etc/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet --no-eff-email --deploy-hook \"docker compose exec -T frontend nginx -s reload\"; sleep 12h & wait $${!}; done'"
+    profiles:
+      - tools
+    restart: unless-stopped
+
 volumes:
   postgres-data:
+  certbot-www:
+  certbot-certs:

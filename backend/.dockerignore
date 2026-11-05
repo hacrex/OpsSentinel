@@ -1,0 +1,14 @@
+node_modules/
+npm-debug.log
+infra-logs/
+.git/
+.gitignore
+.env
+.env.example
+database.sqlite
+*.test.js
+*.spec.js
+__tests__/
+coverage/
+.vscode/
+.DS_Store

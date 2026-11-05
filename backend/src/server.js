@@ -7,15 +7,29 @@ const db = require('./db');
 const { verifySignature, handleWebhook, setBroadcast, handleGitLabWebhook, handleBitbucketWebhook } = require('./webhook');
 const axios = require('axios');
 const dotenv = require('dotenv');
+const { encrypt, decrypt } = require('./secure');
 const logger = require('./logger');
 const validateEnv = require('./validateEnv');
 const { startRetentionJob } = require('./retention');
+const { startScheduler } = require('./automation');
+const { startDriftDetector } = require('./drift');
 const { notifyAll } = require('./notifier');
 const { initAuditTable, logAuditEvent, getAuditLogs } = require('./audit');
 const { triageFailure } = require('./triage');
 const { analyzeFailure, getLLMConfig } = require('./llm');
 const infra = require('./infrastructure');
-const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction, listPredictions, createPrediction, getPrediction, updatePrediction, deletePrediction, listDriftEvents, createDriftEvent, getDriftEvent, updateDriftEvent, deleteDriftEvent } = infra;
+const driftDetector = require('./drift');
+const migration = require('./migration');
+const { runOperation, listRuns, getStackStats, getInfraTrend, LOG_DIR, recordInfraRun, listStacks, createStack, deleteStack, getStackWorkingDir, getStackById, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction, listPredictions, createPrediction, getPrediction, updatePrediction, deletePrediction, listDriftEvents, createDriftEvent, getDriftEvent, updateDriftEvent, deleteDriftEvent, listStackFiles, readStackFile, writeStackFile, exportStackTar } = infra;
+const blueprints = require('./blueprints');
+const { listBlueprints, getBlueprint, instantiateBlueprint } = blueprints;
+const gitsync = require('./gitsync');
+const { listSources, createSource, getSource, updateSource, deleteSource, syncSource, pushStack } = gitsync;
+const providers = require('./providers');
+const { PROVIDER_CATALOG, getProviderCatalog, listConnections, createConnection, updateConnection, deleteConnection, validateConnection } = providers;
+const automation = require('./automation');
+const { listModules, createModule, deleteModule, listSchedules, createSchedule, updateSchedule, deleteSchedule } = automation;
+const pipelines = require('./pipelines');
 const { metrics, inc, observeLatency, set } = require('./metrics');
 const setInfraBroadcast = infra.setBroadcast;
 const helmet = require('helmet');
@@ -83,6 +97,7 @@ function broadcast(data) {
 setBroadcast(broadcast);
 
 setInfraBroadcast(broadcast);
+pipelines.setBroadcast(broadcast);
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(cors({
@@ -352,6 +367,140 @@ app.post('/settings/test', authMiddleware, requirePermission('notifications:test
   }
 });
 
+// ── Runtime Config (GitHub OAuth + Webhook) ─────────────────────────────────
+const CONFIG_KEYS = {
+  github_client_id: { label: 'GitHub OAuth Client ID', encrypted: false },
+  github_client_secret: { label: 'GitHub OAuth Client Secret', encrypted: true },
+  github_webhook_secret: { label: 'GitHub Webhook Secret', encrypted: true },
+};
+
+function maskValue(key, value) {
+  const cfg = CONFIG_KEYS[key];
+  if (!value) return '';
+  if (cfg && cfg.encrypted) return '••••••••';
+  return value;
+}
+
+app.get('/runtime-config', authMiddleware, async (req, res) => {
+  try {
+    const result = await db.query(`SELECT key, value, encrypted FROM runtime_config`);
+    const config = {};
+    for (const row of result.rows || []) {
+      let val = row.value;
+      if (row.encrypted && val) val = decrypt(val) || '';
+      config[row.key] = val;
+    }
+    // Merge with env vars as fallback (env takes precedence if set)
+    const merged = {};
+    for (const [key, cfg] of Object.entries(CONFIG_KEYS)) {
+      const envVal = process.env[key.toUpperCase()];
+      const dbVal = config[key] || '';
+      merged[key] = {
+        value: maskValue(key, envVal || dbVal),
+        configured: Boolean(envVal || dbVal),
+        label: cfg.label,
+        encrypted: cfg.encrypted,
+        source: envVal ? 'env' : dbVal ? 'db' : 'none',
+      };
+    }
+    res.json(merged);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch runtime config');
+    res.status(500).json({ error: 'Failed to fetch runtime config' });
+  }
+});
+
+app.put('/runtime-config', authMiddleware, requirePermission('settings:write'), async (req, res) => {
+  const { github_client_id, github_client_secret, github_webhook_secret } = req.body;
+  const updates = [
+    { key: 'github_client_id', value: github_client_id, encrypted: false },
+    { key: 'github_client_secret', value: github_client_secret, encrypted: true },
+    { key: 'github_webhook_secret', value: github_webhook_secret, encrypted: true },
+  ];
+  try {
+    for (const { key, value, encrypted } of updates) {
+      const encryptedVal = encrypted ? encrypt(value) : value;
+      await db.query(
+        `INSERT INTO runtime_config (key, value, encrypted, updated_at) VALUES (?, ?, ?, ?)
+         ON CONFLICT(key) DO UPDATE SET value = ?, encrypted = ?, updated_at = ?`,
+        [key, encryptedVal, encrypted, new Date().toISOString(), encryptedVal, encrypted, new Date().toISOString()]
+      );
+      await logAuditEvent({
+        userId: req.user?.id || null,
+        username: req.user?.login || 'unknown',
+        action: 'runtime_config_update',
+        resourceType: 'runtime_config',
+        resourceId: key,
+        details: { key, configured: Boolean(value) },
+        ipAddress: req.ip,
+      });
+    }
+    res.json({ success: true, message: 'Runtime config updated' });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update runtime config');
+    res.status(500).json({ error: 'Failed to update runtime config' });
+  }
+});
+
+app.post('/runtime-config/test-github', authMiddleware, requirePermission('settings:write'), async (req, res) => {
+  const { client_id, client_secret } = req.body;
+  if (!client_id || !client_secret) {
+    return res.status(400).json({ error: 'Client ID and Client Secret are required' });
+  }
+  try {
+    // Test by hitting GitHub's OAuth token exchange with a dummy code —
+    // GitHub will return 400 for invalid code, which proves credentials are valid
+    // (if credentials were invalid, we'd get a different error).
+    const res2 = await axios.post('https://github.com/login/oauth/access_token', {
+      client_id,
+      client_secret,
+      code: 'test-code-that-will-fail',
+    }, {
+      headers: { Accept: 'application/json' },
+      timeout: 10000,
+    });
+    // If we got a 200 with an error field, credentials are valid
+    if (res2.data && res2.data.error) {
+      await logAuditEvent({
+        userId: req.user?.id || null,
+        username: req.user?.login || 'unknown',
+        action: 'github_oauth_test',
+        resourceType: 'runtime_config',
+        resourceId: 'github_client_id',
+        details: { success: true, error_code: res2.data.error },
+        ipAddress: req.ip,
+      });
+      return res.json({ success: true, message: 'GitHub OAuth credentials are valid' });
+    }
+    res.json({ success: true, message: 'GitHub OAuth credentials are valid' });
+  } catch (err) {
+    // Axios throws on non-2xx. A 400 from GitHub means credentials ARE valid
+    // (the code is just invalid). Other errors mean credentials are wrong.
+    if (err.response && err.response.status === 400) {
+      await logAuditEvent({
+        userId: req.user?.id || null,
+        username: req.user?.login || 'unknown',
+        action: 'github_oauth_test',
+        resourceType: 'runtime_config',
+        resourceId: 'github_client_id',
+        details: { success: true },
+        ipAddress: req.ip,
+      });
+      return res.json({ success: true, message: 'GitHub OAuth credentials are valid' });
+    }
+    await logAuditEvent({
+      userId: req.user?.id || null,
+      username: req.user?.login || 'unknown',
+      action: 'github_oauth_test',
+      resourceType: 'runtime_config',
+      resourceId: 'github_client_id',
+      details: { success: false, error: err.message },
+      ipAddress: req.ip,
+    });
+    res.status(400).json({ error: 'Invalid GitHub OAuth credentials' });
+  }
+});
+
 // 1-Click re-run
 app.post('/rerun', authMiddleware, requirePermission('workflow:rerun'), async (req, res) => {
   const { run_url } = req.body;
@@ -464,9 +613,9 @@ app.get('/infrastructure/runs', authMiddleware, async (req, res) => {
   }
 });
 
-app.get('/infrastructure/stats/:repo(*)/:stack', authMiddleware, async (req, res) => {
-  const repo_name = decodeURIComponent(req.params.repo);
-  const stack_name = decodeURIComponent(req.params.stack);
+app.get(/^\/infrastructure\/stats\/(.+)\/(.+)$/, authMiddleware, async (req, res) => {
+  const repo_name = decodeURIComponent(req.params[0]);
+  const stack_name = decodeURIComponent(req.params[1]);
 
   try {
     const stats = await getStackStats(repo_name, stack_name, req.tenant_id || null);
@@ -477,9 +626,9 @@ app.get('/infrastructure/stats/:repo(*)/:stack', authMiddleware, async (req, res
   }
 });
 
-app.get('/infrastructure/trend/:repo(*)/:stack', authMiddleware, async (req, res) => {
-  const repo_name = decodeURIComponent(req.params.repo);
-  const stack_name = decodeURIComponent(req.params.stack);
+app.get(/^\/infrastructure\/trend\/(.+)\/(.+)$/, authMiddleware, async (req, res) => {
+  const repo_name = decodeURIComponent(req.params[0]);
+  const stack_name = decodeURIComponent(req.params[1]);
 
   try {
     const trend = await getInfraTrend(repo_name, stack_name, req.tenant_id || null);
@@ -581,6 +730,660 @@ app.delete('/infrastructure/stacks/:id', authMiddleware, requirePermission('infr
   } catch (err) {
     logger.error({ err }, 'Failed to delete stack');
     res.status(500).json({ error: 'Failed to delete stack' });
+  }
+});
+
+// ── Stack code files & export ────────────────────────────────────────────────
+app.get('/stacks/:stackId/files', authMiddleware, async (req, res) => {
+  try {
+    const stack = await getStackById(req.params.stackId, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    const files = await listStackFiles(stack.working_dir);
+    res.json({ stack: { id: stack.id, stack_name: stack.stack_name, working_dir: stack.working_dir }, files });
+  } catch (err) {
+    logger.error({ err }, 'Failed to list stack files');
+    res.status(500).json({ error: 'Failed to list stack files' });
+  }
+});
+
+app.get('/stacks/:stackId/file', authMiddleware, async (req, res) => {
+  try {
+    const stack = await getStackById(req.params.stackId, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    const { path: relPath } = req.query;
+    if (!relPath) return res.status(400).json({ error: 'path query required' });
+    // Prevent path traversal
+    const resolved = path.resolve(stack.working_dir, relPath);
+    const workingResolved = path.resolve(stack.working_dir);
+    if (!resolved.startsWith(workingResolved + path.sep) && resolved !== workingResolved) {
+      return res.status(403).json({ error: 'Path traversal not allowed' });
+    }
+    const result = await readStackFile(resolved);
+    if (result.error) return res.status(result.error === 'too_large' ? 413 : 404).json(result);
+    res.json({ path: relPath, content: result.content, size: result.size });
+  } catch (err) {
+    logger.error({ err }, 'Failed to read stack file');
+    res.status(500).json({ error: 'Failed to read stack file' });
+  }
+});
+
+app.put('/stacks/:stackId/file', authMiddleware, async (req, res) => {
+  try {
+    const stack = await getStackById(req.params.stackId, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    const { path: relPath, content } = req.body;
+    if (!relPath || content === undefined) {
+      return res.status(400).json({ error: 'path and content required' });
+    }
+    const result = await writeStackFile(stack.working_dir, relPath, content);
+    if (result.error) {
+      if (result.error === 'too_large') return res.status(413).json(result);
+      if (result.error === 'forbidden') return res.status(403).json(result);
+      return res.status(500).json(result);
+    }
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'stack_file_write', resourceType: 'stack_file', resourceId: req.params.stackId,
+      details: { path: relPath, stack_name: stack.stack_name }, ipAddress: req.ip,
+    });
+    res.json({ success: true, ...result });
+  } catch (err) {
+    logger.error({ err }, 'Failed to write stack file');
+    res.status(500).json({ error: 'Failed to write stack file' });
+  }
+});
+
+app.get('/stacks/:stackId/export', authMiddleware, async (req, res) => {
+  try {
+    const stack = await getStackById(req.params.stackId, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    const result = await exportStackTar(stack.working_dir);
+    if (result.error) return res.status(500).json(result);
+    res.download(result.tarFile, `stack-${stack.stack_name}.tar.gz`, (err) => {
+      if (err) logger.error({ err }, 'Failed to send stack export');
+    });
+  } catch (err) {
+    logger.error({ err }, 'Failed to export stack');
+    res.status(500).json({ error: 'Failed to export stack' });
+  }
+});
+
+// ── Stack Blueprints ─────────────────────────────────────────────────────────
+app.get('/blueprints', authMiddleware, async (req, res) => {
+  try {
+    res.json({ data: listBlueprints(), catalog: Object.entries(PROVIDER_CATALOG).map(([id, p]) => ({ id, label: p.label })) });
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch blueprints');
+    res.status(500).json({ error: 'Failed to fetch blueprints' });
+  }
+});
+
+app.get('/blueprints/:id', authMiddleware, async (req, res) => {
+  const blueprint = getBlueprint(req.params.id);
+  if (!blueprint) return res.status(404).json({ error: 'Blueprint not found' });
+  res.json(blueprint);
+});
+
+app.post('/blueprints/:id/instantiate', authMiddleware, requirePermission('blueprints:instantiate'), async (req, res) => {
+  const { repo_name, stack_name, working_dir, vars } = req.body;
+  if (!repo_name || !stack_name || !working_dir) {
+    return res.status(400).json({ error: 'repo_name, stack_name, working_dir required' });
+  }
+  try {
+    const result = await instantiateBlueprint({
+      tenant_id: req.tenant_id || null,
+      blueprint_id: req.params.id,
+      repo_name, stack_name, working_dir, vars,
+    });
+    if (result.error) return res.status(404).json({ error: 'Blueprint not found' });
+    broadcast({ type: 'stack_created', stack_name, blueprint: req.params.id });
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'blueprint_instantiate', resourceType: 'stack', resourceId: String(result.stack?.id ?? ''),
+      details: { blueprint: req.params.id, repo_name, stack_name, working_dir },
+      ipAddress: req.ip,
+    });
+    res.json({ success: true, ...result });
+  } catch (err) {
+    logger.error({ err }, 'Failed to instantiate blueprint');
+    res.status(500).json({ error: 'Failed to instantiate blueprint' });
+  }
+});
+
+// ── GitOps Git Sync ──────────────────────────────────────────────────────────
+app.get('/git/sources', authMiddleware, async (req, res) => {
+  try {
+    const data = await listSources({ tenant_id: req.tenant_id || null, status: req.query.status });
+    res.json({ data });
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch git sources');
+    res.status(500).json({ error: 'Failed to fetch git sources' });
+  }
+});
+
+app.post('/git/sources', authMiddleware, requirePermission('git:manage'), async (req, res) => {
+  const { name, repo_url, branch, kind, path: subPath, auth_type, ssh_private_key, token } = req.body;
+  if (!name || !repo_url) return res.status(400).json({ error: 'name, repo_url required' });
+  try {
+    const source = await createSource({ tenant_id: req.tenant_id || null, name, repo_url, branch, kind, path: subPath, auth_type, ssh_private_key, token });
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'git_source_create', resourceType: 'git_source', resourceId: String(source.id ?? ''),
+      details: { name, repo_url, branch, auth_type }, ipAddress: req.ip,
+    });
+    res.json({ success: true, source });
+  } catch (err) {
+    logger.error({ err }, 'Failed to create git source');
+    res.status(500).json({ error: 'Failed to create git source' });
+  }
+});
+
+app.patch('/git/sources/:id', authMiddleware, requirePermission('git:manage'), async (req, res) => {
+  try {
+    const result = await updateSource(req.params.id, req.body, req.tenant_id || null);
+    res.json({ success: true, result });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update git source');
+    res.status(500).json({ error: 'Failed to update git source' });
+  }
+});
+
+app.delete('/git/sources/:id', authMiddleware, requirePermission('git:manage'), async (req, res) => {
+  try {
+    await deleteSource(req.params.id, req.tenant_id || null);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to delete git source');
+    res.status(500).json({ error: 'Failed to delete git source' });
+  }
+});
+
+app.post('/git/sources/:id/sync', authMiddleware, requirePermission('git:sync'), async (req, res) => {
+  try {
+    const source = await getSource(req.params.id, req.tenant_id || null);
+    if (!source) return res.status(404).json({ error: 'Source not found' });
+    const result = await syncSource(source);
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'git_sync', resourceType: 'git_source', resourceId: req.params.id,
+      details: { name: source.name, status: result.status || result.error }, ipAddress: req.ip,
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Git sync failed');
+    res.status(500).json({ error: 'Git sync failed' });
+  }
+});
+
+app.post('/git/sources/:id/push', authMiddleware, requirePermission('git:manage'), async (req, res) => {
+  const { stack_dir, message } = req.body;
+  if (!stack_dir) return res.status(400).json({ error: 'stack_dir required' });
+  try {
+    const source = await getSource(req.params.id, req.tenant_id || null);
+    if (!source) return res.status(404).json({ error: 'Source not found' });
+    const result = await pushStack({ source, stack_dir, message });
+    if (result.error) return res.status(400).json(result);
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'git_push', resourceType: 'git_source', resourceId: req.params.id,
+      details: { stack_dir }, ipAddress: req.ip,
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Git push failed');
+    res.status(500).json({ error: 'Git push failed' });
+  }
+});
+
+// ── Provider Connections ─────────────────────────────────────────────────────
+app.get('/providers/catalog', authMiddleware, async (req, res) => {
+  res.json(Object.entries(PROVIDER_CATALOG).map(([id, p]) => ({
+    id, label: p.label,
+    fields: p.fields,
+  })));
+});
+
+app.get('/providers', authMiddleware, async (req, res) => {
+  try {
+    const data = await listConnections({ tenant_id: req.tenant_id || null, provider: req.query.provider });
+    res.json({ data });
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch provider connections');
+    res.status(500).json({ error: 'Failed to fetch provider connections' });
+  }
+});
+
+app.post('/providers', authMiddleware, requirePermission('providers:write'), async (req, res) => {
+  const { provider, name, credentials } = req.body;
+  if (!provider || !name) return res.status(400).json({ error: 'provider, name required' });
+  if (!getProviderCatalog(provider)) return res.status(400).json({ error: 'Unsupported provider' });
+  try {
+    const connection = await createConnection({ tenant_id: req.tenant_id || null, provider, name, credentials });
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'provider_connection_create', resourceType: 'provider_connection', resourceId: String(connection.id ?? ''),
+      details: { provider, name }, ipAddress: req.ip,
+    });
+    res.json({ success: true, connection });
+  } catch (err) {
+    logger.error({ err }, 'Failed to create provider connection');
+    res.status(500).json({ error: 'Failed to create provider connection' });
+  }
+});
+
+app.patch('/providers/:id', authMiddleware, requirePermission('providers:write'), async (req, res) => {
+  try {
+    await updateConnection(req.params.id, req.body, req.tenant_id || null);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update provider connection');
+    res.status(500).json({ error: 'Failed to update provider connection' });
+  }
+});
+
+app.delete('/providers/:id', authMiddleware, requirePermission('providers:write'), async (req, res) => {
+  try {
+    await deleteConnection(req.params.id, req.tenant_id || null);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to delete provider connection');
+    res.status(500).json({ error: 'Failed to delete provider connection' });
+  }
+});
+
+app.post('/providers/:id/validate', authMiddleware, requirePermission('providers:write'), async (req, res) => {
+  try {
+    const result = await validateConnection(req.params.id, req.tenant_id || null);
+    if (result.error) return res.status(404).json(result);
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Provider validation failed');
+    res.status(500).json({ error: 'Provider validation failed' });
+  }
+});
+
+// ── Stack State Management ───────────────────────────────────────────────────
+const stackstate = require('./stackstate');
+
+app.get('/state/stacks/:stackId', authMiddleware, async (req, res) => {
+  try {
+    const stack = await stackstate.getStack(req.params.stackId, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    const [latest, history, lock] = await Promise.all([
+      stackstate.getLatestState(stack.id, stack.tenant_id),
+      stackstate.listStateVersions({ stack_id: stack.id, tenant_id: stack.tenant_id }),
+      stackstate.getLock(stack.id),
+    ]);
+    res.json({ stack, latest, history, lock });
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch state');
+    res.status(500).json({ error: 'Failed to fetch state' });
+  }
+});
+
+app.put('/state/stacks/:stackId', authMiddleware, requirePermission('state:write'), async (req, res) => {
+  try {
+    const stack = await stackstate.getStack(req.params.stackId, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    const lockCheck = await stackstate.assertNotLocked(stack);
+    if (lockCheck.blocked) return res.status(409).json(lockCheck);
+    const result = await stackstate.pushStateVersion({
+      stack,
+      state_text: req.body.state_text,
+      state_serial: req.body.state_serial,
+      notes: req.body.notes,
+      created_by: req.user?.login || 'api',
+      source: 'api',
+    });
+    if (result.conflict) return res.status(409).json(result);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    logger.error({ err }, 'Failed to push state');
+    res.status(500).json({ error: 'Failed to push state' });
+  }
+});
+
+app.get('/state/stacks/:stackId/versions/:version', authMiddleware, async (req, res) => {
+  try {
+    const stack = await stackstate.getStack(req.params.stackId, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    const version = await stackstate.getStateVersion(stack, req.params.version, stack.tenant_id);
+    if (!version) return res.status(404).json({ error: 'Version not found' });
+    res.json(version);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch state version');
+    res.status(500).json({ error: 'Failed to fetch state version' });
+  }
+});
+
+app.post('/state/stacks/:stackId/restore/:version', authMiddleware, requirePermission('state:write'), async (req, res) => {
+  try {
+    const stack = await stackstate.getStack(req.params.stackId, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    const lockCheck = await stackstate.assertNotLocked(stack);
+    if (lockCheck.blocked) return res.status(409).json(lockCheck);
+    const result = await stackstate.restoreStateVersion(stack, req.params.version, stack.tenant_id, req.user?.login || 'api');
+    if (result.error) return res.status(404).json(result);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    logger.error({ err }, 'Failed to restore state');
+    res.status(500).json({ error: 'Failed to restore state' });
+  }
+});
+
+app.post('/state/stacks/:stackId/lock', authMiddleware, requirePermission('state:write'), async (req, res) => {
+  try {
+    const stack = await stackstate.getStack(req.params.stackId, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    const result = await stackstate.lockStack({
+      stack,
+      locked_by: req.user?.login || 'api',
+      note: req.body.note,
+    });
+    if (result.conflict) return res.status(409).json(result);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    logger.error({ err }, 'Failed to lock state');
+    res.status(500).json({ error: 'Failed to lock state' });
+  }
+});
+
+app.post('/state/stacks/:stackId/unlock', authMiddleware, requirePermission('state:write'), async (req, res) => {
+  try {
+    const stack = await stackstate.getStack(req.params.stackId, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    const result = await stackstate.unlockStack({
+      stack,
+      force: req.body.force === true,
+      unlocked_by: req.user?.login || 'api',
+    });
+    if (result.error === 'not_found') return res.status(404).json(result);
+    if (result.conflict) return res.status(409).json(result);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    logger.error({ err }, 'Failed to unlock state');
+    res.status(500).json({ error: 'Failed to unlock state' });
+  }
+});
+
+// ── Variables / Modules / Scheduled Plans ────────────────────────────────────
+app.get('/stacks/:stackId/variables', authMiddleware, async (req, res) => {
+  try {
+    const stack = await automation.getStack(req.params.stackId, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    res.json({ data: await automation.listVariables({ stack_id: stack.id }), stack });
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch variables');
+    res.status(500).json({ error: 'Failed to fetch variables' });
+  }
+});
+
+app.post('/stacks/:stackId/variables', authMiddleware, requirePermission('variables:write'), async (req, res) => {
+  const { key, value, sensitive } = req.body;
+  if (!key) return res.status(400).json({ error: 'key required' });
+  try {
+    const stack = await automation.getStack(req.params.stackId, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    const variable = await automation.createVariable({ stack_id: stack.id, key, value, sensitive, source: req.body.source });
+    res.json({ success: true, variable });
+  } catch (err) {
+    logger.error({ err }, 'Failed to create variable');
+    res.status(500).json({ error: 'Failed to create variable' });
+  }
+});
+
+app.patch('/stacks/:stackId/variables/:id', authMiddleware, requirePermission('variables:write'), async (req, res) => {
+  try {
+    const stack = await automation.getStack(req.params.stackId, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    await automation.updateVariable(req.params.id, stack.id, req.body);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update variable');
+    res.status(500).json({ error: 'Failed to update variable' });
+  }
+});
+
+app.delete('/stacks/:stackId/variables/:id', authMiddleware, requirePermission('variables:write'), async (req, res) => {
+  try {
+    const stack = await automation.getStack(req.params.stackId, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    await automation.deleteVariable(req.params.id, stack.id);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to delete variable');
+    res.status(500).json({ error: 'Failed to delete variable' });
+  }
+});
+
+app.get('/modules', authMiddleware, async (req, res) => {
+  try {
+    res.json({ data: await listModules({ tenant_id: req.tenant_id || null, engine: req.query.engine }) });
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch modules');
+    res.status(500).json({ error: 'Failed to fetch modules' });
+  }
+});
+
+app.post('/modules', authMiddleware, requirePermission('modules:write'), async (req, res) => {
+  const { name, source } = req.body;
+  if (!name || !source) return res.status(400).json({ error: 'name, source required' });
+  try {
+    const module = await createModule({ tenant_id: req.tenant_id || null, ...req.body });
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'module_create', resourceType: 'stack_module', resourceId: String(module.id ?? ''),
+      details: { name, source }, ipAddress: req.ip,
+    });
+    res.json({ success: true, module });
+  } catch (err) {
+    logger.error({ err }, 'Failed to create module');
+    res.status(500).json({ error: 'Failed to create module' });
+  }
+});
+
+app.delete('/modules/:id', authMiddleware, requirePermission('modules:write'), async (req, res) => {
+  try {
+    await deleteModule(req.params.id, req.tenant_id || null);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to delete module');
+    res.status(500).json({ error: 'Failed to delete module' });
+  }
+});
+
+app.get('/schedules', authMiddleware, async (req, res) => {
+  try {
+    res.json({ data: await listSchedules({ tenant_id: req.tenant_id || null }) });
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch schedules');
+    res.status(500).json({ error: 'Failed to fetch schedules' });
+  }
+});
+
+app.post('/schedules', authMiddleware, requirePermission('schedules:write'), async (req, res) => {
+  const { stack_id } = req.body;
+  if (!stack_id) return res.status(400).json({ error: 'stack_id required' });
+  try {
+    const stack = await automation.getStack(stack_id, req.tenant_id || null);
+    if (!stack) return res.status(404).json({ error: 'Stack not found' });
+    const schedule = await createSchedule({
+      tenant_id: req.tenant_id || null,
+      stack_id: stack.id,
+      repo_name: stack.repo_name,
+      stack_name: stack.stack_name,
+      engine: stack.engine,
+      working_dir: stack.working_dir,
+      operation: req.body.operation,
+      interval_minutes: req.body.interval_minutes,
+      description: req.body.description,
+      created_by: req.user?.login || 'api',
+    });
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'schedule_create', resourceType: 'scheduled_plan', resourceId: String(schedule.id ?? ''),
+      details: { stack: stack.stack_name, operation: req.body.operation, interval_minutes: req.body.interval_minutes }, ipAddress: req.ip,
+    });
+    res.json({ success: true, schedule });
+  } catch (err) {
+    logger.error({ err }, 'Failed to create schedule');
+    res.status(500).json({ error: 'Failed to create schedule' });
+  }
+});
+
+app.patch('/schedules/:id', authMiddleware, requirePermission('schedules:write'), async (req, res) => {
+  try {
+    await updateSchedule(req.params.id, req.body, req.tenant_id || null);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update schedule');
+    res.status(500).json({ error: 'Failed to update schedule' });
+  }
+});
+
+app.delete('/schedules/:id', authMiddleware, requirePermission('schedules:write'), async (req, res) => {
+  try {
+    await deleteSchedule(req.params.id, req.tenant_id || null);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to delete schedule');
+    res.status(500).json({ error: 'Failed to delete schedule' });
+  }
+});
+
+// ── Migration: Terraform → OpenTofu ─────────────────────────────────────────
+app.post('/migration/terraform-to-tofu', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  const { directory } = req.body;
+  if (!directory) return res.status(400).json({ error: 'directory required' });
+  try {
+    const report = await migration.migrateDirectory({ tenant_id: req.tenant_id || null, directory });
+    if (report.error) return res.status(400).json(report);
+    res.json({ success: true, report });
+  } catch (err) {
+    logger.error({ err }, 'Migration analysis failed');
+    res.status(500).json({ error: 'Migration analysis failed' });
+  }
+});
+
+// ── Pipelines ────────────────────────────────────────────────────────────────
+app.get('/pipelines', authMiddleware, async (req, res) => {
+  try {
+    res.json({ data: await pipelines.listPipelines({ tenant_id: req.tenant_id || null, repo: req.query.repo }) });
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch pipelines');
+    res.status(500).json({ error: 'Failed to fetch pipelines' });
+  }
+});
+
+app.post('/pipelines', authMiddleware, requirePermission('pipelines:write'), async (req, res) => {
+  const { name, stages } = req.body;
+  if (!name || !Array.isArray(stages) || stages.length === 0) {
+    return res.status(400).json({ error: 'name and at least one stage required' });
+  }
+  try {
+    const pipeline = await pipelines.createPipeline({ tenant_id: req.tenant_id || null, ...req.body });
+    broadcast({ type: 'pipeline_created', pipeline: { name } });
+    res.json({ success: true, pipeline });
+  } catch (err) {
+    logger.error({ err }, 'Failed to create pipeline');
+    res.status(500).json({ error: 'Failed to create pipeline' });
+  }
+});
+
+app.get('/pipelines/runs', authMiddleware, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+  try {
+    const result = await pipelines.listPipelineRuns({
+      pipeline_id: req.query.pipeline_id, tenant_id: req.tenant_id || null,
+      status: req.query.status, page, limit,
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch pipeline runs');
+    res.status(500).json({ error: 'Failed to fetch pipeline runs' });
+  }
+});
+
+app.get('/pipelines/runs/:runId', authMiddleware, async (req, res) => {
+  try {
+    const run = await pipelines.getPipelineRun(req.params.runId, req.tenant_id || null);
+    if (!run) return res.status(404).json({ error: 'Run not found' });
+    res.json(run);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch pipeline run');
+    res.status(500).json({ error: 'Failed to fetch pipeline run' });
+  }
+});
+
+app.post('/pipelines/runs/:runId/approve', authMiddleware, requirePermission('pipelines:approve'), async (req, res) => {
+  try {
+    const result = await pipelines.approveRun(req.params.runId, req.body.approved !== false, req.user?.login || 'api', req.tenant_id || null);
+    if (result.error) return res.status(400).json(result);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    logger.error({ err }, 'Failed to approve pipeline run');
+    res.status(500).json({ error: 'Failed to approve pipeline run' });
+  }
+});
+
+app.post('/pipelines/runs/:runId/cancel', authMiddleware, requirePermission('pipelines:run'), async (req, res) => {
+  try {
+    const result = await pipelines.cancelRun(req.params.runId, req.tenant_id || null);
+    if (result.error) return res.status(400).json(result);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    logger.error({ err }, 'Failed to cancel pipeline run');
+    res.status(500).json({ error: 'Failed to cancel pipeline run' });
+  }
+});
+
+app.get('/pipelines/:id', authMiddleware, async (req, res) => {
+  try {
+    const pipeline = await pipelines.getPipeline(req.params.id, req.tenant_id || null);
+    if (!pipeline) return res.status(404).json({ error: 'Pipeline not found' });
+    res.json(pipeline);
+  } catch (err) {
+    logger.error({ err }, 'Failed to fetch pipeline');
+    res.status(500).json({ error: 'Failed to fetch pipeline' });
+  }
+});
+
+app.post('/pipelines/:id/run', authMiddleware, requirePermission('pipelines:run'), async (req, res) => {
+  try {
+    const pipeline = await pipelines.getPipeline(req.params.id, req.tenant_id || null);
+    if (!pipeline) return res.status(404).json({ error: 'Pipeline not found' });
+    if (pipeline.enabled === 0) return res.status(400).json({ error: 'Pipeline is disabled' });
+    const started = await pipelines.startPipelineRun(pipeline, req.tenant_id || null, req.user?.login || 'api');
+    await logAuditEvent({
+      userId: req.user?.id || null, username: req.user?.login || 'unknown',
+      action: 'pipeline_run_start', resourceType: 'pipeline', resourceId: req.params.id,
+      details: { run_id: started.run_id }, ipAddress: req.ip,
+    });
+    res.json({ success: true, ...started });
+  } catch (err) {
+    logger.error({ err }, 'Failed to start pipeline');
+    res.status(500).json({ error: 'Failed to start pipeline' });
+  }
+});
+
+app.patch('/pipelines/:id', authMiddleware, requirePermission('pipelines:write'), async (req, res) => {
+  try {
+    const pipeline = await pipelines.updatePipeline(req.params.id, req.body, req.tenant_id || null);
+    res.json({ success: true, pipeline });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update pipeline');
+    res.status(500).json({ error: 'Failed to update pipeline' });
+  }
+});
+
+app.delete('/pipelines/:id', authMiddleware, requirePermission('pipelines:write'), async (req, res) => {
+  try {
+    await pipelines.deletePipeline(req.params.id, req.tenant_id || null);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, 'Failed to delete pipeline');
+    res.status(500).json({ error: 'Failed to delete pipeline' });
   }
 });
 
@@ -1231,6 +2034,17 @@ app.get('/drift/events', authMiddleware, async (req, res) => {
   }
 });
 
+app.post('/drift/detect', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
+  try {
+    const results = await driftDetector.detectAllStacksDrift();
+    broadcast({ type: 'new_drift_event', event: { count: results.length, detected_at: new Date().toISOString() } });
+    res.json({ success: true, results });
+  } catch (err) {
+    logger.error({ err }, 'Manual drift detection failed');
+    res.status(500).json({ error: 'Failed to run drift detection' });
+  }
+});
+
 app.post('/drift/events', authMiddleware, requirePermission('infrastructure:run'), async (req, res) => {
   const { repo_name, stack_name, engine, drift_type, resource_type, resource_name, expected_state, actual_state, status, severity, source_commit, recommended_action } = req.body;
   if (!repo_name || !stack_name || !engine || !drift_type || !resource_type || !resource_name) {
@@ -1748,6 +2562,8 @@ server.listen(port, async () => {
   logger.info(`Backend server listening at http://localhost:${port}`);
   await initAuditTable();
   startRetentionJob();
+  startScheduler();
+  startDriftDetector();
 });
 
 // ── Graceful Shutdown ─────────────────────────────────────────────────────────

@@ -17,6 +17,14 @@ import Fingerprints from './pages/Fingerprints';
 import Remediation from './pages/Remediation';
 import Predictions from './pages/Predictions';
 import Drift from './pages/Drift';
+import Blueprints from './pages/Blueprints';
+import GitSync from './pages/GitSync';
+import Providers from './pages/Providers';
+import StateManager from './pages/StateManager';
+import StackConfig from './pages/StackConfig';
+import StackCodeEditor from './pages/StackCodeEditor';
+import Pipelines from './pages/Pipelines';
+import RuntimeConfig from './pages/RuntimeConfig';
 import SSOLogin from './pages/SSOLogin';
 import ErrorBoundary from './components/ErrorBoundary';
 import api from './api';
@@ -66,6 +74,14 @@ function App() {
           <Route path="/dashboard/remediation" element={<PrivateRoute><Remediation /></PrivateRoute>} />
           <Route path="/dashboard/predictions" element={<PrivateRoute><Predictions /></PrivateRoute>} />
           <Route path="/dashboard/drift" element={<PrivateRoute><Drift /></PrivateRoute>} />
+          <Route path="/dashboard/blueprints" element={<PrivateRoute><Blueprints /></PrivateRoute>} />
+          <Route path="/dashboard/gitsync" element={<PrivateRoute><GitSync /></PrivateRoute>} />
+          <Route path="/dashboard/providers" element={<PrivateRoute><Providers /></PrivateRoute>} />
+          <Route path="/dashboard/state" element={<PrivateRoute><StateManager /></PrivateRoute>} />
+          <Route path="/dashboard/stackconfig" element={<PrivateRoute><StackConfig /></PrivateRoute>} />
+          <Route path="/dashboard/stackeditor" element={<PrivateRoute><StackCodeEditor /></PrivateRoute>} />
+          <Route path="/dashboard/pipelines" element={<PrivateRoute><Pipelines /></PrivateRoute>} />
+          <Route path="/dashboard/runtime-config" element={<PrivateRoute><RuntimeConfig /></PrivateRoute>} />
 
           {/* Redirect root to login or dashboard */}
           <Route path="/" element={<Navigate to="/dashboard" />} />

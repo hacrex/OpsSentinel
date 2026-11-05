@@ -3,9 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const db = require('./db');
 const { notifyAll } = require('./notifier');
+const { encrypt, decrypt } = require('./secure');
+const { validateVars, validateWorkingDir } = require('./validate');
 const logger = require('./logger');
 const { logAuditEvent } = require('./audit');
-const { inc } = require('./metrics');
+const metricsModule = require('./metrics');
+const metrics = metricsModule.metrics;
+const { inc } = metricsModule;
 
 let _broadcast = null;
 function setBroadcast(fn) { _broadcast = fn; }
@@ -110,16 +114,129 @@ function buildArgs(engine, operation, vars) {
 }
 
 async function runOperation({ tenant_id, repo_name, stack_name, engine, operation, workingDir, vars = {}, triggeredBy }) {
+  // ── Resolve stack + effective variables + provider credentials ────────────
+  const stackConditions = ['repo_name = ?', 'stack_name = ?'];
+  const stackParams = [repo_name, stack_name];
+  if (process.env.SAAS_MODE === 'true') { stackConditions.push('tenant_id = ?'); stackParams.push(tenant_id); }
+  const stackResult = await db.query(
+    `SELECT * FROM stacks WHERE ${stackConditions.join(' AND ')} ORDER BY id DESC LIMIT 1`,
+    stackParams
+  );
+  const stack = stackResult.rows?.[0] ?? null;
+
+  // Managed variables override stack defaults; explicit run vars override both
+  let effective = { ...vars };
+  try {
+    const automation = require('./automation');
+    if (stack) effective = { ...(await automation.effectiveVars(stack)), ...vars };
+  } catch (err) {
+    logger.warn({ err }, 'failed to merge managed stack variables; using run vars only');
+  }
+
+  // ── Input validation (command injection defense) ─────────────────────────
+  const dirCheck = validateWorkingDir(workingDir);
+  if (!dirCheck.ok) {
+    return { error: 'invalid_input', conclusion: 'failure', message: dirCheck.error };
+  }
+  const varsCheck = validateVars(effective);
+  if (!varsCheck.ok) {
+    return { error: 'invalid_input', conclusion: 'failure', message: varsCheck.errors.join('; ') };
+  }
+
+  // State locking: mutating operations are refused while locked
+  const MUTATING = ['apply', 'destroy'];
+  if (stack && MUTATING.includes(operation)) {
+    const stackstate = require('./stackstate');
+    const check = await stackstate.assertNotLocked(stack);
+    if (check.blocked) {
+      const logFile = path.join(LOG_DIR, `${stack_name}-${operation}-${Date.now()}.log`);
+      fs.writeFileSync(logFile, `Operation blocked: ${check.message}\nLOCK ID: ${check.lock.lock_id}\nLOCKED BY: ${check.lock.locked_by}\n`, 'utf8');
+      const blocked = {
+        error: 'state_locked',
+        conclusion: 'failure',
+        message: check.message,
+        lock: check.lock,
+        output_url: `/infra-logs/${path.basename(logFile)}`,
+      };
+      inc('infra_runs_total', { engine, operation, conclusion: 'failure' });
+      db.run(
+        `INSERT INTO infrastructure_runs (tenant_id, repo_name, stack_name, engine, operation, status, conclusion, output_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [tenant_id, repo_name, stack_name, engine, operation, 'blocked', 'failure', blocked.output_url],
+        function (err) {
+          if (!err && _broadcast) {
+            _broadcast({ type: 'new_infra_run', event: { id: this.lastID, tenant_id, repo_name, stack_name, engine, operation, status: 'blocked', conclusion: 'failure', output_url: blocked.output_url, mttr_seconds: null, created_at: new Date().toISOString() } });
+          }
+        }
+      );
+      logAuditEvent({
+        userId: null, username: triggeredBy || 'system',
+        action: 'infrastructure_run_blocked', resourceType: 'stack',
+        resourceId: String(stack.id), details: { engine, operation, reason: 'state_locked' }, ipAddress: null,
+      });
+      return blocked;
+    }
+  }
+
+  // Inject provider credentials when a connection exists for this engine's cloud
+  let spawnEnv = { ...process.env };
+  try {
+    const providers = require('./providers');
+    const engineProviders = {
+      cloudformation: 'aws', 'aws-cdk': 'aws', bicep: 'azure',
+      crossplane: 'kubernetes',
+    };
+    const provider = effective.provider || engineProviders[engine];
+    if (provider) {
+      const { env, connection } = await providers.resolveProviderEnvironment(tenant_id, provider, spawnEnv);
+      spawnEnv = env;
+      logger.info({ provider, connection: connection?.name }, 'using provider connection credentials');
+    }
+  } catch (err) {
+    logger.warn({ err }, 'provider credential resolution failed; falling back to base env');
+  }
+
   const logFile = path.join(LOG_DIR, `${stack_name}-${operation}-${Date.now()}.log`);
   const writeStream = fs.createWriteStream(logFile);
 
-  const { cmd, args } = buildArgs(engine, operation, vars);
-  const child = spawn(cmd, args, { cwd: workingDir, env: { ...process.env } });
+  const { cmd, args } = buildArgs(engine, operation, effective);
+  const child = spawn(cmd, args, { cwd: dirCheck.resolved, env: spawnEnv });
+  let _resolve;
+
+  child.on('error', (err) => {
+    writeStream.write(`Spawn failed: ${err.code} ${err.syscall} ${err.path} ${(err.spawnargs || []).join(' ')}\n`);
+    writeStream.end();
+    const conclusion = 'failure';
+    const status = 'completed';
+    const output_url = `/infra-logs/${path.basename(logFile)}`;
+    inc('infra_runs_total', { engine, operation, conclusion });
+    db.run(
+      `INSERT INTO infrastructure_runs (tenant_id, repo_name, stack_name, engine, operation, status, conclusion, output_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [tenant_id, repo_name, stack_name, engine, operation, status, conclusion, output_url],
+      function (err2) {
+        if (err2) {
+          logger.error({ err2 }, 'Failed to record spawn-failed infrastructure run');
+          return resolve({ error: 'db_error' });
+        }
+        const run = {
+          id: this.lastID, tenant_id, repo_name, stack_name, engine, operation, status, conclusion,
+          output_url, mttr_seconds: null, created_at: new Date().toISOString(),
+        };
+        if (_broadcast) _broadcast({ type: 'new_infra_run', event: run });
+        logAuditEvent({
+          userId: null, username: triggeredBy || 'system',
+          action: 'infrastructure_run_spawn_error', resourceType: 'infrastructure_run',
+          resourceId: String(this.lastID), details: { engine, operation, error: err.message }, ipAddress: null,
+        });
+        _resolve(run);
+      }
+    );
+  });
 
   child.stdout.on('data', (d) => { writeStream.write(d); });
   child.stderr.on('data', (d) => { writeStream.write(d); });
 
   return new Promise((resolve) => {
+    _resolve = resolve;
     child.on('close', async (code) => {
       writeStream.end();
       const conclusion = code === 0 ? 'success' : 'failure';
@@ -413,13 +530,21 @@ async function listSecrets({ tenant_id, provider, scope, page, limit }) {
     `SELECT id, tenant_id, name, value, provider, scope, created_at, updated_at FROM secrets ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
     [...params, limit, offset]
   );
-  return { data: dataResult.rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
+  return {
+    data: dataResult.rows.map((s) => ({
+      ...s,
+      // Never return plaintext in list view — show masked placeholder
+      value: s.value ? '••••••••' : null,
+    })),
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+  };
 }
 
 async function createSecret({ tenant_id, name, value, provider, scope }) {
+  const encrypted = value !== undefined ? encrypt(value) : null;
   const result = await db.query(
     `INSERT INTO secrets (tenant_id, name, value, provider, scope) VALUES (?, ?, ?, ?, ?)`,
-    [tenant_id, name, value, provider, scope]
+    [tenant_id, name, encrypted, provider, scope]
   );
   return result.rows?.[0] ?? { id: null };
 }
@@ -429,14 +554,16 @@ async function getSecret(id, tenant_id) {
   const params = [id];
   if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
   const result = await db.query(`SELECT * FROM secrets WHERE ${conditions.join(' AND ')}`, params);
-  return result.rows?.[0] ?? null;
+  if (!result.rows?.[0]) return null;
+  const s = result.rows[0];
+  return { ...s, value: s.value ? decrypt(s.value) : null };
 }
 
 async function updateSecret(id, { name, value, provider, scope }, tenant_id) {
   const sets = [];
   const params = [];
   if (name !== undefined) { sets.push('name = ?'); params.push(name); }
-  if (value !== undefined) { sets.push('value = ?'); params.push(value); }
+  if (value !== undefined) { sets.push('value = ?'); params.push(encrypt(value)); }
   if (provider !== undefined) { sets.push('provider = ?'); params.push(provider); }
   if (scope !== undefined) { sets.push('scope = ?'); params.push(scope); }
   if (sets.length === 0) return null;
@@ -835,4 +962,100 @@ async function deleteDriftEvent(id, tenant_id) {
   return result;
 }
 
-module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction, listPredictions, createPrediction, getPrediction, updatePrediction, deletePrediction, listDriftEvents, createDriftEvent, getDriftEvent, updateDriftEvent, deleteDriftEvent };
+// ── Stack code export / file browsing ────────────────────────────────────────
+
+const EXCLUDE_DIRS = new Set(['.git', 'node_modules', '.terraform', '.tofu', '.pulumi', '__pycache__', '.venv', 'dist', 'build', '.next']);
+const EXCLUDE_FILES = new Set(['.gitignore', '.terraform.lock.hcl', '.tofu.lock.hcl', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml']);
+
+function isExcluded(relPath) {
+  const parts = relPath.split(/[\\/]/);
+  return parts.some((p) => EXCLUDE_DIRS.has(p)) || EXCLUDE_FILES.has(parts[parts.length - 1]);
+}
+
+async function listStackFiles(workingDir) {
+  const results = [];
+  if (!fs.existsSync(workingDir)) return results;
+
+  function walk(dir, prefix) {
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const entry of entries) {
+      if (EXCLUDE_DIRS.has(entry.name)) continue;
+      const full = path.join(dir, entry.name);
+      const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        results.push({ name: entry.name, path: rel, type: 'directory' });
+        walk(full, rel);
+      } else {
+        try { const stat = fs.statSync(full); results.push({ name: entry.name, path: rel, type: 'file', size: stat.size }); } catch {}
+      }
+    }
+  }
+  walk(workingDir, '');
+  return results;
+}
+
+async function readStackFile(filePath) {
+  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) return { error: 'not_found' };
+  const stat = fs.statSync(filePath);
+  const MAX_READ = 2 * 1024 * 1024; // 2MB
+  if (stat.size > MAX_READ) return { error: 'too_large', size: stat.size };
+  const content = fs.readFileSync(filePath, 'utf8');
+  return { content, size: stat.size };
+}
+
+/** Write (create or overwrite) a file inside a stack working directory.
+ *  Path traversal is prevented by resolving against the stack's working_dir.
+ *  Size is capped at 2 MiB to prevent abuse. */
+async function writeStackFile(workingDir, relPath, content) {
+  if (!workingDir || typeof workingDir !== 'string') return { error: 'invalid_input', message: 'working_dir is required' };
+  if (!relPath || typeof relPath !== 'string') return { error: 'invalid_input', message: 'path is required' };
+  if (typeof content !== 'string') return { error: 'invalid_input', message: 'content is required' };
+
+  const MAX_WRITE = 2 * 1024 * 1024; // 2MB
+  if (Buffer.byteLength(content, 'utf8') > MAX_WRITE) return { error: 'too_large', message: 'File exceeds 2 MiB' };
+
+  const workingResolved = path.resolve(workingDir);
+  const resolved = path.resolve(workingResolved, relPath);
+  if (!resolved.startsWith(workingResolved + path.sep) && resolved !== workingResolved) {
+    return { error: 'forbidden', message: 'Path traversal not allowed' };
+  }
+
+  // Prevent writing into excluded directories (e.g. .git, node_modules)
+  const relParts = relPath.split(/[\\/]/);
+  for (let i = 0; i < relParts.length; i++) {
+    if (EXCLUDE_DIRS.has(relParts[i])) return { error: 'forbidden', message: `Cannot write into ${relParts[i]}` };
+  }
+
+  try {
+    fs.mkdirSync(path.dirname(resolved), { recursive: true });
+    fs.writeFileSync(resolved, content, 'utf8');
+    const stat = fs.statSync(resolved);
+    return { path: relPath, size: stat.size, written_at: new Date().toISOString() };
+  } catch (err) {
+    return { error: 'write_failed', message: err.message };
+  }
+}
+
+async function exportStackTar(workingDir) {
+  if (!fs.existsSync(workingDir)) return { error: 'not_found' };
+  const tarFile = path.join(process.env.INFRA_LOG_DIR || path.join(__dirname, '../../infra-logs'), `export-${path.basename(workingDir)}-${Date.now()}.tar.gz`);
+  return new Promise((resolve) => {
+    const tar = spawn('tar', ['-czf', tarFile, '-C', path.dirname(workingDir), path.basename(workingDir)], { windowsHide: true });
+    tar.on('close', (code) => {
+      if (code === 0) resolve({ tarFile, downloadUrl: `/infra-logs/${path.basename(tarFile)}` });
+      else resolve({ error: 'export_failed', code });
+    });
+    tar.on('error', (err) => resolve({ error: err.message }));
+  });
+}
+
+async function getStackById(stackId, tenant_id) {
+  const conditions = ['id = ?'];
+  const params = [stackId];
+  if (process.env.SAAS_MODE === 'true') { conditions.push('tenant_id = ?'); params.push(tenant_id); }
+  const result = await db.query(`SELECT * FROM stacks WHERE ${conditions.join(' AND ')}`, params);
+  return result.rows?.[0] ?? null;
+}
+
+module.exports = { runOperation, setBroadcast, listRuns, getStackStats, getInfraTrend, LOG_DIR, listStacks, createStack, deleteStack, getStackWorkingDir, recordInfraRun, listIncidents, createIncident, getIncident, updateIncident, deleteIncident, listSecrets, createSecret, getSecret, updateSecret, deleteSecret, listConfigRuns, recordConfigRun, listPolicies, createPolicy, getPolicy, updatePolicy, deletePolicy, listFingerprints, upsertFingerprint, listRemediationActions, createRemediationAction, getRemediationAction, updateRemediationAction, deleteRemediationAction, listPredictions, createPrediction, getPrediction, updatePrediction, deletePrediction, listDriftEvents, createDriftEvent, getDriftEvent, updateDriftEvent, deleteDriftEvent, listStackFiles, readStackFile, writeStackFile, exportStackTar, getStackById };
